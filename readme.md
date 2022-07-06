@@ -5,3 +5,15 @@
     $ npm i -D husky
     $ npm i -D lint-staged
     $ npm i -D jest @types/jest ts-jest
+
+## Commands
+
+-   Para atualizar libs de forma seletiva no NPM:
+    
+    -s, --skip-unused: Skip check for unused packages, because there are libraries without reference in any import in the project. But because they are useful to the project.
+
+    -u, --update: Interactive update.
+
+        $ npm-check --skip-unused --update
+        $ npm-check -s -u
+
