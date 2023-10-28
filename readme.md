@@ -1,3 +1,6 @@
+## Environment Setup
+NodeJS version used: 16.14.2
+
 ## Libs
     $ npm i -D git-commit-msg-linter
     $ npm i -D typescript @types/node
