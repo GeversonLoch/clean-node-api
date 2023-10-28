@@ -8,8 +8,8 @@
 
 ## Commands
 
--   Para atualizar libs de forma seletiva no NPM:
-    
+-   To selectively update libs on NPM:
+
     -s, --skip-unused: Skip check for unused packages, because there are libraries without reference in any import in the project. But because they are useful to the project.
 
     -u, --update: Interactive update.
