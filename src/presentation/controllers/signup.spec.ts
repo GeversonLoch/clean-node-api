@@ -19,7 +19,8 @@ describe('SignUp Controller', () => {
     /*
       NOTE: toEqual
       Usado quando você deseja verificar se dois objetos têm o mesmo valor.
-      Esse matcher verifica recursivamente a igualdade de todos os campos, em vez de verificar a identidade do objeto.
+      Esse matcher verifica recursivamente a igualdade de todos os campos,
+      em vez de verificar a identidade do objeto.
     */
     expect(httpResponse.body).toEqual(new Error('Missing param: name'))
   })
