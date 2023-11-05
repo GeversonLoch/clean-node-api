@@ -2,9 +2,7 @@ import { MissingParamError } from '../errors/missing-param-error'
 import { SignUpController } from './signup'
 
 // sut: System Under Test
-const makeSut = (): SignUpController => {
-  return new SignUpController()
-}
+const makeSut = (): SignUpController => new SignUpController()
 
 describe('SignUp Controller', () => {
   test('Should return 400 if no name is provided', () => {
