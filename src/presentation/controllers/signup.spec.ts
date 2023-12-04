@@ -25,6 +25,8 @@ const makeSut = (): SutTypes => {
 }
 
 describe('SignUp Controller', () => {
+
+  // Deve retornar 400 se nenhum nome for fornecido
   test('Should return 400 if no name is provided', () => {
     const { sut } = makeSut()
     const httpRequest = {
@@ -49,6 +51,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('name'))
   })
 
+  // Deve retornar 400 se nenhum email for fornecido.
   test('Should return 400 if no email is provided', () => {
     const { sut } = makeSut()
     const httpRequest = {
@@ -63,6 +66,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('email'))
   })
 
+  // Deve retornar 400 se nenhuma senha for fornecida.
   test('Should return 400 if no password is provided', () => {
     const { sut } = makeSut()
     const httpRequest = {
@@ -77,6 +81,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('password'))
   })
 
+  // Deve retornar 400 se nenhuma confirmação de senha for fornecida.
   test('Should return 400 if no password confirmation is provided', () => {
     const { sut } = makeSut()
     const httpRequest = {
@@ -91,6 +96,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('passwordConfirmation'))
   })
 
+  // Deve retornar 400 se um e-mail inválido for fornecido.
   test('Should return 400 if an invalid email is provided', () => {
 
     const { sut, emailValidatorStub } = makeSut()
@@ -112,6 +118,7 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new InvalidParamError('email'))
   })
 
+  // Deve chamar o EmailValidator com o e-mail correto.
   test('Should call EmailValidator with corret email', () => {
     const { sut, emailValidatorStub } = makeSut()
 
