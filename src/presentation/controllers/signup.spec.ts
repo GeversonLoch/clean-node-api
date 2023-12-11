@@ -122,21 +122,18 @@ describe('SignUp Controller', () => {
   test('Should call EmailValidator with corret email', () => {
     const { sut, emailValidatorStub } = makeSut()
 
-    /* Mockar manualmente o validator com o jest, para nesse caso retornar falso!
-    Isso porque é uma boa pratica que Stub's retornem true por padrão nos demais testes! */
-    jest.spyOn(emailValidatorStub, 'isValid').mockReturnValueOnce(false)
+    const isValidSpy = jest.spyOn(emailValidatorStub, 'isValid')
 
     const httpRequest = {
       body: {
         name: 'any_name',
-        email: 'invalid_email@email.com',
+        email: 'any_email@email.com', // Garantir que o e-mail que está sendo passado para o EmailValidator é o da propriedade email do body.
         password: 'any_password',
         passwordConfirmation: 'any_password'
       }
     }
-    const httpResponse = sut.handle(httpRequest)
-    expect(httpResponse.statusCode).toBe(400)
-    expect(httpResponse.body).toEqual(new InvalidParamError('email'))
+    sut.handle(httpRequest)
+    expect(isValidSpy).toHaveBeenCalledWith(httpRequest.body.email)
   })
 
 })
