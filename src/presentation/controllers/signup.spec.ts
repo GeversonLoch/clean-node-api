@@ -8,14 +8,15 @@ interface SutTypes {
   emailValidatorStub: EmailValidator
 }
 
+// Stub: Sempre retornar com valor verdadeiro, para não influenciar os demais testes!
+class EmailValidatorStub implements EmailValidator {
+  isValid (email: string): boolean {
+    return true
+  }
+}
+
 // sut: System Under Test
 const makeSut = (): SutTypes => {
-  // Stub: Sempre retornar com valor verdadeiro, para não influenciar os demais testes!
-  class EmailValidatorStub implements EmailValidator {
-    isValid (email: string): boolean {
-      return true
-    }
-  }
   const emailValidatorStub = new EmailValidatorStub()
   const sut = new SignUpController(emailValidatorStub)
   return {
