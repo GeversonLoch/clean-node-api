@@ -1,9 +1,9 @@
 import { IHttpRequest, IHttpResponse } from '../protocols/http'
-import { IMissingParamError } from '../errors/missing-param-error'
+import { MissingParamError } from '../errors/missing-param-error'
 import { badRequest, internalServerError } from '../helpers/http-helper'
 import { IController } from '../protocols/controller'
 import { IEmailValidator } from '../protocols/email-validator'
-import { IInvalidParamError } from '../errors/invalid-param-error'
+import { InvalidParamError } from '../errors/invalid-param-error'
 
 export class SignUpController implements IController {
 
@@ -21,14 +21,14 @@ export class SignUpController implements IController {
 
       for (const fild of requiredFields) {
         if (!httpRequest.body[fild]) {
-          return badRequest(new IMissingParamError(fild))
+          return badRequest(new MissingParamError(fild))
         }
       }
 
       const isValid = this.emailValidator.isValid(httpRequest.body.email)
 
       if (!isValid) {
-        return badRequest(new IInvalidParamError('email'))
+        return badRequest(new InvalidParamError('email'))
       }
     } catch (error) {
       return internalServerError()

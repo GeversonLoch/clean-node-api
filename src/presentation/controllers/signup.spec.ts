@@ -1,6 +1,6 @@
-import { IMissingParamError } from '../errors/missing-param-error'
-import { IInvalidParamError } from '../errors/invalid-param-error'
-import { IInternalServerError } from '../errors/internal-server-error'
+import { MissingParamError } from '../errors/missing-param-error'
+import { InvalidParamError } from '../errors/invalid-param-error'
+import { InternalServerError } from '../errors/internal-server-error'
 import { IEmailValidator } from '../protocols/email-validator'
 import { SignUpController } from './signup'
 
@@ -21,7 +21,7 @@ const makeEmailValidator = (): IEmailValidator => {
 const makeEmailValidatorWithError = (): IEmailValidator => {
   class EmailValidatorStub implements IEmailValidator {
     isValid (email: string): boolean {
-      throw new IInternalServerError()
+      throw new InternalServerError()
     }
   }
   return new EmailValidatorStub()
@@ -61,7 +61,7 @@ describe('SignUp Controller', () => {
       Esse matcher verifica recursivamente a igualdade de todos os campos,
       em vez de verificar a identidade do objeto.
     */
-    expect(httpResponse.body).toEqual(new IMissingParamError('name'))
+    expect(httpResponse.body).toEqual(new MissingParamError('name'))
   })
 
   // Deve retornar 400 se nenhum email for fornecido.
@@ -76,7 +76,7 @@ describe('SignUp Controller', () => {
     }
     const httpResponse = sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
-    expect(httpResponse.body).toEqual(new IMissingParamError('email'))
+    expect(httpResponse.body).toEqual(new MissingParamError('email'))
   })
 
   // Deve retornar 400 se nenhuma senha for fornecida.
@@ -91,7 +91,7 @@ describe('SignUp Controller', () => {
     }
     const httpResponse = sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
-    expect(httpResponse.body).toEqual(new IMissingParamError('password'))
+    expect(httpResponse.body).toEqual(new MissingParamError('password'))
   })
 
   // Deve retornar 400 se nenhuma confirmação de senha for fornecida.
@@ -106,7 +106,7 @@ describe('SignUp Controller', () => {
     }
     const httpResponse = sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
-    expect(httpResponse.body).toEqual(new IMissingParamError('passwordConfirmation'))
+    expect(httpResponse.body).toEqual(new MissingParamError('passwordConfirmation'))
   })
 
   // Deve retornar 400 se um e-mail inválido for fornecido.
@@ -128,7 +128,7 @@ describe('SignUp Controller', () => {
     }
     const httpResponse = sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
-    expect(httpResponse.body).toEqual(new IInvalidParamError('email'))
+    expect(httpResponse.body).toEqual(new InvalidParamError('email'))
   })
 
   // Deve chamar o EmailValidator com o e-mail correto.
@@ -164,7 +164,7 @@ describe('SignUp Controller', () => {
       }
       const httpResponse = sut.handle(httpRequest)
       expect(httpResponse.statusCode).toBe(500)
-      expect(httpResponse.body).toEqual(new IInternalServerError())
+      expect(httpResponse.body).toEqual(new InternalServerError())
     })
 
 })

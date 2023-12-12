@@ -1,4 +1,4 @@
-export class IInternalServerError extends Error {
+export class InternalServerError extends Error {
 
     /*
         Atenção:
