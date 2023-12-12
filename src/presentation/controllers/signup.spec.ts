@@ -9,16 +9,27 @@ interface SutTypes {
   emailValidatorStub: EmailValidator
 }
 
-// Stub: Sempre retornar com valor verdadeiro, para não influenciar os demais testes!
-class EmailValidatorStub implements EmailValidator {
-  isValid (email: string): boolean {
-    return true
+const makeEmailValidator = (): EmailValidator => {
+  class EmailValidatorStub implements EmailValidator {
+    isValid (email: string): boolean {
+      return true
+    }
   }
+  return new EmailValidatorStub()
+}
+
+const makeEmailValidatorWithError = (): EmailValidator => {
+  class EmailValidatorStub implements EmailValidator {
+    isValid (email: string): boolean {
+      throw new InternalServerError()
+    }
+  }
+  return new EmailValidatorStub()
 }
 
 // sut: System Under Test
 const makeSut = (): SutTypes => {
-  const emailValidatorStub = new EmailValidatorStub()
+  const emailValidatorStub = makeEmailValidator()
   const sut = new SignUpController(emailValidatorStub)
   return {
     sut,
@@ -140,14 +151,7 @@ describe('SignUp Controller', () => {
 
     // Deve retornar 500 se o EmailValidator lançar uma exceção.
     test('Should return 500 if EmailValidator throws an exception', () => {
-
-      class EmailValidatorStub implements EmailValidator {
-        isValid (email: string): boolean {
-          throw new InternalServerError()
-        }
-      }
-
-      const emailValidatorStub = new EmailValidatorStub()
+      const emailValidatorStub = makeEmailValidatorWithError()
       const sut = new SignUpController(emailValidatorStub)
 
       const httpRequest = {
