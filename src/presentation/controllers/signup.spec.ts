@@ -141,24 +141,24 @@ describe('SignUp Controller', () => {
   })
 
     // Deve retornar 500 se o EmailValidator lançar uma exceção.
-    test('Should return 500 if EmailValidator throws an exception', () => {
-      const { sut, emailValidatorStub } = makeSut()
+  test('Should return 500 if EmailValidator throws an exception', () => {
+    const { sut, emailValidatorStub } = makeSut()
 
-      jest.spyOn(emailValidatorStub, 'isValid').mockImplementationOnce(() => {
-        throw new InternalServerError()
-      })
-
-      const httpRequest = {
-        body: {
-          name: 'any_name',
-          email: 'any_email@email.com',
-          password: 'any_password',
-          passwordConfirmation: 'any_password'
-        }
-      }
-      const httpResponse = sut.handle(httpRequest)
-      expect(httpResponse.statusCode).toBe(500)
-      expect(httpResponse.body).toEqual(new InternalServerError())
+    jest.spyOn(emailValidatorStub, 'isValid').mockImplementationOnce(() => {
+      throw new InternalServerError()
     })
+
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password'
+      }
+    }
+    const httpResponse = sut.handle(httpRequest)
+    expect(httpResponse.statusCode).toBe(500)
+    expect(httpResponse.body).toEqual(new InternalServerError())
+  })
 
 })
