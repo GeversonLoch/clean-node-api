@@ -100,6 +100,22 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new MissingParamError('passwordConfirmation'))
   })
 
+  // Deve retornar 400 se a confirmação de senha falhar
+  test('Should return 400 if password confirmation fails', () => {
+    const { sut } = makeSut()
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_password',
+        passwordConfirmation: 'invalid_password'
+      }
+    }
+    const httpResponse = sut.handle(httpRequest)
+    expect(httpResponse.statusCode).toBe(400)
+    expect(httpResponse.body).toEqual(new InvalidParamError('passwordConfirmation'))
+  })
+
   // Deve retornar 400 se um e-mail inválido for fornecido.
   test('Should return 400 if an invalid email is provided', () => {
 
@@ -140,7 +156,7 @@ describe('SignUp Controller', () => {
     expect(isValidSpy).toHaveBeenCalledWith(httpRequest.body.email)
   })
 
-    // Deve retornar 500 se o EmailValidator lançar uma exceção.
+  // Deve retornar 500 se o EmailValidator lançar uma exceção.
   test('Should return 500 if EmailValidator throws an exception', () => {
     const { sut, emailValidatorStub } = makeSut()
 
