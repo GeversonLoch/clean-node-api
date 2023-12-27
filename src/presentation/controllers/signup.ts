@@ -1,6 +1,6 @@
 import { IHttpRequest, IHttpResponse } from '../protocols/http'
 import { MissingParamError } from '../errors/missing-param-error'
-import { badRequest, internalServerError } from '../helpers/http-helper'
+import { badRequest, internalServerError, success } from '../helpers/http-helper'
 import { IController } from '../protocols/controller'
 import { IEmailValidator } from '../protocols/email-validator'
 import { InvalidParamError } from '../errors/invalid-param-error'
@@ -46,10 +46,7 @@ export class SignUpController implements IController {
         password
       })
 
-      return {
-        statusCode: 200,
-        body: account
-      }
+      return success(account)
     } catch (error) {
       return internalServerError()
     }
