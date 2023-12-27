@@ -2,11 +2,14 @@ import { MissingParamError } from '../errors/missing-param-error'
 import { InvalidParamError } from '../errors/invalid-param-error'
 import { InternalServerError } from '../errors/internal-server-error'
 import { IEmailValidator } from '../protocols/email-validator'
+import { IAddAccountModel, IAddAccountService } from '../../domain/usecases/add-account'
+import { IAccountModel } from '../../domain/models/account'
 import { SignUpController } from './signup'
 
 interface ISutTypes {
   sut: SignUpController
-  emailValidatorStub: IEmailValidator
+  emailValidatorStub: IEmailValidator,
+  addAccountStub: IAddAccountService
 }
 
 const makeEmailValidator = (): IEmailValidator => {
@@ -18,13 +21,30 @@ const makeEmailValidator = (): IEmailValidator => {
   return new EmailValidatorStub()
 }
 
+const makeAddAccount = (): IAddAccountService => {
+  class AddAccountStub implements IAddAccountService {
+    add (account: IAddAccountModel): IAccountModel {
+      const fakeAccount = {
+        id: 'any_id',
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_password'
+      }
+      return fakeAccount
+    }
+  }
+  return new AddAccountStub()
+}
+
 // sut: System Under Test
 const makeSut = (): ISutTypes => {
   const emailValidatorStub = makeEmailValidator()
-  const sut = new SignUpController(emailValidatorStub)
+  const addAccountStub = makeAddAccount()
+  const sut = new SignUpController(emailValidatorStub, addAccountStub)
   return {
     sut,
-    emailValidatorStub
+    emailValidatorStub,
+    addAccountStub
   }
 }
 
@@ -175,6 +195,29 @@ describe('SignUp Controller', () => {
     const httpResponse = sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toEqual(new InternalServerError())
+  })
+
+  // Deve chamar AddAccountService com valores corretos.
+  test('Should call AddAccountService with corret values', () => {
+    const { sut, addAccountStub } = makeSut()
+
+    // Espionar o método add do AddAccountStub para saber se ele foi chamado com os valores corretos.
+    const addSpy = jest.spyOn(addAccountStub, 'add')
+
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password'
+      }
+    }
+    sut.handle(httpRequest)
+    expect(addSpy).toHaveBeenCalledWith({
+      name: 'any_name',
+      email: 'any_email@email.com',
+      password: 'any_password'
+    })
   })
 
 })
