@@ -40,11 +40,16 @@ export class SignUpController implements IController {
         return badRequest(new InvalidParamError('email'))
       }
 
-      this.addAccountService.add({
+      const account = this.addAccountService.add({
         name,
         email,
         password
       })
+
+      return {
+        statusCode: 200,
+        body: account
+      }
     } catch (error) {
       return internalServerError()
     }
