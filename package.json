@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watch",
+    "test": "cls && jest",
     "test:staged": "jest --passWithNoTests"
   },
   "keywords": [],
