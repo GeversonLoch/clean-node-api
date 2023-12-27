@@ -220,4 +220,25 @@ describe('SignUp Controller', () => {
     })
   })
 
+  // Deve retornar 500 se o AddAccountService lançar uma exceção.
+  test('Should return 500 if AddAccountService throws an exception', () => {
+    const { sut, addAccountStub } = makeSut()
+
+    jest.spyOn(addAccountStub, 'add').mockImplementationOnce(() => {
+      throw new InternalServerError()
+    })
+
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password'
+      }
+    }
+    const httpResponse = sut.handle(httpRequest)
+    expect(httpResponse.statusCode).toBe(500)
+    expect(httpResponse.body).toEqual(new InternalServerError())
+  })
+
 })
