@@ -241,25 +241,26 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new InternalServerError())
   })
 
-    // Deve retornar 200 se dados válidos forem fornecidos.
-    test('Should return 200 if valid data is provided', () => {
-      const { sut } = makeSut()
-      const httpRequest = {
-        body: {
-          name: 'valid_name',
-          email: 'valid_email@email.com',
-          password: 'valid_password',
-          passwordConfirmation: 'valid_password'
-        }
-      }
-      const httpResponse = sut.handle(httpRequest)
-      expect(httpResponse.statusCode).toBe(200)
-      expect(httpResponse.body).toEqual({
-        id: 'valid_id',
+  // Deve retornar 200 se dados válidos forem fornecidos.
+  test('Should return 200 if valid data is provided', () => {
+    const { sut } = makeSut()
+
+    const httpRequest = {
+      body: {
         name: 'valid_name',
         email: 'valid_email@email.com',
-        password: 'valid_password'
-      })
+        password: 'valid_password',
+        passwordConfirmation: 'valid_password'
+      }
+    }
+    const httpResponse = sut.handle(httpRequest)
+    expect(httpResponse.statusCode).toBe(200)
+    expect(httpResponse.body).toEqual({
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'valid_email@email.com',
+      password: 'valid_password'
     })
+  })
 
 })
