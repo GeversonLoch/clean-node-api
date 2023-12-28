@@ -1,4 +1,5 @@
 import { EmailValidatorAdapter } from './email-validator'
+import validator from 'validator'
 
 /*
 Ao mockar o retorno do método isEmail, podemos definir manualmente se ele deve retornar true ou false,
@@ -42,6 +43,14 @@ describe('Email Validator Adapter', () => {
         const isValid = sut.isValid('valid_email@email.com')
 
         expect(isValid).toBe(true)
+    })
+
+    // Garantir que o validador seja chamado com o email correto
+    test('Should call validator with correct email', () => {
+        const { sut } = makeSut()
+        const isEmailSpy = jest.spyOn(validator, 'isEmail')
+        sut.isValid('any_email@email.com');
+        expect(isEmailSpy).toHaveBeenCalledWith('any_email@email.com')
     })
 
 })
