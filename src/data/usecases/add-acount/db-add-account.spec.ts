@@ -1,7 +1,12 @@
 import { DbAddAccount } from "./db-add-account"
+import { IEncrypter } from "../../protocols/encrypter"
 
-// Descreve os testes para a classe DbAddAccount Usecase
-describe('DbAddAccount Usecase', () => {
+interface SutTypes {
+    sut: DbAddAccount,
+    encrypterStub: IEncrypter
+}
+
+const makeEncrypter = (): IEncrypter => {
 
     // Classe fictícia EncrypterStub usada para simular o comportamento da classe Encrypter real
     class EncrypterStub {
@@ -11,15 +16,28 @@ describe('DbAddAccount Usecase', () => {
             return Promise.resolve('hashed_password')
         }
     }
+    return new EncrypterStub()
+}
+
+const makeSut = (): SutTypes => {
+    const encrypterStub = makeEncrypter()
+
+    // Cria uma instância da classe DbAddAccount, passando o encrypterStub como argumento
+    const sut = new DbAddAccount(encrypterStub)
+
+    return {
+        sut,
+        encrypterStub
+    }
+}
+
+// Descreve os testes para a classe DbAddAccount Usecase
+describe('DbAddAccount Usecase', () => {
 
     // Teste para garantir que o método Encrypter seja chamado com a senha correta
     test('Should call Encripter with correct password', () => {
 
-        // Cria uma instância da classe EncrypterStub, usada para simular o comportamento da classe Encrypter real
-        const encrypterStub = new EncrypterStub()
-
-        // Cria uma instância da classe DbAddAccount, passando o encrypterStub como argumento
-        const sut = new DbAddAccount(encrypterStub)
+        const { sut, encrypterStub } = makeSut()
 
         // Cria um espião (spy) no método encrypt do encrypterStub
         const encrypterSpy = jest.spyOn(encrypterStub, 'encrypt')
