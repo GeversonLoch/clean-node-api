@@ -2,14 +2,14 @@ import { MissingParamError } from '../errors/missing-param-error'
 import { InvalidParamError } from '../errors/invalid-param-error'
 import { InternalServerError } from '../errors/internal-server-error'
 import { IEmailValidator } from '../protocols/email-validator'
-import { IAddAccountModel, IAddAccountService } from '../../domain/usecases/add-account'
+import { IAddAccountModel, IAddAccount } from '../../domain/usecases/add-account'
 import { IAccountModel } from '../../domain/models/account'
 import { SignUpController } from './signup'
 
 interface ISutTypes {
   sut: SignUpController
   emailValidatorStub: IEmailValidator,
-  addAccountStub: IAddAccountService
+  addAccountStub: IAddAccount
 }
 
 const makeEmailValidator = (): IEmailValidator => {
@@ -21,8 +21,8 @@ const makeEmailValidator = (): IEmailValidator => {
   return new EmailValidatorStub()
 }
 
-const makeAddAccount = (): IAddAccountService => {
-  class AddAccountStub implements IAddAccountService {
+const makeAddAccount = (): IAddAccount => {
+  class AddAccountStub implements IAddAccount {
     async add (account: IAddAccountModel): Promise<IAccountModel> {
       const fakeAccount = {
         id: 'valid_id',
@@ -197,8 +197,8 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(new InternalServerError())
   })
 
-  // Deve chamar AddAccountService com valores corretos.
-  test('Should call AddAccountService with corret values', async () => {
+  // Deve chamar AddAccount com valores corretos.
+  test('Should call AddAccount with corret values', async () => {
     const { sut, addAccountStub } = makeSut()
 
     // Espionar o método add do AddAccountStub para saber se ele foi chamado com os valores corretos.
@@ -220,8 +220,8 @@ describe('SignUp Controller', () => {
     })
   })
 
-  // Deve retornar 500 se o AddAccountService lançar uma exceção.
-  test('Should return 500 if AddAccountService throws an exception', async () => {
+  // Deve retornar 500 se o AddAccount lançar uma exceção.
+  test('Should return 500 if AddAccount throws an exception', async () => {
     const { sut, addAccountStub } = makeSut()
 
     jest.spyOn(addAccountStub, 'add').mockImplementationOnce(() => {

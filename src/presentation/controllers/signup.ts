@@ -4,19 +4,19 @@ import { badRequest, internalServerError, success } from '../helpers/http-helper
 import { IController } from '../protocols/controller'
 import { IEmailValidator } from '../protocols/email-validator'
 import { InvalidParamError } from '../errors/invalid-param-error'
-import { IAddAccountService } from '../../domain/usecases/add-account'
+import { IAddAccount } from '../../domain/usecases/add-account'
 
 export class SignUpController implements IController {
 
   private readonly emailValidator: IEmailValidator
-  private readonly addAccountService: IAddAccountService
+  private readonly addAccount: IAddAccount
 
   constructor(
     emailValidator: IEmailValidator,
-    addAccountService: IAddAccountService
+    addAccount: IAddAccount
   ) {
     this.emailValidator = emailValidator
-    this.addAccountService = addAccountService
+    this.addAccount = addAccount
   }
 
   async handle (httpRequest: IHttpRequest): Promise<IHttpResponse> {
@@ -40,7 +40,7 @@ export class SignUpController implements IController {
         return badRequest(new InvalidParamError('email'))
       }
 
-      const account = await this.addAccountService.add({
+      const account = await this.addAccount.add({
         name,
         email,
         password
