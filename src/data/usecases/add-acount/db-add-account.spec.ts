@@ -85,7 +85,7 @@ describe('DbAddAccount Usecase', () => {
 
         const { sut, encrypterStub } = makeSut()
 
-        // Cria um espião (spy) no método encrypt do encrypterStub
+        // Simula que o método 'encrypt' lance um erro
         jest.spyOn(encrypterStub, 'encrypt').mockReturnValueOnce(Promise.reject(new Error()))
 
         // Chama o método add da instância DbAddAccount
@@ -120,6 +120,25 @@ describe('DbAddAccount Usecase', () => {
             email: 'valid_email',
             password: 'hashed_password'
         })
+    })
+
+    // Teste para garantir que o erro seja tratado na controller
+    test('Should throw if AddAccountRepository throws', async () => {
+
+        const { sut, addAccountRepositoryStub } = makeSut()
+
+        // Simula que o método 'add' lance um erro
+        jest.spyOn(addAccountRepositoryStub, 'add').mockReturnValueOnce(Promise.reject(new Error()))
+
+        // Chama o método add da instância DbAddAccount
+        const promise = sut.add({
+            name: 'valid_name',
+            email: 'valid_email',
+            password: 'valid_password'
+        })
+
+        // Verifica se o método add lançou uma exceção
+        await expect(promise).rejects.toThrow()
     })
 
 })
