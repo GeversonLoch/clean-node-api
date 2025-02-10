@@ -1,9 +1,15 @@
 import { DbAddAccount } from "./db-add-account"
-import { IEncrypter } from './db-add-account-protocols'
+import {
+    IEncrypter,
+    IAddAccountModel,
+    IAccountModel,
+    IAddAccountRepository
+} from './db-add-account-protocols'
 
 interface SutTypes {
     sut: DbAddAccount,
     encrypterStub: IEncrypter
+    addAccountRepositoryStub: IAddAccountRepository
 }
 
 const makeEncrypter = (): IEncrypter => {
@@ -19,15 +25,36 @@ const makeEncrypter = (): IEncrypter => {
     return new EncrypterStub()
 }
 
+const makeAddAccountRepository = (): IAddAccountRepository => {
+
+    // Classe fictícia AddAccountRepositoryStub usada para simular o comportamento da classe AddAccountRepository real
+    class AddAccountRepositoryStub {
+
+        // Simula o retorno do método add e sempre retorna dados mock
+        async add(account: IAddAccountModel): Promise<IAccountModel> {
+            const fakeAccount = {
+                id: 'valid_id',
+                name: 'valid_name',
+                email: 'valid_email',
+                password: 'hashed_password'
+            };
+            return new Promise(resolve => resolve(fakeAccount))
+        }
+    }
+    return new AddAccountRepositoryStub()
+}
+
 const makeSut = (): SutTypes => {
     const encrypterStub = makeEncrypter()
+    const addAccountRepositoryStub = makeAddAccountRepository()
 
     // Cria uma instância da classe DbAddAccount, passando o encrypterStub como argumento
-    const sut = new DbAddAccount(encrypterStub)
+    const sut = new DbAddAccount(encrypterStub, addAccountRepositoryStub)
 
     return {
         sut,
-        encrypterStub
+        encrypterStub,
+        addAccountRepositoryStub,
     }
 }
 
@@ -35,7 +62,7 @@ const makeSut = (): SutTypes => {
 describe('DbAddAccount Usecase', () => {
 
     // Teste para garantir que o método Encrypter seja chamado com a senha correta
-    test('Should call Encripter with correct password', () => {
+    test('Should call Encripter with correct password', async () => {
 
         const { sut, encrypterStub } = makeSut()
 
@@ -43,7 +70,7 @@ describe('DbAddAccount Usecase', () => {
         const encrypterSpy = jest.spyOn(encrypterStub, 'encrypt')
 
         // Chama o método add da instância DbAddAccount
-        sut.add({
+        await sut.add({
             name: 'valid_name',
             email: 'valid_email',
             password: 'valid_password'
@@ -70,6 +97,29 @@ describe('DbAddAccount Usecase', () => {
 
         // Verifica se o método add lançou uma exceção
         await expect(promise).rejects.toThrow()
+    })
+
+    // Teste para garantir que chame AddAccountRepository com os valores corretos
+    test('Should call AddAccountRepository with correct values', async () => {
+
+        const { sut, addAccountRepositoryStub } = makeSut()
+
+        // Cria um espião (spy) no método encrypt do addAccountRepositoryStub
+        const addSpy = jest.spyOn(addAccountRepositoryStub, 'add')
+
+        // Chama o método add da instância DbAddAccount
+        await sut.add({
+            name: 'valid_name',
+            email: 'valid_email',
+            password: 'valid_password'
+        })
+
+        // Verifica se o espião encrypterSpy foi chamado com os valores corretos
+        expect(addSpy).toHaveBeenCalledWith({
+            name: 'valid_name',
+            email: 'valid_email',
+            password: 'hashed_password'
+        })
     })
 
 })
