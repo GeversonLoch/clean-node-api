@@ -48,7 +48,7 @@ const makeSut = (): SutTypes => {
     const encrypterStub = makeEncrypter()
     const addAccountRepositoryStub = makeAddAccountRepository()
 
-    // Cria uma instância da classe DbAddAccount, passando o encrypterStub como argumento
+    // Cria uma instância da classe DbAddAccount, passando o encrypterStub e addAccountRepositoryStub como argumento
     const sut = new DbAddAccount(encrypterStub, addAccountRepositoryStub)
 
     return {
@@ -89,14 +89,14 @@ describe('DbAddAccount Usecase', () => {
         jest.spyOn(encrypterStub, 'encrypt').mockReturnValueOnce(Promise.reject(new Error()))
 
         // Chama o método add da instância DbAddAccount
-        const promise = sut.add({
+        const account = sut.add({
             name: 'valid_name',
             email: 'valid_email',
             password: 'valid_password'
         })
 
         // Verifica se o método add lançou uma exceção
-        await expect(promise).rejects.toThrow()
+        await expect(account).rejects.toThrow()
     })
 
     // Teste para garantir que chame AddAccountRepository com os valores corretos
@@ -104,7 +104,7 @@ describe('DbAddAccount Usecase', () => {
 
         const { sut, addAccountRepositoryStub } = makeSut()
 
-        // Cria um espião (spy) no método encrypt do addAccountRepositoryStub
+        // Cria um espião (spy) no método add do addAccountRepositoryStub
         const addSpy = jest.spyOn(addAccountRepositoryStub, 'add')
 
         // Chama o método add da instância DbAddAccount
@@ -114,7 +114,7 @@ describe('DbAddAccount Usecase', () => {
             password: 'valid_password'
         })
 
-        // Verifica se o espião encrypterSpy foi chamado com os valores corretos
+        // Verifica se o espião addSpy foi chamado com os valores corretos
         expect(addSpy).toHaveBeenCalledWith({
             name: 'valid_name',
             email: 'valid_email',
@@ -131,14 +131,35 @@ describe('DbAddAccount Usecase', () => {
         jest.spyOn(addAccountRepositoryStub, 'add').mockReturnValueOnce(Promise.reject(new Error()))
 
         // Chama o método add da instância DbAddAccount
-        const promise = sut.add({
+        const account = sut.add({
             name: 'valid_name',
             email: 'valid_email',
             password: 'valid_password'
         })
 
         // Verifica se o método add lançou uma exceção
-        await expect(promise).rejects.toThrow()
+        await expect(account).rejects.toThrow()
+    })
+
+    // Teste para garantir que retorne uma conta em caso de sucesso
+    test('Should return an account on success', async () => {
+
+        const { sut } = makeSut()
+
+        // Chama o método add da instância DbAddAccount
+        const account = await sut.add({
+            name: 'valid_name',
+            email: 'valid_email',
+            password: 'valid_password'
+        })
+
+        // Verifica se o espião addSpy retorna com os valores corretos de sucesso
+        expect(account).toEqual({
+            id: 'valid_id',
+            name: 'valid_name',
+            email: 'valid_email',
+            password: 'hashed_password'
+        })
     })
 
 })
