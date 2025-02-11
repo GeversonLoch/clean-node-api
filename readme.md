@@ -9,6 +9,8 @@ NodeJS version used: `16.14.2`
     $ npm i -D lint-staged
     $ npm i -D jest @types/jest ts-jest
     $ npm i @types/validator validator
+    $ npm i bcrypt
+    $ npm i @types/bcrypt
 
 ## Run
 The `test` script runs the Jest test runner in watch mode, which means that Jest will automatically re-run the tests whenever a file changes. This is a useful feature during development, as it allows developers to quickly iterate on their code and see the results of their changes.
