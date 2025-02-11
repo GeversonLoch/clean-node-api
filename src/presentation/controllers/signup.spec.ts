@@ -141,8 +141,8 @@ describe('SignUp Controller', () => {
 
     const { sut, emailValidatorStub } = makeSut()
 
-    /* Mockar manualmente o validator com o jest, para nesse caso retornar falso!
-    Isso porque é uma boa pratica que Stub's retornem true por padrão nos demais testes! */
+    /* Mockar manualmente o EmailValidator com o jest para, nesse caso, retornar false!
+       Isso porque é uma boa prática que os stubs retornem true por padrão nos demais testes! */
     jest.spyOn(emailValidatorStub, 'isValid').mockReturnValueOnce(false)
 
     const httpRequest = {
@@ -159,7 +159,7 @@ describe('SignUp Controller', () => {
   })
 
   // Deve chamar o EmailValidator com o e-mail correto.
-  test('Should call EmailValidator with corret email', async () => {
+  test('Should call EmailValidator with correct email', async () => {
     const { sut, emailValidatorStub } = makeSut()
 
     const isValidSpy = jest.spyOn(emailValidatorStub, 'isValid')
@@ -167,7 +167,7 @@ describe('SignUp Controller', () => {
     const httpRequest = {
       body: {
         name: 'any_name',
-        email: 'any_email@email.com', // Garantir que o e-mail que está sendo passado para o EmailValidator é o da propriedade email do body.
+        email: 'any_email@email.com', // Garantir que o e-mail passado para o EmailValidator é o da propriedade email do body.
         password: 'any_password',
         passwordConfirmation: 'any_password'
       }
@@ -198,7 +198,7 @@ describe('SignUp Controller', () => {
   })
 
   // Deve chamar AddAccount com valores corretos.
-  test('Should call AddAccount with corret values', async () => {
+  test('Should call AddAccount with correct values', async () => {
     const { sut, addAccountStub } = makeSut()
 
     // Espionar o método add do AddAccountStub para saber se ele foi chamado com os valores corretos.

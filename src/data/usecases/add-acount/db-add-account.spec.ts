@@ -7,14 +7,14 @@ import {
 } from './db-add-account-protocols'
 
 interface SutTypes {
-    sut: DbAddAccount,
+    sut: DbAddAccount
     encrypterStub: IEncrypter
     addAccountRepositoryStub: IAddAccountRepository
 }
 
 const makeEncrypter = (): IEncrypter => {
 
-    // Classe fictícia EncrypterStub usada para simular o comportamento da classe Encrypter real
+    // Classe fictícia EncrypterStub usada para simular o comportamento da classe real Encrypter
     class EncrypterStub {
 
         // Método que simula a criptografia e sempre retorna 'hashed_password'
@@ -27,10 +27,10 @@ const makeEncrypter = (): IEncrypter => {
 
 const makeAddAccountRepository = (): IAddAccountRepository => {
 
-    // Classe fictícia AddAccountRepositoryStub usada para simular o comportamento da classe AddAccountRepository real
+    // Classe fictícia AddAccountRepositoryStub usada para simular o comportamento da classe real AddAccountRepository
     class AddAccountRepositoryStub {
 
-        // Simula o retorno do método add e sempre retorna dados mock
+        // Simula o retorno do método add e sempre retorna uma conta mock
         async add(account: IAddAccountModel): Promise<IAccountModel> {
             const fakeAccount = {
                 id: 'valid_id',
@@ -48,7 +48,7 @@ const makeSut = (): SutTypes => {
     const encrypterStub = makeEncrypter()
     const addAccountRepositoryStub = makeAddAccountRepository()
 
-    // Cria uma instância da classe DbAddAccount, passando o encrypterStub e addAccountRepositoryStub como argumento
+    // Cria uma instância da classe DbAddAccount, injetando encrypterStub e addAccountRepositoryStub como dependências
     const sut = new DbAddAccount(encrypterStub, addAccountRepositoryStub)
 
     return {
@@ -58,11 +58,11 @@ const makeSut = (): SutTypes => {
     }
 }
 
-// Descreve os testes para a classe DbAddAccount Usecase
+// Descreve os testes para a use case DbAddAccount
 describe('DbAddAccount Usecase', () => {
 
-    // Teste para garantir que o método Encrypter seja chamado com a senha correta
-    test('Should call Encripter with correct password', async () => {
+    // Teste para garantir que o método encrypt do Encrypter seja chamado com a senha correta
+    test('Should call Encrypter with correct password', async () => {
 
         const { sut, encrypterStub } = makeSut()
 
@@ -76,30 +76,30 @@ describe('DbAddAccount Usecase', () => {
             password: 'valid_password'
         })
 
-        // Verifica se o espião encrypterSpy foi chamado com a senha correta ('valid_password')
+        // Verifica se o espião encrypterSpy foi chamado com a senha 'valid_password'
         expect(encrypterSpy).toHaveBeenCalledWith('valid_password')
     })
 
-    // Teste para garantir que o erro seja tratado na controller
-    test('Should throw if Encripter throws', async () => {
+    // Teste para garantir que o DbAddAccount repassa a exceção caso o Encrypter lance um erro
+    test('Should throw if Encrypter throws', async () => {
 
         const { sut, encrypterStub } = makeSut()
 
         // Simula que o método 'encrypt' lance um erro
         jest.spyOn(encrypterStub, 'encrypt').mockReturnValueOnce(Promise.reject(new Error()))
 
-        // Chama o método add da instância DbAddAccount
-        const account = sut.add({
+        // Chama o método add da instância DbAddAccount e armazena a promise
+        const accountPromise = sut.add({
             name: 'valid_name',
             email: 'valid_email',
             password: 'valid_password'
         })
 
-        // Verifica se o método add lançou uma exceção
-        await expect(account).rejects.toThrow()
+        // Verifica se o método add repassa a exceção lançada pelo Encrypter
+        await expect(accountPromise).rejects.toThrow()
     })
 
-    // Teste para garantir que chame AddAccountRepository com os valores corretos
+    // Teste para garantir que o AddAccountRepository seja chamado com os valores corretos
     test('Should call AddAccountRepository with correct values', async () => {
 
         const { sut, addAccountRepositoryStub } = makeSut()
@@ -114,7 +114,8 @@ describe('DbAddAccount Usecase', () => {
             password: 'valid_password'
         })
 
-        // Verifica se o espião addSpy foi chamado com os valores corretos
+        // Verifica se o espião addSpy foi chamado com os valores esperados,
+        // sendo que a senha já deve estar criptografada ('hashed_password')
         expect(addSpy).toHaveBeenCalledWith({
             name: 'valid_name',
             email: 'valid_email',
@@ -122,7 +123,7 @@ describe('DbAddAccount Usecase', () => {
         })
     })
 
-    // Teste para garantir que o erro seja tratado na controller
+    // Teste para garantir que o DbAddAccount repassa a exceção caso o AddAccountRepository lance um erro
     test('Should throw if AddAccountRepository throws', async () => {
 
         const { sut, addAccountRepositoryStub } = makeSut()
@@ -130,30 +131,30 @@ describe('DbAddAccount Usecase', () => {
         // Simula que o método 'add' lance um erro
         jest.spyOn(addAccountRepositoryStub, 'add').mockReturnValueOnce(Promise.reject(new Error()))
 
-        // Chama o método add da instância DbAddAccount
-        const account = sut.add({
+        // Chama o método add da instância DbAddAccount e armazena a promise
+        const accountPromise = sut.add({
             name: 'valid_name',
             email: 'valid_email',
             password: 'valid_password'
         })
 
-        // Verifica se o método add lançou uma exceção
-        await expect(account).rejects.toThrow()
+        // Verifica se o método add repassa a exceção lançada pelo AddAccountRepository
+        await expect(accountPromise).rejects.toThrow()
     })
 
-    // Teste para garantir que retorne uma conta em caso de sucesso
+    // Teste para garantir que seja retornada uma conta em caso de sucesso
     test('Should return an account on success', async () => {
 
         const { sut } = makeSut()
 
-        // Chama o método add da instância DbAddAccount
+        // Chama o método add da instância DbAddAccount e armazena o resultado
         const account = await sut.add({
             name: 'valid_name',
             email: 'valid_email',
             password: 'valid_password'
         })
 
-        // Verifica se o espião addSpy retorna com os valores corretos de sucesso
+        // Verifica se o método add retorna a conta esperada
         expect(account).toEqual({
             id: 'valid_id',
             name: 'valid_name',
