@@ -37,6 +37,7 @@ https://medium.com/contexto-delimitado/o-princ%C3%ADpio-da-invers%C3%A3o-de-depe
 ## O Princípio Aberto/Fechado (Open/Closed Principle — OCP)
 Indica que entidades de software (classes, módulos, funções, etc.) devem ser abertas para extensão, mas fechadas para modificação. Isso permite que o comportamento do software seja estendido sem alterar o código fonte existente, seguindo os princípios da programação orientada a objetos.
 https://medium.com/contexto-delimitado/o-princípio-aberto-fechado-9341b96f060f
+https://www.youtube.com/watch?v=t4pi3wYMDjQ
 
 ## Referencias
 https://herbertograca.com/2017/08/03/layered-architecture
