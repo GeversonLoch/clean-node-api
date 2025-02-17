@@ -6,8 +6,9 @@ A biblioteca "bcrypt" foi mockada de forma que o método 'hash' retorne sempre '
 Isso significa que, ao chamar o método 'encrypt' do BcryptAdapter (que internamente utiliza bcrypt.hash),
 o resultado será sempre 'any_hashed_value', simulando o retorno de um hash válido.
 
-Caso seja necessário testar outros cenários (por exemplo, simular um hash inválido), podemos sobrescrever
-o comportamento do método 'hash' diretamente nos testes, uma vez que, com o mock, bcrypt.hash sempre retorna 'any_hashed_value'.
+Caso seja necessário testar outros cenários (por exemplo, simular que o método lança uma exceção),
+podemos sobrescrever o comportamento do método 'hash' diretamente nos testes, já que o mock faz com que
+bcrypt.hash retorne sempre 'any_hashed_value' por padrão.
 */
 jest.mock('bcrypt', () => ({
   async hash(): Promise<string> {
@@ -39,7 +40,7 @@ describe('Bcrypt Adapter', () => {
     expect(hashedValue).toBe('any_hashed_value')
   })
 
-  // Garantir que a exceção do bcrypt seja repassada do BcryptAdapter para quem chamou esse componente
+  // Garante que a exceção lançada pelo bcrypt seja repassada pelo BcryptAdapter para o chamador
   test('Should throw if bcrypt throws', async () => {
     const sut = makeSut()
     const hashSpy = jest.spyOn(bcrypt, 'hash') as jest.Mock
