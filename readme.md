@@ -33,6 +33,13 @@ npm i -D lint-staged
 ### 🧪 Testes com Jest
 ```sh
 npm i -D jest @types/jest ts-jest
+npm i -D @shelf/jest-mongodb
+```
+
+### 🎲 Base de dados
+```sh
+npm i mongodb
+npm i -D @types/mongodb
 ```
 
 ### 🔐 Validação e Criptografia

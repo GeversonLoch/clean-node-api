@@ -97,7 +97,7 @@ export default {
   // notifyMode: "failure-change",
 
   // Uma predefinição que é usada como base para a configuração do Jest
-  // preset: undefined,
+  preset: '@shelf/jest-mongodb',
 
   // Executar testes de um ou mais projetos
   // projects: undefined,
