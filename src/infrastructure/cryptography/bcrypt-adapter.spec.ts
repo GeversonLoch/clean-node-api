@@ -39,4 +39,13 @@ describe('Bcrypt Adapter', () => {
     expect(hashedValue).toBe('any_hashed_value')
   })
 
+  // Garantir que a exceção do bcrypt seja repassada do BcryptAdapter para quem chamou esse componente
+  test('Should throw if bcrypt throws', async () => {
+    const sut = makeSut()
+    const hashSpy = jest.spyOn(bcrypt, 'hash') as jest.Mock
+    hashSpy.mockRejectedValueOnce(new Error())
+    const promise = sut.encrypt('any_value')
+    await expect(promise).rejects.toThrow()
+  })
+
 })
