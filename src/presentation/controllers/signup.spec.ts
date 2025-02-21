@@ -1,9 +1,10 @@
 import { MissingParamError } from '../errors/missing-param-error'
 import { InvalidParamError } from '../errors/invalid-param-error'
 import { InternalServerError } from '../errors/internal-server-error'
-import { IEmailValidator } from '../protocols/email-validator'
-import { IAddAccountModel, IAddAccount } from '../../domain/usecases/add-account'
-import { IAccountModel } from '../../domain/models/account'
+import { IEmailValidator } from '../protocols/email-validator.interface'
+import { IAddAccount } from '../../domain/usecases/add-account.interface'
+import { IAddAccountModel } from '../../domain/models/add-account-model.interface'
+import { IAccountModel } from '../../domain/models/account-model.interface'
 import { SignUpController } from './signup'
 
 interface ISutTypes {

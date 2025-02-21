@@ -1,10 +1,9 @@
-import {
-    IAddAccountModel,
-    IAddAccount,
-    IAccountModel,
-    IEncrypter,
-    IAddAccountRepository,
-} from './db-add-account-protocols'
+import { IAccountModel } from "../../../domain/models/account-model.interface";
+import { IAddAccountModel } from "../../../domain/models/add-account-model.interface";
+import { IAddAccount } from "../../../domain/usecases/add-account.interface";
+import { IAddAccountRepository } from "../../protocols/add-account-repository.interface";
+import { IEncrypter } from "../../protocols/encrypter.interface";
+
 
 export class DbAddAccount implements IAddAccount {
 
