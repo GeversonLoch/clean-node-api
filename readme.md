@@ -30,6 +30,13 @@ npm i -D husky
 npm i -D lint-staged
 ```
 
+### 🧩 API
+```sh
+npm i -D express
+npm i -D @types/express
+npm i -D sucrase
+```
+
 ### 🧪 Testes com Jest
 ```sh
 npm i -D jest @types/jest ts-jest
