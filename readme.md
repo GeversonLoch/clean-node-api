@@ -35,6 +35,8 @@ npm i -D lint-staged
 npm i -D express
 npm i -D @types/express
 npm i -D sucrase
+npm i -D supertest
+npm i -D @types/supertest
 ```
 
 ### 🧪 Testes com Jest
