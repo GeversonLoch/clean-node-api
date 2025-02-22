@@ -1,4 +1,4 @@
-import { Collection, WithId, Document } from 'mongodb'
+import { Collection, WithId, Document } from "mongodb"
 
 export interface IMongoHelper {
   connect(): Promise<void>

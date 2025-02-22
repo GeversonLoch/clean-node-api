@@ -1,10 +1,6 @@
-import { DbAddAccount } from "./db-add-account"
-import {
-    IEncrypter,
-    IAddAccountModel,
-    IAccountModel,
-    IAddAccountRepository
-} from './db-add-account-protocols'
+import { DbAddAccount } from "@data/usecases"
+import { IAddAccountRepository, IEncrypter } from "@data/protocols"
+import { IAccountModel, IAddAccountModel } from "@domain/models"
 
 interface SutTypes {
     sut: DbAddAccount
@@ -37,7 +33,7 @@ const makeAddAccountRepository = (): IAddAccountRepository => {
                 name: 'valid_name',
                 email: 'valid_email',
                 password: 'hashed_password'
-            };
+            }
             return new Promise(resolve => resolve(fakeAccount))
         }
     }

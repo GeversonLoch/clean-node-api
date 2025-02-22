@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt'
-import { BcryptAdapter } from './bcrypt-adapter'
+import bcrypt from "bcrypt"
+import { BcryptAdapter } from "@infrastructure/cryptography"
 
 /*
 A biblioteca "bcrypt" foi mockada de forma que o método 'hash' retorne sempre 'any_hashed_value'.

@@ -1,5 +1,4 @@
-import { MongoHelper } from '../helpers/mongo-helper'
-import { AccountMongoRepository } from './account'
+import { AccountMongoRepository, MongoHelper } from "@infrastructure/db"
 
 let mongoHelper: MongoHelper
 

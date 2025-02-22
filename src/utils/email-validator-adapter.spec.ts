@@ -1,5 +1,5 @@
-import { EmailValidatorAdapter } from './email-validator-adapter'
-import validator from 'validator'
+import { EmailValidatorAdapter } from "./email-validator-adapter"
+import validator from "validator"
 
 /*
 A biblioteca "validator" é mockada de forma que o método isEmail retorne sempre true.

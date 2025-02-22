@@ -1,7 +1,6 @@
-import { IAddAccountRepository } from '../../../../data/protocols/add-account-repository.interface'
-import { IAccountModel } from "../../../../domain/models/account-model.interface"
-import { IAddAccountModel } from '../../../../domain/models/add-account-model.interface'
-import { IMongoHelper } from '../helpers/mongo-helper.interface'
+import { IAddAccountRepository } from "@data/protocols"
+import { IAccountModel, IAddAccountModel } from "@domain/models"
+import { IMongoHelper } from "@infrastructure/db"
 
 export class AccountMongoRepository implements IAddAccountRepository {
 

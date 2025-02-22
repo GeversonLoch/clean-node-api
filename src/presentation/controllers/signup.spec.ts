@@ -1,11 +1,8 @@
-import { MissingParamError } from '../errors/missing-param-error'
-import { InvalidParamError } from '../errors/invalid-param-error'
-import { InternalServerError } from '../errors/internal-server-error'
-import { IEmailValidator } from '../protocols/email-validator.interface'
-import { IAddAccount } from '../../domain/usecases/add-account.interface'
-import { IAddAccountModel } from '../../domain/models/add-account-model.interface'
-import { IAccountModel } from '../../domain/models/account-model.interface'
-import { SignUpController } from './signup'
+import { SignUpController } from "@presentation/controllers"
+import { IAccountModel, IAddAccountModel } from "@domain/models"
+import { IAddAccount } from "@domain/usecases"
+import { InternalServerError, InvalidParamError, MissingParamError } from "@presentation/errors"
+import { IEmailValidator } from "@presentation/protocols"
 
 interface ISutTypes {
   sut: SignUpController
@@ -31,7 +28,7 @@ const makeAddAccount = (): IAddAccount => {
         email: 'valid_email@email.com',
         password: 'valid_password'
       }
-      return Promise.resolve(fakeAccount);
+      return Promise.resolve(fakeAccount)
     }
   }
   return new AddAccountStub()

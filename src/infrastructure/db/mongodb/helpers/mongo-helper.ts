@@ -1,5 +1,5 @@
-import { IMongoHelper } from './mongo-helper.interface'
-import { MongoClient, Db, Collection, WithId, Document } from 'mongodb'
+import { IMongoHelper } from "@infrastructure/db"
+import { MongoClient, Db, Collection, WithId, Document } from "mongodb"
 
 export class MongoHelper implements IMongoHelper {
   private client: MongoClient

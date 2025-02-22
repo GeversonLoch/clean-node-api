@@ -9,4 +9,4 @@ module.exports = {
         },
         autoStart: true, // Garante que o MongoDB em memória seja iniciado automaticamente antes dos testes
     },
-};
+}

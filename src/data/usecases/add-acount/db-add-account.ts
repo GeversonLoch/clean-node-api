@@ -1,14 +1,11 @@
-import { IAccountModel } from "../../../domain/models/account-model.interface";
-import { IAddAccountModel } from "../../../domain/models/add-account-model.interface";
-import { IAddAccount } from "../../../domain/usecases/add-account.interface";
-import { IAddAccountRepository } from "../../protocols/add-account-repository.interface";
-import { IEncrypter } from "../../protocols/encrypter.interface";
-
+import { IAddAccountRepository, IEncrypter } from "@data/protocols"
+import { IAccountModel, IAddAccountModel } from "@domain/models"
+import { IAddAccount } from "@domain/usecases"
 
 export class DbAddAccount implements IAddAccount {
 
-    private readonly encrypter: IEncrypter;
-    private readonly addAccountRepository: IAddAccountRepository;
+    private readonly encrypter: IEncrypter
+    private readonly addAccountRepository: IAddAccountRepository
 
     constructor (encrypter: IEncrypter, addAccountRepository: IAddAccountRepository) {
         this.encrypter = encrypter
