@@ -33,6 +33,7 @@
     "husky": "^8.0.1",
     "jest": "^28.1.2",
     "lint-staged": "^13.0.0",
+    "module-alias": "^2.2.3",
     "sucrase": "^3.35.0",
     "supertest": "^7.0.0",
     "ts-jest": "^28.0.5",
@@ -45,5 +46,13 @@
     "express": "^4.21.2",
     "mongodb": "^6.13.0",
     "validator": "^13.11.0"
+  },
+  "_moduleAliases": {
+    "@domain": "src/domain",
+    "@data": "src/data",
+    "@infrastructure": "src/infrastructure",
+    "@presentation": "src/presentation",
+    "@utils": "src/utils",
+    "@main": "src/main"
   }
 }
