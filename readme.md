@@ -34,7 +34,12 @@ npm i -D lint-staged
 ```sh
 npm i -D express
 npm i -D @types/express
+```
+
+### 🛠️ Ferramentas de Desenvolvimento
+```sh
 npm i -D sucrase
+npm i -D module-alias
 npm i -D supertest
 npm i -D @types/supertest
 ```
