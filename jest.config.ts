@@ -90,7 +90,8 @@ export default {
     '^@data/(.*)$': '<rootDir>/src/data/$1',
     '^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
     '^@presentation/(.*)$': '<rootDir>/src/presentation/$1',
-    '^@utils/(.*)$': '<rootDir>/src/utils/$1'
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@main/(.*)$': '<rootDir>/src/main/$1',
   },
 
   // Uma matriz de strings de padrão regexp, combinadas com todos os caminhos do módulo antes de serem consideradas 'visíveis' para o carregador do módulo

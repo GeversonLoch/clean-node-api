@@ -12,6 +12,7 @@
       "@infrastructure/*": ["infrastructure/*"],
       "@presentation/*": ["presentation/*"],
       "@utils/*": ["utils/*"],
+      "@main/*": ["main/*"],
     },
   }
 }
