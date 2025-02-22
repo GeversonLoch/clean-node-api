@@ -21,9 +21,9 @@ export default {
   coverageDirectory: 'coverage',
 
   // Uma matriz de strings de padrão regexp usadas para pular a coleta de cobertura
-  // coveragePathIgnorePatterns: [
-  //   "\\\\node_modules\\\\"
-  // ],
+  coveragePathIgnorePatterns: [
+    "index\\.ts$" // Ignora esses arquivos nos relatórios de coverage
+  ],
 
   // Indica qual provedor deve ser usado para instrumentar o código para cobertura
   // coverageProvider: 'v8'
@@ -85,7 +85,13 @@ export default {
   // ],
 
   // Um mapa de expressões regulares para nomes de módulos ou matrizes de nomes de módulos que permitem stub out recursos com um único módulo
-  // moduleNameMapper: {},
+  moduleNameMapper: {
+    '^@domain/(.*)$': '<rootDir>/src/domain/$1',
+    '^@data/(.*)$': '<rootDir>/src/data/$1',
+    '^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
+    '^@presentation/(.*)$': '<rootDir>/src/presentation/$1',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1'
+  },
 
   // Uma matriz de strings de padrão regexp, combinadas com todos os caminhos do módulo antes de serem consideradas 'visíveis' para o carregador do módulo
   // modulePathIgnorePatterns: [],
@@ -154,9 +160,9 @@ export default {
   // ],
 
   // Uma matriz de strings de padrão regexp que correspondem a todos os caminhos de teste, os testes correspondentes são ignorados
-  // testPathIgnorePatterns: [
-  //   "\\\\node_modules\\\\"
-  // ],
+  testPathIgnorePatterns: [
+    "index\\.ts$" // Ignora qualquer arquivo que termine com "index.ts"
+  ],
 
   // O padrão regexp ou matriz de padrões que Jest usa para detectar arquivos de teste
   // testRegex: [],
