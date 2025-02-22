@@ -3,7 +3,7 @@
 * Verifica se o middleware está corretamente analisando o corpo das requisições como JSON.
 */
 import request from "supertest"
-import app from "../config/app"
+import app from "@main/config/app"
 
 describe('Body Parser Middleware', () => {
     // Garante que o body da requisição é convertido para JSON

@@ -3,7 +3,7 @@
 * Verificando se o middleware define corretamente os cabeçalhos.
 */
 import request from "supertest"
-import app from "../config/app"
+import app from "@main/config/app"
 
 describe('CORS Middleware', () => {
     // Garante que o CORS esteja habilitado com os cabeçalhos corretos
