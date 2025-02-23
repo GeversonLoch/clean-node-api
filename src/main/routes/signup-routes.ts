@@ -1,5 +1,5 @@
 /**
-* Arquivo que define as rotas relacionadas ao cadastro de usuários (signup).
+* Define as rotas relacionadas ao cadastro de usuários.
 */
 import { Router } from "express";
 
