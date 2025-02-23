@@ -44,6 +44,7 @@
     "@types/validator": "^13.11.7",
     "bcrypt": "^5.1.1",
     "express": "^4.21.2",
+    "fast-glob": "^3.3.3",
     "mongodb": "^6.13.0",
     "validator": "^13.11.0"
   },
