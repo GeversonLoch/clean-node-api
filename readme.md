@@ -32,8 +32,14 @@ npm i -D lint-staged
 
 ### 🧩 API
 ```sh
-npm i -D express
+npm i express
 npm i -D @types/express
+```
+
+### 🔍 Fast-Glob
+Utilizado para busca dinâmica de arquivos de rotas, facilitando o carregamento automático das mesmas.
+```sh
+npm i fast-glob
 ```
 
 ### 🛠️ Ferramentas de Desenvolvimento
