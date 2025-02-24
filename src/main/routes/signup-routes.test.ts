@@ -4,6 +4,23 @@
 */
 import request from "supertest"
 import app from "@main/config/app"
+import { MongoHelper } from "@infrastructure/db"
+
+let mongoHelper: MongoHelper
+
+beforeAll(async () => {
+  mongoHelper = new MongoHelper(process.env.MONGO_URL, 'jest')
+  await mongoHelper.connect()
+})
+
+beforeEach(async () => {
+  const accountCollection = mongoHelper.getCollection('accounts')
+  await accountCollection.deleteMany({})
+})
+
+afterAll(async () => {
+  await mongoHelper.disconnect()
+})
 
 describe('Signup Routes', () => {
     // Garante que a rota POST '/api/signup' retorna status 200 em caso de sucesso
