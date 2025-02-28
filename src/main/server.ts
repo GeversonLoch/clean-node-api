@@ -9,5 +9,13 @@ corretamente em tempo de execução em DEV pelo sucrase-node. */
 import "module-alias/register"
 
 import app from "@main/config/app"
+import env from "@main/config/env"
+import { MongoHelper } from "@infrastructure/db"
 
-app.listen(5050, () => console.info('Server running at http://localhost:5050'))
+let mongoHelper = new MongoHelper(env.mongoUrl, env.dbName)
+
+mongoHelper.connect()
+.then(() => {
+    app.listen(env.port, () => console.info(`Server running at http://localhost:${env.port}`))
+})
+.catch(console.error)
