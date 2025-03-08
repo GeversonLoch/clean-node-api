@@ -43,6 +43,7 @@
   "dependencies": {
     "@types/validator": "^13.11.7",
     "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "fast-glob": "^3.3.3",
     "mongodb": "^6.13.0",

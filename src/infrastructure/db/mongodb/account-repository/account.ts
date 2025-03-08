@@ -6,20 +6,20 @@
 
 import { IAddAccountRepository } from "@data/protocols"
 import { IAccountModel, IAddAccountModel } from "@domain/models"
-import { IMongoHelper } from "@infrastructure/db"
+import { IMongoDBAdapter } from "@infrastructure/db"
 
 export class AccountMongoRepository implements IAddAccountRepository {
 
-    constructor(private readonly mongoHelper: IMongoHelper) {}
+    constructor(private readonly mongoDBAdapter: IMongoDBAdapter) {}
 
     /* Adiciona uma nova conta na coleção 'accounts' do MongoDB.
     Este método recebe os dados da conta (IAddAccountModel), insere no banco,
     recupera o documento recém-criado e o converte para o formato IAccountModel,
     incluindo a conversão do _id do MongoDB para o campo id. */
     async add(account: IAddAccountModel): Promise<IAccountModel> {
-        const accountCollection = this.mongoHelper.getCollection('accounts')
+        const accountCollection = this.mongoDBAdapter.getCollection('accounts')
         const result = await accountCollection.insertOne(account)
         const newAccount = await accountCollection.findOne({ _id: result.insertedId })
-        return this.mongoHelper.map(newAccount)
+        return this.mongoDBAdapter.map(newAccount)
     }
 }

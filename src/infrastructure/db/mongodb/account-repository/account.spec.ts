@@ -5,29 +5,27 @@
 * de contas são validadas para assegurar a correta persistência dos dados.
 */
 
-import { AccountMongoRepository, MongoHelper } from "@infrastructure/db"
-
-let mongoHelper: MongoHelper
+import { AccountMongoRepository } from "@infrastructure/db"
+import { mongoDBAdapter } from "@main/config/db-connection"
 
 beforeAll(async () => {
-  mongoHelper = new MongoHelper(process.env.MONGO_URL, 'jest')
-  await mongoHelper.connect()
+  await mongoDBAdapter.connect()
 })
 
 beforeEach(async () => {
-  const accountCollection = mongoHelper.getCollection('accounts')
+  const accountCollection = mongoDBAdapter.getCollection('accounts')
   await accountCollection.deleteMany({})
 })
 
 afterAll(async () => {
-  await mongoHelper.disconnect()
+  await mongoDBAdapter.disconnect()
 })
 
 describe("Account Mongo Repository", () => {
   /* Garante que, ao adicionar uma conta, o método 'add' do repositório retorna um objeto válido,
   com um ID gerado e os dados (nome, email, senha) corretamente persistidos. */
   test("Should return an account on success", async () => {
-    const sut = new AccountMongoRepository(mongoHelper)
+    const sut = new AccountMongoRepository(mongoDBAdapter)
     const account = await sut.add({
       name: "valid_name",
       email: "valid_email@email.com",

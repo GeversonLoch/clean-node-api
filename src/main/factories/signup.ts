@@ -8,9 +8,9 @@
 import { SignUpController } from "@presentation/controllers"
 import { EmailValidatorAdapter } from "@utils/email-validator-adapter"
 import { BcryptAdapter } from "@infrastructure/cryptography"
-import { AccountMongoRepository, MongoHelper } from "@infrastructure/db"
+import { AccountMongoRepository } from "@infrastructure/db"
+import { mongoDBAdapter } from "@main/config/db-connection"
 import { DbAddAccount } from "@data/usecases"
-import env from "@main/config/env"
 
 /*
 * Configuração e criação do SignUpController para compor o caso de uso de adição de conta.
@@ -19,8 +19,7 @@ export const makeSignUpController = (): SignUpController => {
     const salt: number = 12
     const emailValidator = new EmailValidatorAdapter()
     const encrypter = new BcryptAdapter(salt)
-    const mongoHelper = new MongoHelper(env.mongoUrl, env.dbName)
-    const addAccountRepository = new AccountMongoRepository(mongoHelper)
+    const addAccountRepository = new AccountMongoRepository(mongoDBAdapter)
     const addAccount = new DbAddAccount(encrypter, addAccountRepository)
     return new SignUpController(emailValidator, addAccount)
 }

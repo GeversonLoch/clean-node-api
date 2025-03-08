@@ -4,10 +4,8 @@ import { InvalidParamError, MissingParamError } from "@presentation/errors"
 import { badRequest, internalServerError, success } from "@presentation/helpers"
 
 export class SignUpController implements IController {
-
-  private readonly emailValidator: IEmailValidator
   private readonly addAccount: IAddAccount
-
+  private readonly emailValidator: IEmailValidator
   constructor(
     emailValidator: IEmailValidator,
     addAccount: IAddAccount

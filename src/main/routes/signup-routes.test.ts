@@ -4,22 +4,19 @@
 */
 import request from "supertest"
 import app from "@main/config/app"
-import { MongoHelper } from "@infrastructure/db"
-
-let mongoHelper: MongoHelper
+import { mongoDBAdapter } from "@main/config/db-connection"
 
 beforeAll(async () => {
-  mongoHelper = new MongoHelper(process.env.MONGO_URL, 'jest')
-  await mongoHelper.connect()
+  await mongoDBAdapter.connect()
 })
 
 beforeEach(async () => {
-  const accountCollection = mongoHelper.getCollection('accounts')
+  const accountCollection = mongoDBAdapter.getCollection('accounts')
   await accountCollection.deleteMany({})
 })
 
 afterAll(async () => {
-  await mongoHelper.disconnect()
+  await mongoDBAdapter.disconnect()
 })
 
 describe('Signup Routes', () => {

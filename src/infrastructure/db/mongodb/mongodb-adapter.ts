@@ -1,7 +1,7 @@
-import { IMongoHelper } from "@infrastructure/db"
+import { IMongoDBAdapter } from "@infrastructure/db"
 import { MongoClient, Db, Collection, WithId, Document } from "mongodb"
 
-export class MongoHelper implements IMongoHelper {
+export class MongoDBAdapter implements IMongoDBAdapter {
   private client: MongoClient
   private db: Db
 
