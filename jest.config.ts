@@ -15,7 +15,10 @@ export default {
   collectCoverage: true,
 
   // Uma matriz de padrões glob indicando um conjunto de arquivos para os quais as informações de cobertura devem ser coletadas
-  collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
+  collectCoverageFrom: [
+    '<rootDir>/src/**/*.ts',
+    '!<rootDir>/src/main/**',
+  ],
 
   // O diretório onde o Jest deve gerar seus arquivos de cobertura
   coverageDirectory: 'coverage',
