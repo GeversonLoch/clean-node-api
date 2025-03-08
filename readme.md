@@ -21,6 +21,11 @@ npm install
 
 As seguintes bibliotecas são utilizadas no projeto:
 
+### 🌱 Configuração de Ambiente
+```sh
+npm install dotenv
+```
+
 ### 🔧 Configuração de Lint e Formatação
 ```sh
 npm i -D git-commit-msg-linter
