@@ -4,6 +4,7 @@ import { MongoClient, Db, Collection, WithId, Document } from "mongodb"
 export class MongoDBAdapter implements IMongoDBAdapter {
   private client: MongoClient
   private db: Db
+  private isConnected = false
 
   constructor(
     private readonly url: string,
@@ -13,6 +14,7 @@ export class MongoDBAdapter implements IMongoDBAdapter {
   public async connect(): Promise<void> {
     if (!this.client) {
       this.client = new MongoClient(this.url)
+      this.registerConnectionEvents()
       await this.client.connect()
       this.db = this.client.db(this.dbName)
     }
@@ -26,9 +28,18 @@ export class MongoDBAdapter implements IMongoDBAdapter {
     }
   }
 
-  public getCollection<T extends Document>(name: string): Collection<T> {
-    if (!this.db) {
-      throw new Error("MongoDB is not connected.")
+  private registerConnectionEvents(): void {
+    this.client.on('connect', () => {
+      this.isConnected = true
+    })
+    this.client.on('disconnect', () => {
+      this.isConnected = false
+    })
+  }
+
+  public async getCollection<T extends Document>(name: string): Promise<Collection<T>> {
+    if (!this.isConnected) {
+      await this.connect()
     }
     return this.db.collection<T>(name)
   }

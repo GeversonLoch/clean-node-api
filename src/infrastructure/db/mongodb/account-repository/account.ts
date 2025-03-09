@@ -17,7 +17,7 @@ export class AccountMongoRepository implements IAddAccountRepository {
     recupera o documento recém-criado e o converte para o formato IAccountModel,
     incluindo a conversão do _id do MongoDB para o campo id. */
     async add(account: IAddAccountModel): Promise<IAccountModel> {
-        const accountCollection = this.mongoDBAdapter.getCollection('accounts')
+        const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
         const result = await accountCollection.insertOne(account)
         const newAccount = await accountCollection.findOne({ _id: result.insertedId })
         return this.mongoDBAdapter.map(newAccount)

@@ -11,7 +11,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-  const accountCollection = mongoDBAdapter.getCollection('accounts')
+  const accountCollection = await mongoDBAdapter.getCollection('accounts')
   await accountCollection.deleteMany({})
 })
 
