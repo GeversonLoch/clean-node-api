@@ -1,20 +1,20 @@
-import { mongoDBAdapter } from "@main/config/db-connection"
+import { mongoDBAdapter as sut } from "@main/config/db-connection"
 
 beforeAll(async () => {
-    await mongoDBAdapter.connect()
+    await sut.connect()
 })
 
 afterAll(async () => {
-  await mongoDBAdapter.disconnect()
+  await sut.disconnect()
 })
 
 describe('MongoDB Adapter', () => {
     // Garante que a conexão com o MongoDB seja reestabelecida após uma desconexão
     test('Should reconnect if MongoDB is down', async () => {
-        let accountCollection = await mongoDBAdapter.getCollection('accounts')
+        let accountCollection = await sut.getCollection('accounts')
         expect(accountCollection).toBeTruthy()
-        await mongoDBAdapter.disconnect()
-        accountCollection = await mongoDBAdapter.getCollection('accounts')
+        await sut.disconnect()
+        accountCollection = await sut.getCollection('accounts')
         expect(accountCollection).toBeTruthy()
     })
 })
