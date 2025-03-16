@@ -11,15 +11,18 @@ import { BcryptAdapter } from "@infrastructure/cryptography"
 import { AccountMongoRepository } from "@infrastructure/db"
 import { mongoDBAdapter } from "@main/config/db-connection"
 import { DbAddAccount } from "@data/usecases"
+import { IController } from "@presentation/protocols"
+import { LogControllerDecorator } from "@main/decorators/log-controller-decorator"
 
 /*
 * Configuração e criação do SignUpController para compor o caso de uso de adição de conta.
 */
-export const makeSignUpController = (): SignUpController => {
+export const makeSignUpController = (): IController => {
     const salt: number = 12
     const emailValidator = new EmailValidatorAdapter()
     const encrypter = new BcryptAdapter(salt)
     const addAccountRepository = new AccountMongoRepository(mongoDBAdapter)
     const addAccount = new DbAddAccount(encrypter, addAccountRepository)
-    return new SignUpController(emailValidator, addAccount)
+    const signUpController = new SignUpController(emailValidator, addAccount)
+    return new LogControllerDecorator(signUpController)
 }
