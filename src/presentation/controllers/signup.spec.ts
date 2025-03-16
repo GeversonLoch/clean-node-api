@@ -179,7 +179,7 @@ describe('SignUp Controller', () => {
     const { sut, emailValidatorStub } = makeSut()
 
     jest.spyOn(emailValidatorStub, 'isValid').mockImplementationOnce(() => {
-      throw new InternalServerError()
+      throw new InternalServerError('internal_server_error')
     })
 
     const httpRequest = {
@@ -192,7 +192,7 @@ describe('SignUp Controller', () => {
     }
     const httpResponse = await sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
-    expect(httpResponse.body).toEqual(new InternalServerError())
+    expect(httpResponse.body).toEqual(new InternalServerError('internal_server_error'))
   })
 
   // Deve chamar AddAccount com valores corretos.
@@ -223,7 +223,7 @@ describe('SignUp Controller', () => {
     const { sut, addAccountStub } = makeSut()
 
     jest.spyOn(addAccountStub, 'add').mockImplementationOnce(() => {
-      throw new InternalServerError()
+      throw new InternalServerError('internal_server_error')
     })
 
     const httpRequest = {
@@ -236,7 +236,7 @@ describe('SignUp Controller', () => {
     }
     const httpResponse = await sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
-    expect(httpResponse.body).toEqual(new InternalServerError())
+    expect(httpResponse.body).toEqual(new InternalServerError('internal_server_error'))
   })
 
   // Deve retornar 200 se dados válidos forem fornecidos.
