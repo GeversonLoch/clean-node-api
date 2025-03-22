@@ -27,6 +27,12 @@ const makeFakeAccount = (): IAccountModel => ({
   password: 'valid_password'
 })
 
+const makeFakeServerError = (): IHttpResponse => {
+  let fakeError = new Error()
+  fakeError.stack = 'any_stack'
+  return internalServerError(fakeError)
+}
+
 const makeEmailValidator = (): IEmailValidator => {
   class EmailValidatorStub implements IEmailValidator {
     isValid (email: string): boolean {
@@ -43,12 +49,6 @@ const makeAddAccount = (): IAddAccount => {
     }
   }
   return new AddAccountStub()
-}
-
-const makeFakeServerError = (): IHttpResponse => {
-  let fakeError = new Error()
-  fakeError.stack = 'any_stack'
-  return internalServerError(fakeError)
 }
 
 // sut: System Under Test
