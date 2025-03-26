@@ -21,12 +21,16 @@ afterAll(async () => {
   await mongoDBAdapter.disconnect()
 })
 
+const makeSut = (): LogMongoRepository => {
+  return new LogMongoRepository(mongoDBAdapter)
+}
+
 describe('Log Mongo Repository', () => {
-    // Garante que, um log de erro seja criado em caso de sucesso
-    test('Should create an error log on success', async () => {
-        const sut = new LogMongoRepository(mongoDBAdapter)
-        await sut.logError('any_error')
-        const count = await errorCollection.countDocuments()
-        expect(count).toBe(1)
-    })
+  // Garante que, um log de erro seja criado em caso de sucesso
+  test('Should create an error log on success', async () => {
+    const sut = makeSut()
+    await sut.logError('any_error')
+    const count = await errorCollection.countDocuments()
+    expect(count).toBe(1)
+  })
 })
