@@ -6,7 +6,17 @@ export const expressRouteAdapter = (controller: IController) => {
         const httpRequest: IHttpRequest = {
             body: req.body
         }
+
         const httpResponse = await controller.handle(httpRequest)
-        res.status(httpResponse.statusCode).json(httpResponse.body)
+
+        if (httpResponse.statusCode >= 400) {
+            const errorMessage =
+                httpResponse.body instanceof Error
+                    ? httpResponse.body.message
+                    : httpResponse.body
+            res.status(httpResponse.statusCode).json({ error: errorMessage })
+        } else {
+            res.status(httpResponse.statusCode).json(httpResponse.body)
+        }
     }
 }
