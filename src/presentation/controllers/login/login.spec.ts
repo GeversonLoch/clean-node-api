@@ -2,10 +2,18 @@ import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
 import { badRequest } from "@presentation/helpers"
 
+// sut: System Under Test
+const makeSut = () => {
+  const sut = new LoginController()
+  return {
+    sut,
+  }
+}
+
 describe('Login Controller', () => {
     // Garante que retorna 400 se nenhum e-mail for fornecido
     test('Should return 400 if no e-mail is provided', async () => {
-        const sut = new LoginController()
+        const { sut } = makeSut()
         const httpRequest = {
             body: {
               name: 'any_name',
@@ -19,7 +27,7 @@ describe('Login Controller', () => {
 
     // Garante que retorna 400 se o password não for fornecido
     test('Should return 400 if no password is provided', async () => {
-        const sut = new LoginController()
+        const { sut } = makeSut()
         const httpRequest = {
             body: {
               name: 'any_name',
