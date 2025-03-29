@@ -68,15 +68,7 @@ describe('Login Controller', () => {
            Isso porque é uma boa prática que os stubs retornem true por padrão nos demais testes! */
         jest.spyOn(emailValidatorStub, 'isValid').mockReturnValueOnce(false)
 
-        const httpRequest = {
-            body: {
-                name: 'any_name',
-                email: 'invalid_email@email.com',
-                password: 'any_password',
-                passwordConfirmation: 'any_password'
-            }
-        }
-        const httpResponse = await sut.handle(httpRequest)
+        const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(badRequest(new InvalidParamError('email')))
     })
 
