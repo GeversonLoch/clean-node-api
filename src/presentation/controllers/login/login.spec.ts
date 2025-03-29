@@ -1,16 +1,22 @@
 import { LoginController } from "@presentation/controllers"
-import { InvalidParamError, MissingParamError } from "@presentation/errors"
-import { badRequest } from "@presentation/helpers"
-import { IEmailValidator, IHttpRequest } from "@presentation/protocols"
+import { InternalServerError, InvalidParamError, MissingParamError } from "@presentation/errors"
+import { badRequest, internalServerError } from "@presentation/helpers"
+import { IEmailValidator, IHttpRequest, IHttpResponse } from "@presentation/protocols"
 
 const makeFakeRequest = (): IHttpRequest => ({
-  body: {
-    name: 'any_name',
-    email: 'any_email@email.com',
-    password: 'any_password',
-    passwordConfirmation: 'any_password'
-  }
+    body: {
+        name: 'any_name',
+        email: 'any_email@email.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password'
+    }
 })
+
+const makeFakeServerError = (): IHttpResponse => {
+  let fakeError = new Error()
+  fakeError.stack = 'any_stack'
+  return internalServerError(fakeError)
+}
 
 const makeEmailValidator = (): IEmailValidator => {
     class EmailValidatorStub implements IEmailValidator {
@@ -81,5 +87,17 @@ describe('Login Controller', () => {
         const httpRequest = makeFakeRequest()
         await sut.handle(httpRequest)
         expect(isValidSpy).toHaveBeenCalledWith(httpRequest.body.email)
+    })
+
+    // Garante que retorne erro 500 se o EmailValidator lançar uma exceção.
+    test('Should return 500 if EmailValidator throws an exception', async () => {
+        const { sut, emailValidatorStub } = makeSut()
+
+        jest.spyOn(emailValidatorStub, 'isValid').mockImplementationOnce(() => {
+            throw new InternalServerError('internal_server_error')
+        })
+
+        const httpResponse = await sut.handle(makeFakeRequest())
+        expect(httpResponse).toEqual(makeFakeServerError())
     })
 })
