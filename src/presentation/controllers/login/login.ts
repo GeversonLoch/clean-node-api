@@ -4,8 +4,8 @@ import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocol
 
 export class LoginController implements IController {
     async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
-        const requiredFields = ['name', 'email', 'password', 'passwordConfirmation']
-        const { name, email, password, passwordConfirmation } = httpRequest.body
+        const requiredFields = ['email', 'password']
+        const { email, password } = httpRequest.body
 
         for (const fild of requiredFields) {
             if (!httpRequest.body[fild]) {
