@@ -4,8 +4,13 @@ import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocol
 
 export class LoginController implements IController {
     async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
-        return new Promise(resolve => resolve(
-            badRequest(new MissingParamError('email'))
-        ))
+        const requiredFields = ['name', 'email', 'password', 'passwordConfirmation']
+        const { name, email, password, passwordConfirmation } = httpRequest.body
+
+        for (const fild of requiredFields) {
+            if (!httpRequest.body[fild]) {
+                return badRequest(new MissingParamError(fild))
+            }
+        }
     }
 }
