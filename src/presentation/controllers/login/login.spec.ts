@@ -1,3 +1,4 @@
+import { IAuthenticator } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { InternalServerError, InvalidParamError, MissingParamError } from "@presentation/errors"
 import { badRequest, internalServerError } from "@presentation/helpers"
@@ -13,9 +14,9 @@ const makeFakeRequest = (): IHttpRequest => ({
 })
 
 const makeFakeServerError = (): IHttpResponse => {
-  let fakeError = new Error()
-  fakeError.stack = 'any_stack'
-  return internalServerError(fakeError)
+    let fakeError = new Error()
+    fakeError.stack = 'any_stack'
+    return internalServerError(fakeError)
 }
 
 const makeEmailValidator = (): IEmailValidator => {
@@ -27,13 +28,24 @@ const makeEmailValidator = (): IEmailValidator => {
     return new EmailValidatorStub()
 }
 
+const makeAuthenticator = () => {
+    class AuthenticatorStub implements IAuthenticator {
+        async auth(email: string, password: string): Promise<string> {
+            return new Promise(resolve => resolve('any_token'))
+        }
+    }
+    return new AuthenticatorStub()
+}
+
 // sut: System Under Test
 const makeSut = () => {
     const emailValidatorStub = makeEmailValidator()
-    const sut = new LoginController(emailValidatorStub)
+    const authenticatorStub = makeAuthenticator()
+    const sut = new LoginController(emailValidatorStub, authenticatorStub)
     return {
         sut,
         emailValidatorStub,
+        authenticatorStub,
     }
 }
 
@@ -99,5 +111,16 @@ describe('Login Controller', () => {
 
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(makeFakeServerError())
+    })
+
+    // Garante que chame o Authenticator com os valores corretos.
+    test('Should call Authenticator with correct values', async () => {
+        const { sut, authenticatorStub } = makeSut()
+
+        const authSpy = jest.spyOn(authenticatorStub, 'auth')
+
+        const request = makeFakeRequest()
+        await sut.handle(request)
+        expect(authSpy).toHaveBeenCalledWith(request.body.email, request.body.password)
     })
 })
