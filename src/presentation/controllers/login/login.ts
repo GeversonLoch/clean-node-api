@@ -1,6 +1,6 @@
 import { IAuthenticator } from "@domain/usecases";
 import { InvalidParamError, MissingParamError } from "@presentation/errors";
-import { badRequest, internalServerError } from "@presentation/helpers";
+import { badRequest, internalServerError, unauthorizedError } from "@presentation/helpers";
 import { IController, IEmailValidator, IHttpRequest, IHttpResponse } from "@presentation/protocols";
 
 export class LoginController implements IController {
@@ -32,7 +32,11 @@ export class LoginController implements IController {
                 return badRequest(new InvalidParamError('email'))
             }
 
-            await this.authenticator.auth(email, password)
+            const accessToken = await this.authenticator.auth(email, password)
+            if (!accessToken) {
+                return unauthorizedError()
+            }
+
         } catch (error) {
             return internalServerError(error)
         }
