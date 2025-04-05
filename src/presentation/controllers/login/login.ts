@@ -1,6 +1,6 @@
 import { IAuthenticator } from "@domain/usecases";
 import { InvalidParamError, MissingParamError } from "@presentation/errors";
-import { badRequest, internalServerError, unauthorizedError } from "@presentation/helpers";
+import { badRequest, internalServerError, success, unauthorizedError } from "@presentation/helpers";
 import { IController, IEmailValidator, IHttpRequest, IHttpResponse } from "@presentation/protocols";
 
 export class LoginController implements IController {
@@ -37,6 +37,9 @@ export class LoginController implements IController {
                 return unauthorizedError()
             }
 
+            return success({
+                token: accessToken,
+            })
         } catch (error) {
             return internalServerError(error)
         }
