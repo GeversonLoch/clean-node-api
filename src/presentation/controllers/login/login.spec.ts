@@ -1,15 +1,13 @@
 import { IAuthenticator } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { InternalServerError, InvalidParamError, MissingParamError } from "@presentation/errors"
-import { badRequest, internalServerError, unauthorizedError } from "@presentation/helpers"
+import { badRequest, internalServerError, success, unauthorizedError } from "@presentation/helpers"
 import { IEmailValidator, IHttpRequest, IHttpResponse } from "@presentation/protocols"
 
 const makeFakeRequest = (): IHttpRequest => ({
     body: {
-        name: 'any_name',
         email: 'any_email@email.com',
         password: 'any_password',
-        passwordConfirmation: 'any_password'
     }
 })
 
@@ -146,5 +144,14 @@ describe('Login Controller', () => {
 
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(makeFakeServerError())
+    })
+
+    // Garante que retorne erro 200 se credenciais validas forem fornecidas.
+    test('Should return 200 if valid credentials are provided', async () => {
+        const { sut } = makeSut()
+        const httpResponse = await sut.handle(makeFakeRequest())
+        expect(httpResponse).toEqual(success({
+            token: 'any_token',
+        }))
     })
 })
