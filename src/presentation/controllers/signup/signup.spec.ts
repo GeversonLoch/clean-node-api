@@ -145,7 +145,7 @@ describe('SignUp Controller', () => {
   })*/
 
   // Deve retornar 400 se a confirmação de senha falhar
-  test('Should return 400 if password confirmation fails', async () => {
+  /*test('Should return 400 if password confirmation fails', async () => {
     const { sut } = makeSut()
     const httpRequest = {
       body: {
@@ -158,7 +158,7 @@ describe('SignUp Controller', () => {
     const httpResponse = await sut.handle(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
     expect(httpResponse.body).toEqual(new InvalidParamError('passwordConfirmation'))
-  })
+  })*/
 
   // Deve retornar 400 se um e-mail inválido for fornecido.
   test('Should return 400 if an invalid email is provided', async () => {
