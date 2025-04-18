@@ -33,4 +33,13 @@ describe('Validation Composite', () => {
         const error = sut.validate({ field: 'any_field' })
         expect(error).toEqual(new MissingParamError('field'))
     })
+
+    // Garrante que retorne o primeiro erro se mais de uma validação falhar
+    test('Should return the first error if more than one validation fails', () => {
+        const { sut, validationStubs } = makeSut()
+        jest.spyOn(validationStubs[0], 'validate').mockReturnValueOnce(new MissingParamError('field1'))
+        jest.spyOn(validationStubs[1], 'validate').mockReturnValueOnce(new MissingParamError('field2'))
+        const error = sut.validate({ field: 'any_field' })
+        expect(error).toEqual(new MissingParamError('field1'))
+    })
 })
