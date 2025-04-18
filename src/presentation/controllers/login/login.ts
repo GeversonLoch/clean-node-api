@@ -1,6 +1,7 @@
-import { IAuthenticator } from "@domain/usecases";
-import { badRequest, internalServerError, IValidation, success, unauthorizedError } from "@presentation/helpers";
-import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols";
+import { IAuthenticator } from "@domain/usecases"
+import { badRequest, internalServerError, success, unauthorizedError } from "@presentation/helpers"
+import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
+import { IValidation } from "@presentation/protocols"
 
 export class LoginController implements IController {
     private readonly authenticator: IAuthenticator

@@ -1,6 +1,7 @@
-import { CompareFieldsValidation, EmailValidation, IValidation, RequiredFieldValidation, ValidationComposite } from "@presentation/helpers"
+import { CompareFieldsValidation, EmailValidation, RequiredFieldValidation, ValidationComposite } from "@presentation/helpers"
 import { makeSignUpValidation } from "./signup-validation"
 import { IEmailValidator } from "@presentation/protocols"
+import { IValidation } from "@presentation/protocols"
 
 jest.mock('@presentation/helpers/validators/validation-composite')
 

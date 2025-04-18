@@ -1,8 +1,9 @@
 import { IAuthenticator } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
-import { badRequest, internalServerError, IValidation, success, unauthorizedError } from "@presentation/helpers"
+import { badRequest, internalServerError, success, unauthorizedError } from "@presentation/helpers"
 import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
+import { IValidation } from "@presentation/protocols"
 
 const makeFakeRequest = (): IHttpRequest => ({
     body: {

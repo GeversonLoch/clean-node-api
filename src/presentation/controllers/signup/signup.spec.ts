@@ -3,7 +3,8 @@ import { IAccountModel, IAddAccountModel } from "@domain/models"
 import { IAddAccount } from "@domain/usecases"
 import { InternalServerError, MissingParamError } from "@presentation/errors"
 import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
-import { success, internalServerError, badRequest, IValidation } from "@presentation/helpers"
+import { success, internalServerError, badRequest } from "@presentation/helpers"
+import { IValidation } from "@presentation/protocols"
 
 interface ISutTypes {
   sut: SignUpController,

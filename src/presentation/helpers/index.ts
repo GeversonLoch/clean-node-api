@@ -1,5 +1,4 @@
 export * from "./http/http-helper"
-export * from "./validators/validation.interface"
 export * from "./validators/validation-composite"
 export * from "./validators/required-field-validation"
 export * from "./validators/compare-fields-validation"

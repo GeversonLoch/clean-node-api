@@ -1,6 +1,7 @@
 import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
 import { IAddAccount } from "@domain/usecases"
-import { badRequest, internalServerError, IValidation, success } from "@presentation/helpers"
+import { badRequest, internalServerError, success } from "@presentation/helpers"
+import { IValidation } from "@presentation/protocols"
 
 export class SignUpController implements IController {
   private readonly addAccount: IAddAccount
