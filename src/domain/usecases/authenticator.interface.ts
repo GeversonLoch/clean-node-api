@@ -1,3 +1,5 @@
+import { IAuthenticatorModel } from "@domain/models";
+
 export interface IAuthenticator {
-    auth(email: string, password: string): Promise<string>
+    auth(authenticator: IAuthenticatorModel): Promise<string>
 }

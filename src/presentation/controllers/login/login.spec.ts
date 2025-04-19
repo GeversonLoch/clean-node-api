@@ -1,3 +1,4 @@
+import { IAuthenticatorModel } from "@domain/models"
 import { IAuthenticator } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
@@ -20,7 +21,7 @@ const makeFakeServerError = (): IHttpResponse => {
 
 const makeAuthenticator = () => {
     class AuthenticatorStub implements IAuthenticator {
-        async auth(email: string, password: string): Promise<string> {
+        async auth(authenticator: IAuthenticatorModel): Promise<string> {
             return new Promise(resolve => resolve('any_token'))
         }
     }
@@ -55,7 +56,10 @@ describe('Login Controller', () => {
         const authSpy = jest.spyOn(authenticatorStub, 'auth')
         const request = makeFakeRequest()
         await sut.handle(request)
-        expect(authSpy).toHaveBeenCalledWith(request.body.email, request.body.password)
+        expect(authSpy).toHaveBeenCalledWith({
+          email: request.body.email,
+          password: request.body.password,
+        })
     })
 
     // Garante que retorne erro 401 se credenciais inválidas forem fornecidas.
