@@ -1,5 +1,5 @@
-import { IAuthenticatorModel } from "@domain/models"
-import { IAuthenticator } from "@domain/usecases"
+import { IAuthenticationModel } from "@domain/models"
+import { IAuthentication } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
 import { badRequest, internalServerError, success, unauthorizedError } from "@presentation/helpers"
@@ -19,13 +19,13 @@ const makeFakeServerError = (): IHttpResponse => {
     return internalServerError(fakeError)
 }
 
-const makeAuthenticator = () => {
-    class AuthenticatorStub implements IAuthenticator {
-        async auth(authenticator: IAuthenticatorModel): Promise<string> {
+const makeAuthentication = () => {
+    class AuthenticationStub implements IAuthentication {
+        async auth(authentication: IAuthenticationModel): Promise<string> {
             return new Promise(resolve => resolve('any_token'))
         }
     }
-    return new AuthenticatorStub()
+    return new AuthenticationStub()
 }
 
 const makeValidation = (): IValidation => {
@@ -39,21 +39,21 @@ const makeValidation = (): IValidation => {
 
 // sut: System Under Test
 const makeSut = () => {
-    const authenticatorStub = makeAuthenticator()
+    const authenticationStub = makeAuthentication()
     const validationStub = makeValidation()
-    const sut = new LoginController(authenticatorStub, validationStub)
+    const sut = new LoginController(authenticationStub, validationStub)
     return {
         sut,
-        authenticatorStub,
+        authenticationStub,
         validationStub,
     }
 }
 
 describe('Login Controller', () => {
-    // Garante que chame o Authenticator com os valores corretos.
-    test('Should call Authenticator with correct values', async () => {
-        const { sut, authenticatorStub } = makeSut()
-        const authSpy = jest.spyOn(authenticatorStub, 'auth')
+    // Garante que chame o Authentication com os valores corretos.
+    test('Should call Authentication with correct values', async () => {
+        const { sut, authenticationStub } = makeSut()
+        const authSpy = jest.spyOn(authenticationStub, 'auth')
         const request = makeFakeRequest()
         await sut.handle(request)
         expect(authSpy).toHaveBeenCalledWith({
@@ -64,18 +64,18 @@ describe('Login Controller', () => {
 
     // Garante que retorne erro 401 se credenciais inválidas forem fornecidas.
     test('Should return 401 if invalid credentials are provided', async () => {
-        const { sut, authenticatorStub } = makeSut()
-        jest.spyOn(authenticatorStub, 'auth').mockReturnValueOnce(
+        const { sut, authenticationStub } = makeSut()
+        jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(
             Promise.resolve(null) // Return null accessToken
         )
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(unauthorizedError())
     })
 
-    // Garante que retorne erro 500 se o Authenticator lançar uma exceção.
-    test('Should return 500 if Authenticator throws an exception', async () => {
-        const { sut, authenticatorStub } = makeSut()
-        jest.spyOn(authenticatorStub, 'auth').mockReturnValueOnce(
+    // Garante que retorne erro 500 se o Authentication lançar uma exceção.
+    test('Should return 500 if Authentication throws an exception', async () => {
+        const { sut, authenticationStub } = makeSut()
+        jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(
             Promise.reject(new Error())
         )
         const httpResponse = await sut.handle(makeFakeRequest())

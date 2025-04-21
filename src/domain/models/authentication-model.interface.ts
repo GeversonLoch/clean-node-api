@@ -1,4 +1,4 @@
-export interface IAuthenticatorModel {
+export interface IAuthenticationModel {
     email: string
     password: string
 }
