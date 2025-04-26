@@ -1,4 +1,4 @@
-import { IHashComparer, ILoadAccountByEmailRepository, ITokenGenerator } from '@data/protocols'
+import { IHashComparer, ILoadAccountByEmailRepository, ITokenGenerator, IUpdateAccessTokenRepository } from '@data/protocols'
 import { DbAuthentication } from '@data/usecases'
 import { IAccountModel } from '@domain/models'
 
@@ -41,20 +41,32 @@ const makeTokenGeneratorStub = (): ITokenGenerator => {
     return new TokenGeneratorStub()
 }
 
+const makeUpdateAccessTokenRepositoryStub = (): IUpdateAccessTokenRepository => {
+    class UpdateAccessTokenRepositoryStub implements IUpdateAccessTokenRepository {
+        async update(id: string, token: string): Promise<void> {
+            return new Promise(resolve => resolve())
+        }
+    }
+    return new UpdateAccessTokenRepositoryStub()
+}
+
 const makeSut = () => {
     const loadAccountByEmailRepositoryStub = makeLoadAccountByEmailRepository()
     const hashComparerStub = makeHashComparerStub()
     const tokenGeneratorStub = makeTokenGeneratorStub()
+    const updateAccessTokenRepositoryStub = makeUpdateAccessTokenRepositoryStub()
     const sut = new DbAuthentication(
         loadAccountByEmailRepositoryStub,
         hashComparerStub,
         tokenGeneratorStub,
+        updateAccessTokenRepositoryStub,
     )
     return {
         sut,
         loadAccountByEmailRepositoryStub,
         hashComparerStub,
         tokenGeneratorStub,
+        updateAccessTokenRepositoryStub,
     }
 }
 
