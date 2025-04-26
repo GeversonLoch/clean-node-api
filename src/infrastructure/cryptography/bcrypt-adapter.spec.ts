@@ -3,7 +3,7 @@ import { BcryptAdapter } from "@infrastructure/cryptography"
 
 /*
 A biblioteca "bcrypt" foi mockada de forma que o método 'hash' retorne sempre 'any_hashed_value'.
-Isso significa que, ao chamar o método 'encrypt' do BcryptAdapter (que internamente utiliza bcrypt.hash),
+Isso significa que, ao chamar o método 'hash' do BcryptAdapter (que internamente utiliza bcrypt.hash),
 o resultado será sempre 'any_hashed_value', simulando o retorno de um hash válido.
 
 Caso seja necessário testar outros cenários (por exemplo, simular que o método lança uma exceção),
@@ -29,14 +29,14 @@ describe('Bcrypt Adapter', () => {
   test('Should call Bcrypt with correct values', async () => {
     const sut = makeSut()
     const hashSpy = jest.spyOn(bcrypt, 'hash')
-    await sut.encrypt('any_value')
+    await sut.hash('any_value')
     expect(hashSpy).toHaveBeenCalledWith('any_value', salt)
   })
 
   // Garante que o BcryptAdapter retorne um hash quando o processo de criptografia for bem-sucedido
   test('Should return a hash on success', async () => {
     const sut = makeSut()
-    const hashedValue = await sut.encrypt('any_value')
+    const hashedValue = await sut.hash('any_value')
     expect(hashedValue).toBe('any_hashed_value')
   })
 
@@ -45,7 +45,7 @@ describe('Bcrypt Adapter', () => {
     const sut = makeSut()
     const hashSpy = jest.spyOn(bcrypt, 'hash') as jest.Mock
     hashSpy.mockRejectedValueOnce(new Error())
-    const promise = sut.encrypt('any_value')
+    const promise = sut.hash('any_value')
     await expect(promise).rejects.toThrow()
   })
 
