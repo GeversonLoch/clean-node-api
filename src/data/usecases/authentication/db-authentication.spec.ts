@@ -1,4 +1,4 @@
-import { IHashComparer, ILoadAccountByEmailRepository } from '@data/protocols'
+import { IHashComparer, ILoadAccountByEmailRepository, ITokenGenerator } from '@data/protocols'
 import { DbAuthentication } from '@data/usecases'
 import { IAccountModel } from '@domain/models'
 
@@ -32,14 +32,29 @@ const makeHashComparerStub = (): IHashComparer => {
     return new HashComparerStub()
 }
 
+const makeTokenGeneratorStub = (): ITokenGenerator => {
+    class TokenGeneratorStub implements ITokenGenerator {
+        async generate(id: string): Promise<string> {
+            return new Promise(resolve => resolve('any_token'))
+        }
+    }
+    return new TokenGeneratorStub()
+}
+
 const makeSut = () => {
     const loadAccountByEmailRepositoryStub = makeLoadAccountByEmailRepository()
     const hashComparerStub = makeHashComparerStub()
-    const sut = new DbAuthentication(loadAccountByEmailRepositoryStub, hashComparerStub)
+    const tokenGeneratorStub = makeTokenGeneratorStub()
+    const sut = new DbAuthentication(
+        loadAccountByEmailRepositoryStub,
+        hashComparerStub,
+        tokenGeneratorStub,
+    )
     return {
         sut,
         loadAccountByEmailRepositoryStub,
         hashComparerStub,
+        tokenGeneratorStub,
     }
 }
 
