@@ -128,4 +128,11 @@ describe('DbAuthentication Usecase', () => {
         const promise = sut.auth(makeFakeAuthentication())
         await expect(promise).rejects.toThrow()
     })
+
+    // Garante que DbAuthentication retorne o accessToken em caso de sucesso
+    test('Should return an access token on success', async () => {
+        const { sut } = makeSut()
+        const accessToken = await sut.auth(makeFakeAuthentication())
+        expect(accessToken).toBe('any_token')
+    })
 })
