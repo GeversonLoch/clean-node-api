@@ -1,4 +1,9 @@
-import { IHashComparer, ILoadAccountByEmailRepository, ITokenGenerator, IUpdateAccessTokenRepository } from '@data/protocols'
+import {
+    IHashComparer,
+    ILoadAccountByEmailRepository,
+    ITokenGenerator,
+    IUpdateAccessTokenRepository,
+} from '@data/protocols'
 import { DbAuthentication } from '@data/usecases'
 import { IAccountModel } from '@domain/models'
 
