@@ -78,7 +78,7 @@ describe('DbAuthentication Usecase', () => {
         expect(compareSpy).toHaveBeenCalledWith('any_password', 'hashed_password')
     })
 
-    // Garante que 
+    // Garante que DbAuthentication lance uma exceção se o HashComparer lançar
     test('Should throw if HashComparer throws', async () => {
         const { sut, hashComparer } = makeSut()
         jest.spyOn(hashComparer, 'compare').mockReturnValueOnce(
