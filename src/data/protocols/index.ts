@@ -1,6 +1,6 @@
 export * from './cryptography/hasher.interface'
 export * from './cryptography/hash-comparer.interface'
-export * from './cryptography/token-generator.interface'
+export * from './cryptography/encrypter.interface'
 export * from './db/add-account-repository.interface'
 export * from './db/log-error-repository.interface'
 export * from './db/load-account-by-email-repository.interface'
