@@ -26,15 +26,15 @@ const makeSut = (): BcryptAdapter => {
 describe('Bcrypt Adapter', () => {
 
   // Garante que o BcryptAdapter chame o método bcrypt.hash com os valores corretos (valor e salt)
-  test('Should call Bcrypt with correct values', async () => {
+  test('Should call hash with correct values', async () => {
     const sut = makeSut()
     const hashSpy = jest.spyOn(bcrypt, 'hash')
     await sut.hash('any_value')
     expect(hashSpy).toHaveBeenCalledWith('any_value', salt)
   })
 
-  // Garante que o BcryptAdapter retorne um hash quando o processo de criptografia for bem-sucedido
-  test('Should return a hash on success', async () => {
+  // Garante que o BcryptAdapter retorne um hash valido quando o processo de criptografia for bem-sucedido
+  test('Should return a valid hash on hash success', async () => {
     const sut = makeSut()
     const hashedValue = await sut.hash('any_value')
     expect(hashedValue).toBe('any_hashed_value')
