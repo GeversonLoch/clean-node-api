@@ -33,7 +33,7 @@ describe('Bcrypt Adapter', () => {
     expect(hashSpy).toHaveBeenCalledWith('any_value', salt)
   })
 
-  // Garante que o BcryptAdapter retorne um hash valido quando o processo de criptografia for bem-sucedido
+  // Garante que o método hash retorne um hash valido quando o processo de criptografia for bem-sucedido
   test('Should return a valid hash on hash success', async () => {
     const sut = makeSut()
     const hashedValue = await sut.hash('any_value')
