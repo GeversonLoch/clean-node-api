@@ -13,6 +13,9 @@ bcrypt.hash retorne sempre 'any_hashed_value' por padrão.
 jest.mock('bcrypt', () => ({
   async hash(): Promise<string> {
     return new Promise(resolve => resolve('any_hashed_value'))
+  },
+  async compare(): Promise<boolean> {
+    return new Promise(resolve => resolve(true))
   }
 }))
 
@@ -49,4 +52,11 @@ describe('Bcrypt Adapter', () => {
     await expect(promise).rejects.toThrow()
   })
 
+  // Garante que o BcryptAdapter chame o método compare com os valores corretos
+  test('Should call compare with correct values', async () => {
+    const sut = makeSut()
+    const compareSpy = jest.spyOn(bcrypt, 'compare')
+    await sut.compare('any_value', 'any_hash')
+    expect(compareSpy).toHaveBeenCalledWith('any_value', 'any_hash')
+  })
 })
