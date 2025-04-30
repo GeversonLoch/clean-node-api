@@ -43,8 +43,8 @@ describe('Bcrypt Adapter', () => {
     expect(hashedValue).toBe('any_hashed_value')
   })
 
-  // Garante que a exceção lançada pelo bcrypt seja repassada pelo BcryptAdapter para o chamador
-  test('Should throw if bcrypt throws', async () => {
+  // Garante que o BcryptAdapter lance uma exceção se o método hash do bcrypt lançar
+  test('Should throw if hash throws', async () => {
     const sut = makeSut()
     const hashSpy = jest.spyOn(bcrypt, 'hash') as jest.Mock
     hashSpy.mockRejectedValueOnce(new Error())
@@ -73,5 +73,14 @@ describe('Bcrypt Adapter', () => {
     jest.spyOn(bcrypt, 'compare').mockImplementationOnce(() => Promise.resolve(false));
     const isValid = await sut.compare('any_value', 'any_hash')
     expect(isValid).toBe(false)
+  })
+
+  // Garante que o BcryptAdapter lance uma exceção se o método compare do bcrypt lançar
+  test('Should throw if compare throws', async () => {
+    const sut = makeSut()
+    const compareSpy = jest.spyOn(bcrypt, 'compare') as jest.Mock
+    compareSpy.mockRejectedValueOnce(new Error())
+    const promise = sut.compare('any_value', 'any_hash')
+    await expect(promise).rejects.toThrow()
   })
 })
