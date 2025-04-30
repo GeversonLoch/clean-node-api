@@ -71,6 +71,8 @@ npm i -D @types/mongodb
 ```sh
 npm i @types/validator validator
 npm i bcrypt @types/bcrypt
+npm i jsonwebtoken
+npm i -D @types/jsonwebtoken
 ```
 
 ---
