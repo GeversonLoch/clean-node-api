@@ -4,16 +4,10 @@ import { badRequest, internalServerError, success } from "@presentation/helpers"
 import { IValidation } from "@presentation/protocols"
 
 export class SignUpController implements IController {
-  private readonly addAccount: IAddAccount
-  private readonly validation: IValidation
-
   constructor(
-    addAccount: IAddAccount,
-    validation: IValidation,
-  ) {
-    this.addAccount = addAccount
-    this.validation = validation
-  }
+    private readonly addAccount: IAddAccount,
+    private readonly validation: IValidation,
+  ) {}
 
   async handle (httpRequest: IHttpRequest): Promise<IHttpResponse> {
     try {
