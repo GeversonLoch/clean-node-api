@@ -4,11 +4,11 @@
 * por persistir os dados de uma conta no banco, utilizando um helper/adapter para lidar com operações do MongoDB.
 */
 
-import { IAddAccountRepository } from "@data/protocols"
+import { IAddAccountRepository, ILoadAccountByEmailRepository } from "@data/protocols"
 import { IAccountModel, IAddAccountModel } from "@domain/models"
 import { IMongoDBAdapter } from "@infrastructure/db"
 
-export class AccountMongoRepository implements IAddAccountRepository {
+export class AccountMongoRepository implements IAddAccountRepository, ILoadAccountByEmailRepository {
 
     constructor(private readonly mongoDBAdapter: IMongoDBAdapter) {}
 
@@ -21,5 +21,11 @@ export class AccountMongoRepository implements IAddAccountRepository {
         const result = await accountCollection.insertOne(account)
         const newAccount = await accountCollection.findOne({ _id: result.insertedId })
         return this.mongoDBAdapter.map(newAccount)
+    }
+
+    async loadByEmail(email: string): Promise<IAccountModel> {
+        const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
+        const account = await accountCollection.findOne({ email })
+        return this.mongoDBAdapter.map(account)
     }
 }
