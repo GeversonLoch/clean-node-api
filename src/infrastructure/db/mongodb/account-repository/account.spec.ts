@@ -7,13 +7,16 @@
 
 import { AccountMongoRepository } from '@infrastructure/db'
 import { mongoDBAdapter } from '@main/config/db-connection'
+import { Collection } from 'mongodb'
+
+let accountCollection: Collection
 
 beforeAll(async () => {
     await mongoDBAdapter.connect()
 })
 
 beforeEach(async () => {
-    const accountCollection = await mongoDBAdapter.getCollection('accounts')
+    accountCollection = await mongoDBAdapter.getCollection('accounts')
     await accountCollection.deleteMany({})
 })
 
@@ -41,7 +44,7 @@ describe('Account Mongo Repository', () => {
     // Garante que retorne uma conta se o método loadByEmail for bem sucedido
     test('Should return an account on loadByEmail success', async () => {
         const sut = new AccountMongoRepository(mongoDBAdapter)
-        await sut.add({
+        await accountCollection.insertOne({
             name: 'any_name',
             email: 'any_email@email.com',
             password: 'any_password',
@@ -59,5 +62,21 @@ describe('Account Mongo Repository', () => {
         const sut = new AccountMongoRepository(mongoDBAdapter)
         const account = await sut.loadByEmail('any_email@email.com')
         expect(account).toBeFalsy()
+    })
+
+    // Garante que o token de acesso seja atualizado se o método updateAccessToken for bem sucedido
+    test('Should update the account accessToken on updateAccessToken success', async () => {
+        const account = await (await mongoDBAdapter.getCollection('accounts')).insertOne({
+            name: 'any_name',
+            email: 'any_email@email.com',
+            password: 'any_password',
+        })
+        const insertedAccount = await (await mongoDBAdapter.getCollection('accounts')).findOne({ _id: account.insertedId })
+        expect(insertedAccount?.accessToken).toBeFalsy()
+        const sut = new AccountMongoRepository(mongoDBAdapter)
+        await sut.updateAccessToken(account.insertedId.toHexString(), 'new_token')
+        const updatedAccount = await (await mongoDBAdapter.getCollection('accounts')).findOne({ _id: account.insertedId })
+        expect(updatedAccount).toBeTruthy()
+        expect(updatedAccount.accessToken).toBe('new_token')
     })
 })
