@@ -37,4 +37,27 @@ describe('Account Mongo Repository', () => {
         expect(account.email).toBe('any_email@email.com')
         expect(account.password).toBe('any_password')
     })
+
+    // Garante que retorne uma conta se o método loadByEmail for bem sucedido
+    test('Should return an account on loadByEmail success', async () => {
+        const sut = new AccountMongoRepository(mongoDBAdapter)
+        await sut.add({
+            name: 'any_name',
+            email: 'any_email@email.com',
+            password: 'any_password',
+        })
+        const account = await sut.loadByEmail('any_email@email.com')
+        expect(account).toBeTruthy()
+        expect(account.id).toBeTruthy()
+        expect(account.name).toBe('any_name')
+        expect(account.email).toBe('any_email@email.com')
+        expect(account.password).toBe('any_password')
+    })
+
+    // Garante que retorne nulo se loadByEmail falhar na obtenção do registro
+    test('Should return null if loadByEmail fails', async () => {
+        const sut = new AccountMongoRepository(mongoDBAdapter)
+        const account = await sut.loadByEmail('any_email@email.com')
+        expect(account).toBeFalsy()
+    })
 })
