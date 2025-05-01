@@ -17,11 +17,18 @@ const makeSut = () => {
 }
 
 describe('JWT Adapter', () => {
-    // Garantir que o JwtAdapter chame o método sign com os valores corretos
+    // Garante que o JwtAdapter chame o método sign com os valores corretos
     test('Should call sign with coorrect values', async () => {
         const { sut } = makeSut()
         const signSpy = jest.spyOn(jwt, 'sign')
-        await sut.encrypt('any_value')
-        expect(signSpy).toHaveBeenCalledWith({ id: 'any_value' }, secret)
+        await sut.encrypt('any_id')
+        expect(signSpy).toHaveBeenCalledWith({ id: 'any_id' }, secret)
+    })
+
+    // Garante que o JwtAdapter retorne um token quando o método sign for bem-sucedido
+    test('Should return a token on sign success', async () => {
+        const { sut } = makeSut()
+        const accessToken = await sut.encrypt('any_id')
+        expect(accessToken).toBe('any_token')
     })
 })
