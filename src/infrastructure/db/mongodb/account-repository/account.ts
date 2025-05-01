@@ -8,12 +8,12 @@
 * de conexão, obtenção de coleção e mapeamento de documentos.
 */
 
-import { IAddAccountRepository, ILoadAccountByEmailRepository } from "@data/protocols"
-import { IAccountModel, IAddAccountModel } from "@domain/models"
-import { IMongoDBAdapter } from "@infrastructure/db"
+import { IAddAccountRepository, ILoadAccountByEmailRepository, IUpdateAccessTokenRepository } from '@data/protocols'
+import { IAccountModel, IAddAccountModel } from '@domain/models'
+import { IMongoDBAdapter } from '@infrastructure/db'
+import { ObjectId } from 'mongodb'
 
-export class AccountMongoRepository implements IAddAccountRepository, ILoadAccountByEmailRepository {
-
+export class AccountMongoRepository implements IAddAccountRepository, ILoadAccountByEmailRepository, IUpdateAccessTokenRepository {
     constructor(private readonly mongoDBAdapter: IMongoDBAdapter) {}
 
     /* Adiciona uma nova conta na coleção 'accounts' do MongoDB.
@@ -31,5 +31,13 @@ export class AccountMongoRepository implements IAddAccountRepository, ILoadAccou
         const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
         const account = await accountCollection.findOne({ email })
         return this.mongoDBAdapter.map(account)
+    }
+
+    async updateAccessToken(id: string, token: string): Promise<void> {
+        const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
+        await accountCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { accessToken: token } }
+        )
     }
 }
