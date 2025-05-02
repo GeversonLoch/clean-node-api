@@ -4,7 +4,7 @@ import {
     EmailValidation,
 } from '@presentation/helpers'
 import { IValidation } from '@presentation/protocols'
-import { EmailValidatorAdapter } from '@utils/email-validator-adapter'
+import { EmailValidatorAdapter } from '@main/adapters/validators/email-validator-adapter'
 
 export const makeLoginValidation = (): IValidation => {
     const validations: IValidation[] = []

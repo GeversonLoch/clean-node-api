@@ -3,7 +3,7 @@
 */
 
 import { Router } from "express"
-import { expressRouteAdapter } from "@main/adapters/express-route-adapter"
+import { expressRouteAdapter } from "@main/adapters/express/express-route-adapter"
 import { makeSignUpController } from "@main/factories/signup/signup-factory"
 
 export default (router: Router): void => {
