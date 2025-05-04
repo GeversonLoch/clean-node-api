@@ -13,10 +13,10 @@ import { makeSignUpValidation } from "@main/factories/signup/signup-validation-f
 
 export const makeSignUpController = (): IController => {
     const salt: number = 12
-    const hasher = new BcryptAdapter(salt)
-    const addAccountRepository = new AccountMongoRepository(mongoDBAdapter)
-    const addAccount = new DbAddAccount(hasher, addAccountRepository)
-    const signUpController = new SignUpController(addAccount, makeSignUpValidation())
-    const logErrorRepository = new LogMongoRepository(mongoDBAdapter)
-    return new LogControllerDecorator(signUpController, logErrorRepository)
+    const bcryptAdapter = new BcryptAdapter(salt)
+    const accountMongoRepository = new AccountMongoRepository(mongoDBAdapter)
+    const dbAddAccount = new DbAddAccount(bcryptAdapter, accountMongoRepository)
+    const signUpController = new SignUpController(dbAddAccount, makeSignUpValidation())
+    const logMongoRepository = new LogMongoRepository(mongoDBAdapter)
+    return new LogControllerDecorator(signUpController, logMongoRepository)
 }
