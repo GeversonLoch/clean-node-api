@@ -14,7 +14,8 @@ import { makeLoginValidation } from '@main/factories/login/login-validation-fact
 export const makeLoginController = (): IController => {
     const salt: number = 12
     const bcryptAdapter = new BcryptAdapter(salt)
-    const jwtAdapter = new JwtAdapter('')
+    const jwtSecretIntegrationTest = 'S1w/bYomPDSl4uEkE9YxvURoetjSrC1dIvp9PZA3/dPkJJEH8y30bzqAVh3VN2c/ta2KE4kugRjasXppDqlbnQ=='
+    const jwtAdapter = new JwtAdapter(process.env.JWT_SECRET ?? jwtSecretIntegrationTest)
     const accountMongoRepository = new AccountMongoRepository(mongoDBAdapter)
     const dbAuthentication = new DbAuthentication(
         accountMongoRepository,
