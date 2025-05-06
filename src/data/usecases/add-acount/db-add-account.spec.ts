@@ -1,10 +1,10 @@
 import { DbAddAccount } from "@data/usecases"
-import { IAddAccountRepository, IEncrypter } from "@data/protocols"
+import { IAddAccountRepository, IHasher } from "@data/protocols"
 import { IAccountModel, IAddAccountModel } from "@domain/models"
 
 interface SutTypes {
     sut: DbAddAccount
-    encrypterStub: IEncrypter
+    hasherStub: IHasher
     addAccountRepositoryStub: IAddAccountRepository
 }
 
@@ -21,15 +21,15 @@ const makeFakeAccountData = (): IAddAccountModel => ({
     password: 'valid_password'
 })
 
-const makeEncrypter = (): IEncrypter => {
-    // Classe fictícia EncrypterStub usada para simular o comportamento da classe real Encrypter
-    class EncrypterStub {
+const makeHasher = (): IHasher => {
+    // Classe fictícia HasherStub usada para simular o comportamento da classe real Hasher
+    class HasherStub {
         // Método que simula a criptografia e sempre retorna 'hashed_password'
-        async encrypt(value: string): Promise<string> {
+        async hash(value: string): Promise<string> {
             return Promise.resolve('hashed_password')
         }
     }
-    return new EncrypterStub()
+    return new HasherStub()
 }
 
 const makeAddAccountRepository = (): IAddAccountRepository => {
@@ -44,47 +44,47 @@ const makeAddAccountRepository = (): IAddAccountRepository => {
 }
 
 const makeSut = (): SutTypes => {
-    const encrypterStub = makeEncrypter()
+    const hasherStub = makeHasher()
     const addAccountRepositoryStub = makeAddAccountRepository()
 
-    // Cria uma instância da classe DbAddAccount, injetando encrypterStub e addAccountRepositoryStub como dependências
-    const sut = new DbAddAccount(encrypterStub, addAccountRepositoryStub)
+    // Cria uma instância da classe DbAddAccount, injetando hasherStub e addAccountRepositoryStub como dependências
+    const sut = new DbAddAccount(hasherStub, addAccountRepositoryStub)
     return {
         sut,
-        encrypterStub,
+        hasherStub,
         addAccountRepositoryStub,
     }
 }
 
 // Descreve os testes para a use case DbAddAccount
 describe('DbAddAccount Usecase', () => {
-    // Teste para garantir que o método encrypt do Encrypter seja chamado com a senha correta
-    test('Should call Encrypter with correct password', async () => {
+    // Teste para garantir que o método hash do Hasher seja chamado com a senha correta
+    test('Should call Hasher with correct password', async () => {
 
-        const { sut, encrypterStub } = makeSut()
+        const { sut, hasherStub } = makeSut()
 
-        // Cria um espião (spy) no método encrypt do encrypterStub
-        const encrypterSpy = jest.spyOn(encrypterStub, 'encrypt')
+        // Cria um espião (spy) no método hash do hasherStub
+        const hasherSpy = jest.spyOn(hasherStub, 'hash')
 
         // Chama o método add da instância DbAddAccount
         await sut.add(makeFakeAccountData())
 
-        // Verifica se o espião encrypterSpy foi chamado com a senha 'valid_password'
-        expect(encrypterSpy).toHaveBeenCalledWith('valid_password')
+        // Verifica se o espião hasherSpy foi chamado com a senha 'valid_password'
+        expect(hasherSpy).toHaveBeenCalledWith('valid_password')
     })
 
-    // Teste para garantir que o DbAddAccount repassa a exceção caso o Encrypter lance um erro
-    test('Should throw if Encrypter throws', async () => {
+    // Teste para garantir que o DbAddAccount repassa a exceção caso o Hasher lance um erro
+    test('Should throw if Hasher throws', async () => {
 
-        const { sut, encrypterStub } = makeSut()
+        const { sut, hasherStub } = makeSut()
 
-        // Simula que o método 'encrypt' lance um erro
-        jest.spyOn(encrypterStub, 'encrypt').mockReturnValueOnce(Promise.reject(new Error()))
+        // Simula que o método 'hash' lance um erro
+        jest.spyOn(hasherStub, 'hash').mockReturnValueOnce(Promise.reject(new Error()))
 
         // Chama o método add da instância DbAddAccount e armazena a promise
         const accountPromise = sut.add(makeFakeAccountData())
 
-        // Verifica se o método add repassa a exceção lançada pelo Encrypter
+        // Verifica se o método add repassa a exceção lançada pelo Hasher
         await expect(accountPromise).rejects.toThrow()
     })
 
