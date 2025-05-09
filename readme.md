@@ -6,8 +6,8 @@ Uma API desenvolvida com uma arquitetura definida e modular, priorizando a manut
 
 ## 🚀 Configuração do Ambiente
 
-- **Versão do Node.js:** `16.14.2`
-- **Gerenciador de pacotes:** NPM ou Yarn
+* **Versão do Node.js:** `20.15.0`
+* **Gerenciador de pacotes:** NPM ou Yarn
 
 Instale as dependências do projeto:
 
@@ -49,8 +49,8 @@ npm i fast-glob
 
 ### 🛠️ Ferramentas de Desenvolvimento
 ```sh
-npm i -D sucrase
-npm i -D module-alias
+npm i -D ts-node
+npm i -D tsconfig-paths
 npm i -D supertest
 npm i -D @types/supertest
 ```
@@ -69,10 +69,11 @@ npm i -D @types/mongodb
 
 ### 🔐 Validação e Criptografia
 ```sh
-npm i @types/validator validator
+npm i validator
+npm i @types/validator
 npm i bcrypt @types/bcrypt
 npm i jsonwebtoken
-npm i -D @types/jsonwebtoken
+npm i @types/jsonwebtoken
 ```
 
 ---
@@ -96,12 +97,11 @@ npm run test:staged
 
 ---
 
-## 📌 Comandos Adicionais
-
 ### 📌 Atualização de Bibliotecas
 Para atualizar pacotes de forma interativa:
 
 ```sh
+npm i -g npm-check
 npm-check --skip-unused --update
 ```
 
@@ -112,7 +112,7 @@ npm-check -s -u
 ```
 
 **Opções:**
-- `-s, --skip-unused`: Ignora pacotes não referenciados diretamente, mas ainda necessários ao projeto.
-- `-u, --update`: Atualização interativa dos pacotes.
+* `-s, --skip-unused`: Ignora pacotes não referenciados diretamente, mas ainda necessários ao projeto.
+* `-u, --update`: Atualização interativa dos pacotes.
 
 ---
