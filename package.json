@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && tsc-alias --project tsconfig.json",
-    "prestart": "npm run build",
+    "build": "rimraf dist && tsc && tsc-alias --project tsconfig.json",
     "start": "node dist/main/server.js",
     "dev": "ts-node -r tsconfig-paths/register src/main/server.ts",
     "test": "jest --passWithNoTests --runInBand --no-cache",
@@ -38,6 +37,7 @@
     "husky": "^8.0.1",
     "jest": "^28.1.2",
     "lint-staged": "^13.0.0",
+    "rimraf": "^6.0.1",
     "supertest": "^7.0.0",
     "ts-jest": "^28.0.5",
     "ts-node": "^10.9.2",
