@@ -47,6 +47,12 @@ Utilizado para busca dinâmica de arquivos de rotas, facilitando o carregamento 
 npm i fast-glob
 ```
 
+### 🧹 Limpeza de Diretórios
+Utilitário para remover arquivos e pastas de forma segura antes dos builds.
+```sh
+npm i -D rimraf
+```
+
 ### 🛠️ Ferramentas de Desenvolvimento
 ```sh
 npm i -D ts-node

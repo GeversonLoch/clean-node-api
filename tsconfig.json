@@ -14,7 +14,10 @@
       "@main/*": ["src/main/*"],
     },
     "esModuleInterop": true,
-    "allowJs": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
 }
