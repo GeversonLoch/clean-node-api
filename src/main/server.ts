@@ -6,9 +6,13 @@
 import "@main/config/env-config"
 import app from "@main/config/app"
 import { mongoDBAdapter } from "@main/config/db-connection"
+import { AddressInfo } from "net"
 
 mongoDBAdapter.connect()
-.then(() => {
-    app.listen(process.env.PORT, () => console.info(`Server running at http://localhost:${process.env.PORT}`))
-})
-.catch(console.error)
+  .then(() => {
+    const server = app.listen(process.env.PORT, () => {
+      const { address, port } = server.address() as AddressInfo
+      console.info(`Server running at http://${address}:${port}`)
+    })
+  })
+  .catch(console.error)
