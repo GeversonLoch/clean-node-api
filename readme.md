@@ -6,7 +6,7 @@ Uma API desenvolvida com uma arquitetura definida e modular, priorizando a manut
 
 ## 🚀 Configuração do Ambiente
 
-* **Versão do Node.js:** `20.15.0`
+* **Versão do Node.js:** `22.15.0`
 * **Gerenciador de pacotes:** NPM ou Yarn
 
 Instale as dependências do projeto:
