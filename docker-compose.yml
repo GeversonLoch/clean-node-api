@@ -12,10 +12,12 @@ services:
     container_name: api-container
     image: clean-node-api
     build: .
-    command: npm start
+    command: npm run docker-debug
     volumes:
       - ./dist:/usr/src/api/dist
+      - ./package.json:/usr/src/api/package.json
     ports:
       - "5050:5050"
+      - "9222:9222"
     depends_on:
       - mongo
