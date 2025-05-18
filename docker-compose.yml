@@ -11,11 +11,11 @@ services:
   api:
     container_name: api-container
     image: node:22.15.1
-    working_dir: /usr/src/api
-    command: bash -c "npm install --only=prod && npm run docker-debug"
+    working_dir: /usr/api
     volumes:
-      - ./dist:/usr/src/api/dist
-      - ./package.json:/usr/src/api/package.json
+      - ./src/:/usr/api/src
+      - ./package.json:/usr/api/package.json
+      - ./tsconfig.json:/usr/api/tsconfig.json
     ports:
       - "5050:5050"
       - "9222:9222"
@@ -24,4 +24,6 @@ services:
     env_file:
       - ./.env
     environment:
+      CHOKIDAR_USEPOLLING: "true"
       MONGO_URL: "mongodb://mongo:27017/"
+    command: bash -c "npm install && npm run docker:start-debug"

@@ -15,6 +15,7 @@
     },
     "esModuleInterop": true,
     "sourceMap": true,
+    "inlineSources": true,
   },
   "include": ["src"],
   "exclude": [
