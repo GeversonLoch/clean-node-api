@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf dist && tsc && tsc-alias --project tsconfig.json",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && tsc-alias --project tsconfig.build.json",
     "start": "node dist/main/server.js",
     "start:debug": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/main/server.ts",
     "docker:up": "docker-compose up --build -d",
