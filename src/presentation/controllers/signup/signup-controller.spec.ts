@@ -1,15 +1,16 @@
 import { SignUpController } from "@presentation/controllers"
-import { IAccountModel, IAddAccountModel } from "@domain/models"
-import { IAddAccount } from "@domain/usecases"
+import { IAccountModel, IAddAccountModel, IAuthenticationModel } from "@domain/models"
+import { IAddAccount, IAuthentication } from "@domain/usecases"
 import { InternalServerError, MissingParamError } from "@presentation/errors"
 import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
-import { success, internalServerError, badRequest } from "@presentation/helpers"
+import { success, internalServerError, badRequest, forbidden } from "@presentation/helpers"
 import { IValidation } from "@presentation/protocols"
 
 interface ISutTypes {
   sut: SignUpController,
   addAccountStub: IAddAccount,
   validationStub: IValidation,
+  authenticationStub: IAuthentication,
 }
 
 const makeFakeRequest = (): IHttpRequest => ({
@@ -52,15 +53,26 @@ const makeValidation = (): IValidation => {
   return new ValidationStub()
 }
 
+const makeAuthentication = (): IAuthentication => {
+  class AuthenticationStub implements IAuthentication {
+    async auth(authentication: IAuthenticationModel): Promise<string> {
+      return Promise.resolve('any_token')
+    }
+  }
+  return new AuthenticationStub()
+}
+
 // sut: System Under Test
 const makeSut = (): ISutTypes => {
-  const addAccountStub = makeAddAccount()
   const validationStub = makeValidation()
-  const sut = new SignUpController(addAccountStub, validationStub)
+  const addAccountStub = makeAddAccount()
+  const authenticationStub = makeAuthentication()
+  const sut = new SignUpController(validationStub, addAccountStub, authenticationStub)
   return {
     sut,
-    addAccountStub,
     validationStub,
+    addAccountStub,
+    authenticationStub,
   }
 }
 
@@ -92,20 +104,21 @@ describe('SignUp Controller', () => {
     expect(httpResponse).toEqual(makeFakeServerError())
   })
 
+  // Deve retornar 403 se o AddAccount retornar nulo.
+  test('Should return 403 if AddAccount returns null', async () => {
+    const { sut, addAccountStub } = makeSut()
+    jest.spyOn(addAccountStub, 'add').mockReturnValueOnce(Promise.resolve(null))
+    const httpResponse = await sut.handle(makeFakeRequest())
+    expect(httpResponse).toEqual(forbidden('O email informado está em uso!'))
+  })
+
   // Deve retornar 200 se dados válidos forem fornecidos.
   test('Should return 200 if valid data is provided', async () => {
     const { sut } = makeSut()
-
-    const httpRequest = {
-      body: {
-        name: 'valid_name',
-        email: 'valid_email@email.com',
-        password: 'valid_password',
-        passwordConfirmation: 'valid_password'
-      }
-    }
-    const httpResponse = await sut.handle(httpRequest)
-    expect(httpResponse).toEqual(success(makeFakeAccount()))
+    const httpResponse = await sut.handle(makeFakeRequest())
+    expect(httpResponse).toEqual(success({
+      token: 'any_token',
+    }))
   })
 
   // Deve chamar Validation com o valore correto.
@@ -140,4 +153,25 @@ describe('SignUp Controller', () => {
     expect(httpResponse).toEqual(badRequest(new MissingParamError('any_field')))
   })
 
+  // Garante que chame o Authentication com os valores corretos.
+  test('Should call Authentication with correct values', async () => {
+    const { sut, authenticationStub } = makeSut()
+    const authSpy = jest.spyOn(authenticationStub, 'auth')
+    const request = makeFakeRequest()
+    await sut.handle(request)
+    expect(authSpy).toHaveBeenCalledWith({
+      email: request.body.email,
+      password: request.body.password,
+    })
+  })
+
+  // Garante que retorne erro 500 se o Authentication lançar uma exceção.
+  test('Should return 500 if Authentication throws an exception', async () => {
+    const { sut, authenticationStub } = makeSut()
+    jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(
+      Promise.reject(new Error())
+    )
+    const httpResponse = await sut.handle(makeFakeRequest())
+    expect(httpResponse).toEqual(makeFakeServerError())
+  })
 })

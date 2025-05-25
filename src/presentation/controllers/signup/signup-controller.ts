@@ -1,12 +1,13 @@
 import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
-import { IAddAccount } from "@domain/usecases"
-import { badRequest, internalServerError, success } from "@presentation/helpers"
+import { IAddAccount, IAuthentication } from "@domain/usecases"
+import { badRequest, forbidden, internalServerError, success } from "@presentation/helpers"
 import { IValidation } from "@presentation/protocols"
 
 export class SignUpController implements IController {
   constructor(
-    private readonly addAccount: IAddAccount,
     private readonly validation: IValidation,
+    private readonly addAccount: IAddAccount,
+    private readonly authentication: IAuthentication
   ) {}
 
   async handle (httpRequest: IHttpRequest): Promise<IHttpResponse> {
@@ -23,7 +24,17 @@ export class SignUpController implements IController {
         password
       })
 
-      return success(account)
+      const accessToken = await this.authentication.auth({
+        email,
+        password,
+      })
+      if (!account) {
+        return forbidden('O email informado está em uso!')
+      }
+
+      return success({
+        token: accessToken,
+      })
     } catch (error) {
       return internalServerError(error)
     }
