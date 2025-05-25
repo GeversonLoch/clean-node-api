@@ -23,10 +23,10 @@ const makeFakeRequest = (): IHttpRequest => ({
 })
 
 const makeFakeAccount = (): IAccountModel => ({
-  id: 'valid_id',
-  name: 'valid_name',
-  email: 'valid_email@email.com',
-  password: 'valid_password'
+  id: 'any_id',
+  name: 'any_name',
+  email: 'any_email@email.com',
+  password: 'any_password'
 })
 
 const makeFakeServerError = (): IHttpResponse => {
@@ -136,20 +136,10 @@ describe('SignUp Controller', () => {
   // Deve retornar 400 se Validation retornar um erro.
   test('Should return 400 if Validation returns an error', async () => {
     const { sut, validationStub } = makeSut()
-
     jest.spyOn(validationStub, 'validate').mockReturnValueOnce(
       new MissingParamError('any_field')
     )
-
-    const httpRequest = {
-      body: {
-        name: 'valid_name',
-        email: 'valid_email@email.com',
-        password: 'valid_password',
-        passwordConfirmation: 'valid_password'
-      }
-    }
-    const httpResponse = await sut.handle(httpRequest)
+    const httpResponse = await sut.handle(makeFakeRequest())
     expect(httpResponse).toEqual(badRequest(new MissingParamError('any_field')))
   })
 
