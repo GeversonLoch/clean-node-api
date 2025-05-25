@@ -41,7 +41,7 @@ const makeValidation = (): IValidation => {
 const makeSut = () => {
     const authenticationStub = makeAuthentication()
     const validationStub = makeValidation()
-    const sut = new LoginController(authenticationStub, validationStub)
+    const sut = new LoginController(validationStub, authenticationStub)
     return {
         sut,
         authenticationStub,

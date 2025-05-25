@@ -5,8 +5,8 @@ import { IValidation } from "@presentation/protocols"
 
 export class LoginController implements IController {
     constructor(
-        private readonly authentication: IAuthentication,
         private readonly validation: IValidation,
+        private readonly authentication: IAuthentication,
     ) {}
 
     async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {

@@ -23,7 +23,7 @@ export const makeLoginController = (): IController => {
         jwtAdapter,
         accountMongoRepository,
     )
-    const loginController = new LoginController(dbAuthentication, makeLoginValidation())
+    const loginController = new LoginController(makeLoginValidation(), dbAuthentication)
     const logErrorRepository = new LogMongoRepository(mongoDBAdapter)
     return new LogControllerDecorator(loginController, logErrorRepository)
 }
