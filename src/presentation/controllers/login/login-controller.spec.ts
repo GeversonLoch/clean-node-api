@@ -2,7 +2,7 @@ import { IAuthenticationModel } from "@domain/models"
 import { IAuthentication } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
-import { badRequest, internalServerError, success, unauthorizedError } from "@presentation/helpers"
+import { badRequest, internalServerError, success, unauthorized } from "@presentation/helpers"
 import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
 import { IValidation } from "@presentation/protocols"
 
@@ -69,7 +69,7 @@ describe('Login Controller', () => {
             Promise.resolve(null) // Return null accessToken
         )
         const httpResponse = await sut.handle(makeFakeRequest())
-        expect(httpResponse).toEqual(unauthorizedError())
+        expect(httpResponse).toEqual(unauthorized())
     })
 
     // Garante que retorne erro 500 se o Authentication lançar uma exceção.
