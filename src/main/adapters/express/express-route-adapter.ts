@@ -1,5 +1,6 @@
-import { IController, IHttpRequest } from "@presentation/protocols"
-import { Request, Response } from "express"
+import { makeLogControllerDecorator } from '@main/factories/decorators/log-controller-factory'
+import { IController, IHttpRequest } from '@presentation/protocols'
+import { Request, Response } from 'express'
 
 export const expressRouteAdapter = (controller: IController) => {
     return async (req: Request, res: Response) => {
@@ -7,7 +8,8 @@ export const expressRouteAdapter = (controller: IController) => {
             body: req.body
         }
 
-        const httpResponse = await controller.handle(httpRequest)
+        const logControllerDecorator = makeLogControllerDecorator(controller)
+        const httpResponse = await logControllerDecorator.handle(httpRequest)
 
         if (httpResponse.statusCode >= 400) {
             const errorMessage =
