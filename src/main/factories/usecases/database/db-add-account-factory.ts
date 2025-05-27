@@ -7,5 +7,9 @@ import { IAddAccount } from "@domain/usecases"
 export const makeDbAddAccount = (): IAddAccount => {
     const bcryptAdapter = new BcryptAdapter(Number(process.env.SALT) ?? 5)
     const accountMongoRepository = new AccountMongoRepository(mongoDBAdapter)
-    return new DbAddAccount(bcryptAdapter, accountMongoRepository)
+    return new DbAddAccount(
+        bcryptAdapter,
+        accountMongoRepository,
+        accountMongoRepository,
+    )
 }
