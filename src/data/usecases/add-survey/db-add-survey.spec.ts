@@ -1,0 +1,53 @@
+import { IAddSurveyRepository } from '@data/protocols'
+import { DbAddSurvey } from '@data/usecases'
+import { IAddSurveyModel, ISurveyModel } from '@domain/models'
+
+const makeFakeSurveyData = (): IAddSurveyModel => ({
+    answers: [
+        {
+            answer: 'any_answer',
+            image: 'any_image',
+        },
+    ],
+    question: 'any_question',
+})
+
+const makeFakeSurvey = (): ISurveyModel => ({
+    id: 'any_id',
+    question: 'any_question',
+    answers: [
+        {
+            answer: 'any_answer',
+            image: 'any_image',
+        },
+    ],
+})
+
+const makeAddSurveyRepository = (): IAddSurveyRepository => {
+    class AddSurveyRepositoryStub {
+        async add(surveyData: IAddSurveyModel): Promise<void> {
+            return Promise.resolve()
+        }
+    }
+    return new AddSurveyRepositoryStub()
+}
+
+const makeSut = () => {
+    const addSurveyRepositoryStub = makeAddSurveyRepository()
+    const sut = new DbAddSurvey(addSurveyRepositoryStub)
+    return {
+        sut,
+        addSurveyRepositoryStub,
+    }
+}
+
+describe('DbAddSurvey Usecase', () => {
+    // Garante que AddSurveyRepository seja chamado com os valores corretos
+    test('Should call AddSurveyRepository with correct values', async () => {
+        const { sut, addSurveyRepositoryStub } = makeSut()
+        const addSurveySpy = jest.spyOn(addSurveyRepositoryStub, 'add')
+        const surveyData = makeFakeSurveyData()
+        await sut.add(surveyData)
+        expect(addSurveySpy).toHaveBeenCalledWith(surveyData)
+    })
+})
