@@ -28,7 +28,7 @@ describe('AddSurvey Controller', () => {
 
     const makeAddSurvey = (): IAddSurvey => {
         class AddSurveyStub implements IAddSurvey {
-            async add(survey: IAddSurveyModel): Promise<void> {
+            async add(surveyData: IAddSurveyModel): Promise<void> {
                 return Promise.resolve()
             }
         }
