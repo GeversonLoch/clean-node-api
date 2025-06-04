@@ -10,8 +10,8 @@ describe('AddSurvey Controller', () => {
             question: 'any_question',
             answers: [
                 {
-                    image: 'any_image',
                     answer: 'any_answer',
+                    image: 'any_image',
                 },
             ],
         },
