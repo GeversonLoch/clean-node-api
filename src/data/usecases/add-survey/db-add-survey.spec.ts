@@ -12,17 +12,6 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
     question: 'any_question',
 })
 
-const makeFakeSurvey = (): ISurveyModel => ({
-    id: 'any_id',
-    question: 'any_question',
-    answers: [
-        {
-            answer: 'any_answer',
-            image: 'any_image',
-        },
-    ],
-})
-
 const makeAddSurveyRepository = (): IAddSurveyRepository => {
     class AddSurveyRepositoryStub {
         async add(surveyData: IAddSurveyModel): Promise<void> {
