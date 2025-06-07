@@ -4,54 +4,54 @@ import { badRequest, internalServerError, noContent } from '@presentation/helper
 import { IAddSurvey } from '@domain/usecases'
 import { IAddSurveyModel } from '@domain/models'
 
+const makeFakeRequest = (): IHttpRequest => ({
+    body: {
+        question: 'any_question',
+        answers: [
+            {
+                answer: 'any_answer',
+                image: 'any_image',
+            },
+        ],
+    },
+})
+
+const makeValidation = (): IValidation => {
+    class ValidationStub implements IValidation {
+        validate(input: any): Error {
+            return null
+        }
+    }
+    return new ValidationStub()
+}
+
+const makeAddSurvey = (): IAddSurvey => {
+    class AddSurveyStub implements IAddSurvey {
+        async add(surveyData: IAddSurveyModel): Promise<void> {
+            return Promise.resolve()
+        }
+    }
+    return new AddSurveyStub()
+}
+
+const makeFakeServerError = (): IHttpResponse => {
+    let fakeError = new Error()
+    fakeError.stack = 'any_stack'
+    return internalServerError(fakeError)
+}
+
+const makeSut = () => {
+    const validationStub = makeValidation()
+    const addSurveyStub = makeAddSurvey()
+    const sut = new AddSurveyController(validationStub, addSurveyStub)
+    return {
+        sut,
+        validationStub,
+        addSurveyStub,
+    }
+}
+
 describe('AddSurvey Controller', () => {
-    const makeFakeRequest = (): IHttpRequest => ({
-        body: {
-            question: 'any_question',
-            answers: [
-                {
-                    answer: 'any_answer',
-                    image: 'any_image',
-                },
-            ],
-        },
-    })
-
-    const makeValidation = (): IValidation => {
-        class ValidationStub implements IValidation {
-            validate(input: any): Error {
-                return null
-            }
-        }
-        return new ValidationStub()
-    }
-
-    const makeAddSurvey = (): IAddSurvey => {
-        class AddSurveyStub implements IAddSurvey {
-            async add(surveyData: IAddSurveyModel): Promise<void> {
-                return Promise.resolve()
-            }
-        }
-        return new AddSurveyStub()
-    }
-
-    const makeFakeServerError = (): IHttpResponse => {
-        let fakeError = new Error()
-        fakeError.stack = 'any_stack'
-        return internalServerError(fakeError)
-    }
-
-    const makeSut = () => {
-        const validationStub = makeValidation()
-        const addSurveyStub = makeAddSurvey()
-        const sut = new AddSurveyController(validationStub, addSurveyStub)
-        return {
-            sut,
-            validationStub,
-            addSurveyStub,
-        }
-    }
-
     // Garante que Validation seja chamado com os valores corretos.
     test('Should call Validation with correct values', async () => {
         const { sut, validationStub } = makeSut()
