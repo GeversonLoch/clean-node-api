@@ -2,6 +2,7 @@ import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocol
 import { IAddAccount, IAuthentication } from "@domain/usecases"
 import { badRequest, forbidden, internalServerError, success } from "@presentation/helpers"
 import { IValidation } from "@presentation/protocols"
+import { InvalidCredentialsError } from "@presentation/errors"
 
 export class SignUpController implements IController {
   constructor(
@@ -29,7 +30,7 @@ export class SignUpController implements IController {
         password,
       })
       if (!account) {
-        return forbidden('O email informado está em uso!')
+        return forbidden(new InvalidCredentialsError())
       }
 
       return success({

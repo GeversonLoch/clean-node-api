@@ -1,7 +1,7 @@
 import { SignUpController } from "@presentation/controllers"
 import { IAccountModel, IAddAccountModel, IAuthenticationModel } from "@domain/models"
 import { IAddAccount, IAuthentication } from "@domain/usecases"
-import { InternalServerError, MissingParamError } from "@presentation/errors"
+import { InternalServerError, InvalidCredentialsError, MissingParamError } from "@presentation/errors"
 import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
 import { success, internalServerError, badRequest, forbidden } from "@presentation/helpers"
 import { IValidation } from "@presentation/protocols"
@@ -109,7 +109,7 @@ describe('SignUp Controller', () => {
     const { sut, addAccountStub } = makeSut()
     jest.spyOn(addAccountStub, 'add').mockReturnValueOnce(Promise.resolve(null))
     const httpResponse = await sut.handle(makeFakeRequest())
-    expect(httpResponse).toEqual(forbidden('O email informado está em uso!'))
+    expect(httpResponse).toEqual(forbidden(new InvalidCredentialsError()))
   })
 
   // Deve retornar 200 se dados válidos forem fornecidos.

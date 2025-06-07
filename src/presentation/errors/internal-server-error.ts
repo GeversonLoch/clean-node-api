@@ -11,7 +11,7 @@ export class InternalServerError extends Error {
     */
 
   constructor(stack: string) {
-    super('Desculpe, algo deu errado! 😕 Ocorreu um problema interno no servidor (Erro 500). Tente novamente mais tarde.')
+    super('Desculpe, algo deu errado! 😕')
     this.name = `InternalServerError`
     this.stack = stack
   }
