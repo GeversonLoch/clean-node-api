@@ -76,4 +76,11 @@ describe('DbLoadAccountByToken Usecase', () => {
         const account = await sut.loadByToken(accessToken, role)
         expect(account).toBeNull()
     })
+
+    // Garrante que retorne uma conta em caso de sucesso.
+    test('Shoud return an account on success', async () => {
+        const { sut } = makeSut()
+        const account = await sut.loadByToken(accessToken, role)
+        expect(account).toEqual(makeFakeAccount())
+    })
 })
