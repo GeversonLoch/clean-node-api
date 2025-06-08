@@ -1,5 +1,6 @@
-import { IDecrypter } from '@data/protocols'
+import { IDecrypter, ILoadAccountByTokenRepository } from '@data/protocols'
 import { DbLoadAccountByToken } from '@data/usecases'
+import { IAccountModel } from '@domain/models'
 
 const accessToken = 'any_token'
 const role = 'any_role'
@@ -14,12 +15,30 @@ const makeDecrypterStub = (): IDecrypter => {
     return new Decrypter()
 }
 
+const makeFakeAccount = (): IAccountModel => ({
+    id: 'any_id',
+    name: 'any_name',
+    email: 'any_email@email.com',
+    password: 'any_password',
+})
+
+const makeLoadAccountByTokenRepositoryStub = (): ILoadAccountByTokenRepository => {
+    class LoadAccountByTokenRepository implements ILoadAccountByTokenRepository {
+        async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
+            return Promise.resolve(makeFakeAccount())
+        }
+    }
+    return new LoadAccountByTokenRepository()
+}
+
 const makeSut = () => {
     const decrypterStub = makeDecrypterStub()
-    const sut = new DbLoadAccountByToken(decrypterStub)
+    const loadAccountByTokenRepositoryStub = makeLoadAccountByTokenRepositoryStub()
+    const sut = new DbLoadAccountByToken(decrypterStub, loadAccountByTokenRepositoryStub)
     return {
         sut,
         decrypterStub,
+        loadAccountByTokenRepositoryStub,
     }
 }
 
