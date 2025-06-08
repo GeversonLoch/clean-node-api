@@ -5,6 +5,8 @@ import { forbidden, internalServerError, success } from '@presentation/helpers'
 import { AuthMiddleware } from '@presentation/middlewares'
 import { IHttpRequest } from '@presentation/protocols'
 
+const role = 'any_role'
+
 const makeFakeRequest = (): IHttpRequest => ({
     headers: {
         'x-access-token': 'any_token',
@@ -27,9 +29,9 @@ const makeLoadAccountByTokenStub = (): ILoadAccountByToken => {
     return new LoadAccountByToken()
 }
 
-const makeSut = () => {
+const makeSut = (role?: string) => {
     const loadAccountByTokenStub = makeLoadAccountByTokenStub()
-    const sut = new AuthMiddleware(loadAccountByTokenStub)
+    const sut = new AuthMiddleware(loadAccountByTokenStub, role)
     return {
         sut,
         loadAccountByTokenStub,
@@ -46,10 +48,10 @@ describe('Auth Middleware', () => {
 
     // Garante que LoadAccountByToken seja chamado com accessToken correto.
     test('Should call LoadAccountByToken with coorrect accessToken', async () => {
-        const { sut, loadAccountByTokenStub } = makeSut()
+        const { sut, loadAccountByTokenStub } = makeSut(role)
         const loadSpy = jest.spyOn(loadAccountByTokenStub, 'loadByToken')
         await sut.handle(makeFakeRequest())
-        expect(loadSpy).toHaveBeenCalledWith('any_token')
+        expect(loadSpy).toHaveBeenCalledWith('any_token', role)
     })
 
     // Garante que retorne 403 se o LoadAccountByToken retornar nulo.
