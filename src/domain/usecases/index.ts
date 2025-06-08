@@ -1,3 +1,4 @@
 export * from './add-account.interface'
 export * from './authentication.interface'
 export * from './add-survey.interface'
+export * from './load-account-by-token.interface'
