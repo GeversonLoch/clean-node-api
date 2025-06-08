@@ -51,11 +51,21 @@ describe('JWT Adapter', () => {
             expect(verifySpy).toHaveBeenCalledWith('any_token', 'secret')
         })
 
-        // Garante que o JwtAdapter retorne um valor quando o método decrypt for bem-sucedido
-        test('Should return a value on decrypt success', async () => {
+        // Garante que o JwtAdapter retorne um valor quando o método verify for bem-sucedido
+        test('Should return a value on verify success', async () => {
             const sut = makeSut()
             const value = await sut.decrypt('any_token')
             expect(value).toBe('any_value')
+        })
+
+        // Garante que o JwtAdapter lance uma exceção se o método verify lançar
+        test('Should throw if verify throws', async () => {
+            const sut = makeSut()
+            jest.spyOn(jwt, 'verify').mockImplementationOnce(() => {
+                throw new Error()
+            })
+            const promise = sut.decrypt('any_token')
+            await expect(promise).rejects.toThrow()
         })
     })
 })
