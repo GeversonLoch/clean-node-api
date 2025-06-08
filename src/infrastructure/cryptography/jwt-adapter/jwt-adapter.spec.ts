@@ -10,11 +10,8 @@ jest.mock('jsonwebtoken', () => ({
     },
 }))
 
-const token = 'any_token'
-const secret = 'secret'
-
 const makeSut = (): JwtAdapter => {
-    return new JwtAdapter(secret)
+    return new JwtAdapter('secret')
 }
 
 describe('JWT Adapter', () => {
@@ -24,7 +21,7 @@ describe('JWT Adapter', () => {
             const sut = makeSut()
             const signSpy = jest.spyOn(jwt, 'sign')
             await sut.encrypt('any_id')
-            expect(signSpy).toHaveBeenCalledWith({ id: 'any_id' }, secret)
+            expect(signSpy).toHaveBeenCalledWith({ id: 'any_id' }, 'secret')
         })
 
         // Garante que o JwtAdapter retorne um token quando o método sign for bem-sucedido
@@ -50,8 +47,8 @@ describe('JWT Adapter', () => {
         test('Should call decrypt with coorrect values', async () => {
             const sut = makeSut()
             const verifySpy = jest.spyOn(jwt, 'verify')
-            await sut.decrypt(token)
-            expect(verifySpy).toHaveBeenCalledWith(token, secret)
+            await sut.decrypt('any_token')
+            expect(verifySpy).toHaveBeenCalledWith('any_token', 'secret')
         })
     })
 })
