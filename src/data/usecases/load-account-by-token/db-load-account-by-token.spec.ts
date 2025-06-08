@@ -83,4 +83,14 @@ describe('DbLoadAccountByToken Usecase', () => {
         const account = await sut.loadByToken(accessToken, role)
         expect(account).toEqual(makeFakeAccount())
     })
+
+    // Garante que DbLoadAccountByToken lance uma exceção se o Decrypter lançar.
+    test('Should throw if Decrypter throws', async () => {
+        const { sut, decrypterStub } = makeSut()
+        jest.spyOn(decrypterStub, 'decrypt').mockReturnValueOnce(
+            Promise.reject(new Error())
+        )
+        const promise = sut.loadByToken(accessToken, role)
+        await expect(promise).rejects.toThrow()
+    })
 })
