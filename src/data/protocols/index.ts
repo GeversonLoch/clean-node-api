@@ -1,6 +1,7 @@
 export * from './cryptography/hasher.interface'
 export * from './cryptography/hash-comparer.interface'
 export * from './cryptography/encrypter.interface'
+export * from './cryptography/decrypter.interface'
 export * from './db/account/add-account-repository.interface'
 export * from './db/log/log-error-repository.interface'
 export * from './db/account/load-account-by-email-repository.interface'
