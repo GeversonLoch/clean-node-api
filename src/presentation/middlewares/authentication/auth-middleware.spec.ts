@@ -1,3 +1,5 @@
+import { IAccountModel } from '@domain/models'
+import { ILoadAccountByToken } from '@domain/usecases'
 import { AccessDeniedError } from '@presentation/errors'
 import { forbidden } from '@presentation/helpers'
 import { AuthMiddleware } from '@presentation/middlewares'
@@ -5,16 +7,32 @@ import { IHttpRequest } from '@presentation/protocols'
 
 const makeFakeRequest = (): IHttpRequest => ({
     headers: {
-        'x-access-token': '',
+        'x-access-token': 'any_token',
     },
 })
 
+const makeFakeAccount = (): IAccountModel => ({
+  id: 'any_id',
+  name: 'any_name',
+  email: 'any_email@email.com',
+  password: 'any_password'
+})
+
+const makeLoadAccountByTokenStub = () => {
+    class LoadAccountByToken implements ILoadAccountByToken {
+        async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
+            return Promise.resolve(makeFakeAccount())
+        }
+    }
+    return new LoadAccountByToken()
+}
+
 const makeSut = () => {
-    // const addSurveyStub = makeAddSurvey()
-    const sut = new AuthMiddleware()
+    const loadAccountByTokenStub = makeLoadAccountByTokenStub()
+    const sut = new AuthMiddleware(loadAccountByTokenStub)
     return {
         sut,
-        // validationStub,
+        loadAccountByTokenStub,
     }
 }
 
@@ -24,5 +42,13 @@ describe('Auth Middleware', () => {
         const { sut } = makeSut()
         const httpResponse = await sut.handle({})
         expect(httpResponse).toEqual(forbidden(new AccessDeniedError()))
+    })
+
+    // Garante que LoadAccountByToken seja chamado com accessToken correto.
+    test('Should call LoadAccountByToken with coorrect accessToken', async () => {
+        const { sut, loadAccountByTokenStub } = makeSut()
+        const loadSpy = jest.spyOn(loadAccountByTokenStub, 'loadByToken')
+        await sut.handle(makeFakeRequest())
+        expect(loadSpy).toHaveBeenCalledWith('any_token')
     })
 })
