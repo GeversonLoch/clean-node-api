@@ -2,6 +2,7 @@ import { IDecrypter } from '@data/protocols'
 import { DbLoadAccountByToken } from '@data/usecases'
 
 const accessToken = 'any_token'
+const role = 'any_role'
 const decryptToken = 'any_decrypted_value'
 
 const makeDecrypterStub = (): IDecrypter => {
@@ -27,7 +28,15 @@ describe('DbLoadAccountByToken Usecase', () => {
     test('Shoud call Decrypter with correct values', async () => {
         const { sut, decrypterStub } = makeSut()
         const decryptSpy = jest.spyOn(decrypterStub, 'decrypt')
-        await sut.loadByToken(accessToken)
+        await sut.loadByToken(accessToken, role)
         expect(decryptSpy).toHaveBeenCalledWith(accessToken)
+    })
+
+    // Garrante que DbLoadAccountByToken retorne nulo se Decrypter retornar nulo.
+    test('Shoud return null if Decrypter returns null', async () => {
+        const { sut, decrypterStub } = makeSut()
+        jest.spyOn(decrypterStub, 'decrypt').mockReturnValueOnce(Promise.resolve(null))
+        const account = await sut.loadByToken(accessToken, role)
+        expect(account).toBeNull()
     })
 })
