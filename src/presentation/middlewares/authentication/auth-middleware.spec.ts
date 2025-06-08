@@ -1,7 +1,7 @@
 import { IAccountModel } from '@domain/models'
 import { ILoadAccountByToken } from '@domain/usecases'
 import { AccessDeniedError } from '@presentation/errors'
-import { forbidden } from '@presentation/helpers'
+import { forbidden, success } from '@presentation/helpers'
 import { AuthMiddleware } from '@presentation/middlewares'
 import { IHttpRequest } from '@presentation/protocols'
 
@@ -58,5 +58,16 @@ describe('Auth Middleware', () => {
         jest.spyOn(loadAccountByTokenStub, 'loadByToken').mockReturnValueOnce(Promise.resolve(null))
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(forbidden(new AccessDeniedError()))
+    })
+
+    // Garante que retorne 200 se o LoadAccountByToken retornar uma conta.
+    test('Should return 403 if LoadAccountByToken returns an account', async () => {
+        const { sut } = makeSut()
+        const httpResponse = await sut.handle(makeFakeRequest())
+        expect(httpResponse).toEqual(
+            success({
+                accountId: 'any_id',
+            }),
+        )
     })
 })
