@@ -18,7 +18,7 @@ const makeFakeAccount = (): IAccountModel => ({
   password: 'any_password'
 })
 
-const makeLoadAccountByTokenStub = () => {
+const makeLoadAccountByTokenStub = (): ILoadAccountByToken => {
     class LoadAccountByToken implements ILoadAccountByToken {
         async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
             return Promise.resolve(makeFakeAccount())
