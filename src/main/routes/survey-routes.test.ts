@@ -33,11 +33,11 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
 })
 
 describe('POST /add-survey', () => {
-    // Garante que a rota POST '/add-survey' retorna status 204 em caso de sucesso
-    test('Should return 204 on add survey success', async () => {
+    // Garante que a rota POST '/add-survey' retorna status 403 caso não seja passado um accessToken de usuário admin
+    test('Should return 403 on add survey without accessToken', async () => {
         await request(app)
             .post('/api/add-survey')
             .send(makeFakeSurveyData())
-            .expect(204)
+            .expect(403)
     })
 })
