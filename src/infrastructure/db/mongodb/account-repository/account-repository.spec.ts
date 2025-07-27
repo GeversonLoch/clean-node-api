@@ -91,4 +91,48 @@ describe('Account Mongo Repository', () => {
             expect(updatedAccount.accessToken).toBe('new_token')
         })
     })
+
+    describe('loadByToken()', () => {
+        // Garante que retorne uma conta se o método loadByToken for bem sucedido sem regra
+        test('Should return an account on loadByToken success without role', async () => {
+            const sut = new AccountMongoRepository(mongoDBAdapter)
+            await accountCollection.insertOne({
+                name: 'any_name',
+                email: 'any_email@email.com',
+                password: 'any_password',
+                accessToken: 'any_token',
+            })
+            const account = await sut.loadByToken('any_token')
+            expect(account).toBeTruthy()
+            expect(account.id).toBeTruthy()
+            expect(account.name).toBe('any_name')
+            expect(account.email).toBe('any_email@email.com')
+            expect(account.password).toBe('any_password')
+        })
+
+        // Garante que retorne uma conta se o método loadByToken for bem sucedido com regra
+        test('Should return an account on loadByToken success with role', async () => {
+            const sut = new AccountMongoRepository(mongoDBAdapter)
+            await accountCollection.insertOne({
+                name: 'any_name',
+                email: 'any_email@email.com',
+                password: 'any_password',
+                accessToken: 'any_token',
+                role: 'any_role',
+            })
+            const account = await sut.loadByToken('any_token', 'any_role')
+            expect(account).toBeTruthy()
+            expect(account.id).toBeTruthy()
+            expect(account.name).toBe('any_name')
+            expect(account.email).toBe('any_email@email.com')
+            expect(account.password).toBe('any_password')
+        })
+
+        // Garante que retorne nulo se loadByToken falhar na obtenção do registro
+        test('Should return null if loadByToken fails', async () => {
+            const sut = new AccountMongoRepository(mongoDBAdapter)
+            const account = await sut.loadByToken('any_token')
+            expect(account).toBeFalsy()
+        })
+    })
 })
