@@ -8,13 +8,17 @@
 * de conexão, obtenção de coleção e mapeamento de documentos.
 */
 
-import { IAddAccountRepository, ILoadAccountByEmailRepository, IUpdateAccessTokenRepository } from '@data/protocols'
+import { IAddAccountRepository, ILoadAccountByEmailRepository, ILoadAccountByTokenRepository, IUpdateAccessTokenRepository } from '@data/protocols'
 import { IAccountModel, IAddAccountModel } from '@domain/models'
 import { IMongoDBAdapter } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
-export class AccountMongoRepository implements IAddAccountRepository, ILoadAccountByEmailRepository, IUpdateAccessTokenRepository {
-    constructor(private readonly mongoDBAdapter: IMongoDBAdapter) {}
+export class AccountMongoRepository implements
+    IAddAccountRepository,
+    ILoadAccountByEmailRepository,
+    IUpdateAccessTokenRepository,
+    ILoadAccountByTokenRepository {
+    constructor(private readonly mongoDBAdapter: IMongoDBAdapter) { }
 
     /* Adiciona uma nova conta na coleção 'accounts' do MongoDB.
     Este método recebe os dados da conta (IAddAccountModel), insere no banco,
@@ -39,5 +43,14 @@ export class AccountMongoRepository implements IAddAccountRepository, ILoadAccou
             { _id: new ObjectId(id) },
             { $set: { accessToken: token } }
         )
+    }
+
+    async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
+        const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
+        const account = await accountCollection.findOne({
+            accessToken,
+            role,
+        })
+        return this.mongoDBAdapter.map(account)
     }
 }
