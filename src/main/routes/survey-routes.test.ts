@@ -40,7 +40,7 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
 })
 
 describe('POST /add-survey', () => {
-    // Garante que a rota POST '/add-survey' retorna status 403 caso não seja passado um accessToken de usuário admin
+    // Garante que a rota POST '/add-survey' retorne status 403 caso não seja passado um accessToken de usuário admin
     test('Should return 403 on add survey without accessToken', async () => {
         await request(app)
             .post('/api/add-survey')
@@ -48,7 +48,7 @@ describe('POST /add-survey', () => {
             .expect(403)
     })
 
-    // Garante que a rota POST '/add-survey' retorna status 204 caso seja passado um accessToken de usuário admin valido
+    // Garante que a rota POST '/add-survey' retorne status 204 caso seja passado um accessToken de usuário admin valido
     test('Should return 403 on add survey with valid accessToken', async () => {
         const { insertedId } = await accountCollection.insertOne({
             name: 'Nome',
@@ -69,6 +69,26 @@ describe('POST /add-survey', () => {
             .expect(204)
     })
 
-    // Garante que a rota POST '/add-survey' retorna status 403 caso seja passado um accessToken admin invalido
-    
+    // Garante que a rota POST '/add-survey' retorne status 403 caso seja passado um accessToken admin invalido
+    test('Should return 403 on add survey with invalid accessToken', async () => {
+        const { insertedId } = await accountCollection.insertOne({
+            name: 'Nome',
+            email: 'nome.sobrenome@email.com',
+            password: '123abc',
+            role: 'admin'
+        })
+        const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
+        await accountCollection.updateOne({ _id: insertedId }, {
+            $set: {
+                accessToken
+            }
+        })
+        await request(app)
+            .post('/api/add-survey')
+            .set('x-access-token', 'invalid_token')
+            .send(makeFakeSurveyData())
+            .expect(403)
+    })
 })
+
+// Aula 58 - 00:29:44 (Rodar testes, o teste que criei acima deveria funcionar?!)
