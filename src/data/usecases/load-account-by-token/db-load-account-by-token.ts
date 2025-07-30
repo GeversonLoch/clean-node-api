@@ -9,8 +9,9 @@ export class DbLoadAccountByToken implements ILoadAccountByToken {
     ) {}
 
     async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
-        const token = await this.decrypter.decrypt(accessToken)
-        if (token) {
+        const decodedToken = await this.decrypter.decrypt(accessToken)
+        if (decodedToken) {
+            // TODO: O certo não seria verificação por ID? decodedToken.id com loadById?
             const account = await this.loadAccountByTokenRepository.loadByToken(accessToken, role)
             if (account) {
                 return account

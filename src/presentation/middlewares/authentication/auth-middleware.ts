@@ -22,6 +22,9 @@ export class AuthMiddleware implements IMiddleware {
             }
             return forbidden(new AccessDeniedError())
         } catch (error) {
+            if (error.name === 'JsonWebTokenError')
+              return forbidden(new AccessDeniedError())
+
             return internalServerError(error)
         }
     }
