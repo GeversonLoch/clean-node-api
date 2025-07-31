@@ -7,13 +7,7 @@ Uma API desenvolvida com uma arquitetura definida e modular, priorizando a manut
 ## 🚀 Configuração do Ambiente
 
 * **Versão do Node.js:** `22.15.1`
-* **Gerenciador de pacotes:** NPM ou Yarn
-
-Instale as dependências do projeto:
-
-```sh
-npm install
-```
+* **MongoDB** `8.0.9`
 
 ---
 
@@ -83,8 +77,16 @@ npm i @types/jsonwebtoken
 ```
 
 ---
+### ⚙️ Configuração inicial
 
-## 🏃 Executando o Projeto
+ - Instale as dependências do projeto com `npm install`.
+ - Instale o MongoDB Community Server localmente, de preferencia a versão `8.0.9` (vira com visualizador Compass).
+ - Faça login no MongoDB Atlas (cloud database).
+
+### 🏃 Executando o Projeto
+
+ - Compilar o projeto com o script `build`.
+ - Para iniciar a API localmente execute o script `start` ou `start:debug` para debugar.
 
 ### 🔬 Rodar os Testes
 
