@@ -1,6 +1,15 @@
 import { IAddSurveyRepository } from '@data/protocols'
 import { DbAddSurvey } from '@data/usecases'
-import { IAddSurveyModel, ISurveyModel } from '@domain/models'
+import { IAddSurveyModel } from '@domain/models'
+import MockDate from 'mockdate'
+
+beforeAll(() => {
+    MockDate.set(new Date())
+})
+
+afterAll(() => {
+    MockDate.reset()
+})
 
 const makeFakeSurveyData = (): IAddSurveyModel => ({
     answers: [
@@ -10,6 +19,7 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
         },
     ],
     question: 'any_question',
+    date: new Date(),
 })
 
 const makeAddSurveyRepository = (): IAddSurveyRepository => {

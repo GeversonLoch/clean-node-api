@@ -2,11 +2,13 @@ import { IAddSurveyModel } from '@domain/models'
 import { SurveyMongoRepository } from '@infrastructure/db'
 import { mongoDBAdapter } from '@main/config/db-connection'
 import { Collection } from 'mongodb'
+import MockDate from 'mockdate'
 
 let surveyCollection: Collection
 
 beforeAll(async () => {
     await mongoDBAdapter.connect()
+    MockDate.set(new Date())
 })
 
 beforeEach(async () => {
@@ -16,6 +18,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
     await mongoDBAdapter.disconnect()
+    MockDate.reset()
 })
 
 const makeFakeSurveyData = (): IAddSurveyModel => ({
@@ -29,6 +32,7 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
             answer: 'any_answer',
         },
     ],
+    date: new Date(),
 })
 
 describe('Survey Mongo Repository', () => {
