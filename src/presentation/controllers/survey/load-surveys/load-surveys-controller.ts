@@ -1,5 +1,5 @@
 import { IController, IHttpRequest, IHttpResponse } from '@presentation/protocols'
-import { badRequest, internalServerError, success } from '@presentation/helpers'
+import { badRequest, internalServerError, noContent, success } from '@presentation/helpers'
 import { IValidation } from '@presentation/protocols'
 import { ILoadSurveys } from '@domain/usecases'
 
@@ -18,8 +18,10 @@ export class LoadSurveysController implements IController {
             }
 
             const surveys = await this.loadSurveys.load()
-
-            return success(surveys)
+            if (surveys.length)
+                return success(surveys)
+            else
+                return noContent()
         } catch (error) {
             return internalServerError(error)
         }
