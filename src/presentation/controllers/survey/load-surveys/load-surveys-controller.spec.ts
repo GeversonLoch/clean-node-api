@@ -1,6 +1,6 @@
-import { IHttpRequest, IHttpResponse, IValidation } from '@presentation/protocols'
+import { IHttpResponse, IValidation } from '@presentation/protocols'
 import { LoadSurveysController } from '@presentation/controllers'
-import { badRequest, internalServerError, noContent } from '@presentation/helpers'
+import { internalServerError, success } from '@presentation/helpers'
 import { ILoadSurveys } from '@domain/usecases'
 import { ISurveyModel } from '@domain/models'
 import MockDate from 'mockdate'
@@ -58,6 +58,12 @@ const makeLoadSurveys = (): ILoadSurveys => {
     return new LoadSurveysStub()
 }
 
+const makeFakeServerError = (): IHttpResponse => {
+    let fakeError = new Error()
+    fakeError.stack = 'any_stack'
+    return internalServerError(fakeError)
+}
+
 const makeSut = () => {
     const validationStub = makeValidation()
     const loadSurveysStub = makeLoadSurveys()
@@ -70,11 +76,26 @@ const makeSut = () => {
 }
 
 describe('LoadSurveys Controller', () => {
-    // Garante que LoadSurveys seja chamado
+    // Garante que LoadSurveys seja chamado.
     test('Should call LoadSurveys', async () => {
         const { sut, loadSurveysStub } = makeSut()
         const loadSpy = jest.spyOn(loadSurveysStub, 'load')
         await sut.handle({})
         expect(loadSpy).toHaveBeenCalled()
+    })
+
+    // Garante que retorne 200 em caso de sucesso.
+    test('Should return 200 on success', async () => {
+        const { sut } = makeSut()
+        const httpResponse = await sut.handle({})
+        expect(httpResponse).toEqual(success(makeFakeSurveys()))
+    })
+
+    // Garante que retorne erro 500 se o LoadSurveys lançar uma exceção.
+    test('Should return 500 if LoadSurveys throws an exception', async () => {
+        const { sut, loadSurveysStub } = makeSut()
+        jest.spyOn(loadSurveysStub, 'load').mockReturnValueOnce(Promise.reject(new Error()))
+        const httpResponse = await sut.handle({})
+        expect(httpResponse).toEqual(makeFakeServerError())
     })
 })
