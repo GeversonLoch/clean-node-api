@@ -1,7 +1,6 @@
 import { IController, IHttpRequest, IHttpResponse } from '@presentation/protocols'
 import { badRequest, internalServerError, success } from '@presentation/helpers'
 import { IValidation } from '@presentation/protocols'
-import { ISurveyModel } from '@domain/models'
 import { ILoadSurveys } from '@domain/usecases'
 
 export class LoadSurveysController implements IController {
@@ -18,7 +17,7 @@ export class LoadSurveysController implements IController {
                 return badRequest(error)
             }
 
-            const surveys: Array<ISurveyModel> = await this.loadSurveys.load()
+            const surveys = await this.loadSurveys.load()
 
             return success(surveys)
         } catch (error) {
