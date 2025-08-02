@@ -1,6 +1,6 @@
 import { IHttpResponse, IValidation } from '@presentation/protocols'
 import { LoadSurveysController } from '@presentation/controllers'
-import { internalServerError, success } from '@presentation/helpers'
+import { internalServerError, noContent, success } from '@presentation/helpers'
 import { ILoadSurveys } from '@domain/usecases'
 import { ISurveyModel } from '@domain/models'
 import MockDate from 'mockdate'
@@ -89,6 +89,14 @@ describe('LoadSurveys Controller', () => {
         const { sut } = makeSut()
         const httpResponse = await sut.handle({})
         expect(httpResponse).toEqual(success(makeFakeSurveys()))
+    })
+
+    // Garante que retorne 204 em caso de sucesso quando não registros salvos.
+    test('Should return 204 if LoadSurveys returns empty', async () => {
+        const { sut, loadSurveysStub } = makeSut()
+        jest.spyOn(loadSurveysStub, 'load').mockReturnValueOnce(Promise.resolve([]))
+        const httpResponse = await sut.handle({})
+        expect(httpResponse).toEqual(noContent())
     })
 
     // Garante que retorne erro 500 se o LoadSurveys lançar uma exceção.
