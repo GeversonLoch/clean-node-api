@@ -57,10 +57,18 @@ const makeSut = () => {
 }
 
 describe('DbLoadSurveys Usecase', () => {
+    // Garante que AddSurveyRepository seja chamado
     test('Should call LoadSurveysRepository', async () => {
         const { sut, loadSurveysRepositoryStub } = makeSut()
         const loadAllSpy = jest.spyOn(loadSurveysRepositoryStub, 'loadAll')
         await sut.load()
         expect(loadAllSpy).toHaveBeenCalled()
+    })
+
+    // Garante que DbLoadSurveys retorne uma lista de pesquisas em caso de sucesso
+    test('Should return a list of Surveys on sucess', async () => {
+        const { sut } = makeSut()
+        const surveys = await sut.load()
+        expect(surveys).toEqual(makeFakeSurveys())
     })
 })
