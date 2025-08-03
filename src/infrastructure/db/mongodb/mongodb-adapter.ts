@@ -46,10 +46,12 @@ export class MongoDBAdapter implements IMongoDBAdapter {
 
   // Mapeia o documento do MongoDB, convertendo _id para id
   public map<T extends Document>(document: WithId<T> | null) {
-    if (document) {
-      const { _id, ...documentWithoutId } = document
-      return { id: _id, ...documentWithoutId }
-    }
-    return null
+    if (!document) return null
+    const { _id, ...data } = document
+    return { id: _id, ...data }
+  }
+
+  public mapAll<T extends Document>(documents: WithId<T>[]) {
+    return documents.map(doc => this.map(doc))
   }
 }
