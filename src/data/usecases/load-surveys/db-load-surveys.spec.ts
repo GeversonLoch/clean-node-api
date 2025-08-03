@@ -57,7 +57,7 @@ const makeSut = () => {
 }
 
 describe('DbLoadSurveys Usecase', () => {
-    // Garante que AddSurveyRepository seja chamado
+    // Garante que LoadSurveysRepository seja chamado
     test('Should call LoadSurveysRepository', async () => {
         const { sut, loadSurveysRepositoryStub } = makeSut()
         const loadAllSpy = jest.spyOn(loadSurveysRepositoryStub, 'loadAll')
@@ -70,5 +70,13 @@ describe('DbLoadSurveys Usecase', () => {
         const { sut } = makeSut()
         const surveys = await sut.load()
         expect(surveys).toEqual(makeFakeSurveys())
+    })
+
+    // Garante que DbLoadSurveys lance uma exceção se o LoadSurveysRepository lançar
+    test('Should throw if LoadSurveysRepository throws', async () => {
+        const { sut, loadSurveysRepositoryStub } = makeSut()
+        jest.spyOn(loadSurveysRepositoryStub, 'loadAll').mockReturnValueOnce(Promise.reject(new Error()))
+        const promise = sut.load()
+        await expect(promise).rejects.toThrow()
     })
 })
