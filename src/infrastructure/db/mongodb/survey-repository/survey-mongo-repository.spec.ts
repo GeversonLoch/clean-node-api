@@ -36,12 +36,14 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
 })
 
 describe('Survey Mongo Repository', () => {
-    // Garante que o Survey MongoRepository adicione uma nova pesquisa ao executar o método 'add' com sucesso
-    test('Should add a survey on success', async () => {
-        const sut = new SurveyMongoRepository(mongoDBAdapter)
-        await sut.add(makeFakeSurveyData())
-        const survey = await surveyCollection.findOne({ question: 'any_question' })
-        expect(survey).toBeTruthy()
-        expect(survey._id).toBeTruthy()
+    describe('add()', () => {
+        // Garante que o Survey MongoRepository adicione uma nova pesquisa ao executar o método 'add' com sucesso
+        test('Should add a survey on success', async () => {
+            const sut = new SurveyMongoRepository(mongoDBAdapter)
+            await sut.add(makeFakeSurveyData())
+            const survey = await surveyCollection.findOne({ question: 'any_question' })
+            expect(survey).toBeTruthy()
+            expect(survey._id).toBeTruthy()
+        })
     })
 })
