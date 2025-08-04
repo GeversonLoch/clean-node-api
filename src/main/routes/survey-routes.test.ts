@@ -90,3 +90,12 @@ describe('POST /add-survey', () => {
             .expect(403)
     })
 })
+
+describe('GET /surveys', () => {
+    // Garante que a rota GET '/add-survey' retorne status 403 caso não seja passado um accessToken
+    test('Should return 403 on load surveys without accessToken', async () => {
+        await request(app)
+            .get('/api/surveys')
+            .expect(403)
+    })
+})
