@@ -1,4 +1,4 @@
-import { IHttpResponse, IValidation } from '@presentation/protocols'
+import { IHttpResponse } from '@presentation/protocols'
 import { LoadSurveysController } from '@presentation/controllers'
 import { internalServerError, noContent, success } from '@presentation/helpers'
 import { ILoadSurveys } from '@domain/usecases'
@@ -40,15 +40,6 @@ const makeFakeSurveys = (): ISurveyModel[] => {
     ]
 }
 
-const makeValidation = (): IValidation => {
-    class ValidationStub implements IValidation {
-        validate(input: any): Error {
-            return null
-        }
-    }
-    return new ValidationStub()
-}
-
 const makeLoadSurveys = (): ILoadSurveys => {
     class LoadSurveysStub implements ILoadSurveys {
         async load(): Promise<ISurveyModel[]> {
@@ -65,12 +56,10 @@ const makeFakeServerError = (): IHttpResponse => {
 }
 
 const makeSut = () => {
-    const validationStub = makeValidation()
     const loadSurveysStub = makeLoadSurveys()
-    const sut = new LoadSurveysController(validationStub, loadSurveysStub)
+    const sut = new LoadSurveysController(loadSurveysStub)
     return {
         sut,
-        validationStub,
         loadSurveysStub,
     }
 }
@@ -80,14 +69,14 @@ describe('LoadSurveys Controller', () => {
     test('Should call LoadSurveys', async () => {
         const { sut, loadSurveysStub } = makeSut()
         const loadSpy = jest.spyOn(loadSurveysStub, 'load')
-        await sut.handle({})
+        await sut.handle()
         expect(loadSpy).toHaveBeenCalled()
     })
 
     // Garante que retorne 200 em caso de sucesso.
     test('Should return 200 on success', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle({})
+        const httpResponse = await sut.handle()
         expect(httpResponse).toEqual(success(makeFakeSurveys()))
     })
 
@@ -95,7 +84,7 @@ describe('LoadSurveys Controller', () => {
     test('Should return 204 if LoadSurveys returns empty', async () => {
         const { sut, loadSurveysStub } = makeSut()
         jest.spyOn(loadSurveysStub, 'load').mockReturnValueOnce(Promise.resolve([]))
-        const httpResponse = await sut.handle({})
+        const httpResponse = await sut.handle()
         expect(httpResponse).toEqual(noContent())
     })
 
@@ -103,7 +92,7 @@ describe('LoadSurveys Controller', () => {
     test('Should return 500 if LoadSurveys throws an exception', async () => {
         const { sut, loadSurveysStub } = makeSut()
         jest.spyOn(loadSurveysStub, 'load').mockReturnValueOnce(Promise.reject(new Error()))
-        const httpResponse = await sut.handle({})
+        const httpResponse = await sut.handle()
         expect(httpResponse).toEqual(makeFakeServerError())
     })
 })
