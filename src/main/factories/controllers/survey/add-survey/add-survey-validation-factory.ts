@@ -4,7 +4,7 @@ import {
 } from '@presentation/helpers'
 import { IValidation } from '@presentation/protocols'
 
-export const makeLoadSurveysValidation = (): IValidation => {
+export const makeAddSurveyValidation = (): IValidation => {
     const validations: IValidation[] = []
     for (const field of ['question', 'answers']) {
         validations.push(new RequiredFieldValidation(field))
