@@ -72,5 +72,12 @@ describe('Survey Mongo Repository', () => {
             expect(surveys[0].question).toBe('any_question')
             expect(surveys[1].question).toBe('other_question')
         })
+
+        // Garante que o SurveyMongoRepository obtenha um array vazio quando não há registros na base ao executar o método 'loadAll' com sucesso
+        test('Should load all surveys on success', async () => {
+            const sut = new SurveyMongoRepository(mongoDBAdapter)
+            const surveys = await sut.loadAll()
+            expect(surveys.length).toBe(0)
+        })
     })
 })
