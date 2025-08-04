@@ -1,5 +1,5 @@
 import { ISurveyModel } from '@domain/models'
 
 export interface ILoadSurveys {
-    load(): Promise<ISurveyModel[]>
+    load(params?: any): Promise<ISurveyModel[]>
 }
