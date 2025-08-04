@@ -49,7 +49,7 @@ describe('POST /add-survey', () => {
     })
 
     // Garante que a rota POST '/add-survey' retorne status 204 caso seja passado um accessToken de usuário admin valido
-    test('Should return 403 on add survey with valid accessToken', async () => {
+    test('Should return 204 on add survey with valid accessToken', async () => {
         const { insertedId } = await accountCollection.insertOne({
             name: 'Nome',
             email: 'nome.sobrenome@email.com',
