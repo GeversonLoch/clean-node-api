@@ -77,6 +77,17 @@ const makeFakeSurveyCollection = (): IAddSurveyModel[] => [
     },
 ]
 
+const makeAccessToken = async (): Promise<string> => {
+    const { insertedId } = await accountCollection.insertOne(makeFakeAccount())
+    const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
+    await accountCollection.updateOne({ _id: insertedId }, {
+        $set: {
+            accessToken
+        }
+    })
+    return accessToken
+}
+
 describe('POST /add-survey', () => {
     // Garante que a rota POST '/add-survey' retorne status 403 caso não seja passado um accessToken de usuário admin
     test('Should return 403 on add survey without accessToken', async () => {
@@ -129,13 +140,7 @@ describe('GET /surveys', () => {
 
     // Garante que a rota GET '/surveys' retorne status 204 caso seja passado um accessToken valido
     test('Should return 204 on add survey with valid accessToken', async () => {
-        const { insertedId } = await accountCollection.insertOne(makeFakeAccount())
-        const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
-        await accountCollection.updateOne({ _id: insertedId }, {
-            $set: {
-                accessToken
-            }
-        })
+        const accessToken = await makeAccessToken()
         await request(app)
             .get('/api/surveys')
             .set('x-access-token', accessToken)
@@ -145,13 +150,7 @@ describe('GET /surveys', () => {
     // Garante que a rota GET '/surveys' retorne status 200 caso seja passado um accessToken valido
     test('Should return 200 on add survey with valid accessToken', async () => {
         await surveyCollection.insertMany(makeFakeSurveyCollection())
-        const { insertedId } = await accountCollection.insertOne(makeFakeAccount())
-        const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
-        await accountCollection.updateOne({ _id: insertedId }, {
-            $set: {
-                accessToken
-            }
-        })
+        const accessToken = await makeAccessToken()
         await request(app)
             .get('/api/surveys')
             .set('x-access-token', accessToken)
