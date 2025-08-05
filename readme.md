@@ -59,6 +59,7 @@ npm i -D @types/supertest
 ```sh
 npm i -D jest @types/jest ts-jest
 npm i -D @shelf/jest-mongodb
+npm i -D mockdate
 ```
 
 ### 🎲 Base de dados

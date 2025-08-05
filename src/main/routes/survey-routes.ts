@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { expressRouteAdapter } from '@main/adapters/express/express-route-adapter'
+import { auth, adminAuth } from '@main/middlewares/auth'
 import { makeAddSurveyController } from '@main/factories/controllers/survey/add-survey/add-survey-controller-factory'
-import { expressMiddlewareAdapter } from '@main/adapters/express/express-middleware-adapter'
-import { makeAuthMiddleware } from '@main/factories/middlewares/auth-middlewares-factory'
+import { makeLoadSurveysController } from '@main/factories/controllers/survey/load-surveys/load-surveys-controller-factory'
 
 export default (router: Router): void => {
-    const adminAuth = expressMiddlewareAdapter(makeAuthMiddleware('admin'))
     router.post('/add-survey', adminAuth, expressRouteAdapter(makeAddSurveyController()))
+    router.get('/surveys', auth, expressRouteAdapter(makeLoadSurveysController()))
 }

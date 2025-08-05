@@ -3,6 +3,15 @@ import { AddSurveyController } from '@presentation/controllers'
 import { badRequest, internalServerError, noContent } from '@presentation/helpers'
 import { IAddSurvey } from '@domain/usecases'
 import { IAddSurveyModel } from '@domain/models'
+import MockDate from 'mockdate'
+
+beforeAll(() => {
+    MockDate.set(new Date())
+})
+
+afterAll(() => {
+    MockDate.reset()
+})
 
 const makeFakeRequest = (): IHttpRequest => ({
     body: {
@@ -13,6 +22,7 @@ const makeFakeRequest = (): IHttpRequest => ({
                 image: 'any_image',
             },
         ],
+        date: new Date(),
     },
 })
 
