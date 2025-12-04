@@ -104,6 +104,18 @@ Ele roda apenas nos arquivos modificados antes de um commit.
 npm run test:staged
 ```
 
+### 🕸️ Grafo de dependências
+
+Para gerar um gráfico em SVG das dependências do diretório `src`, execute:
+
+```sh
+npm run lint:deps:svg
+```
+
+> ⚠️ Use `npm run`, não `npx run`. O comando `npx run lint:deps:svg` tenta instalar/rodar o pacote `run` e falha porque não é um script executável do projeto.
+
+O comando usa a configuração do Dependency Cruiser e grava o resultado em `dependency-graph.svg` na raiz do projeto, convertendo o DOT para SVG via [`viz.js`](https://www.npmjs.com/package/viz.js) sem depender de uma instalação do Graphviz.
+
 ---
 
 ### 📌 Atualização de Bibliotecas
