@@ -464,13 +464,13 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       .selectAll('line')
       .data(data.links)
       .join('line')
-      .attr('class', d => `link ${d.kind}`);
+      .attr('class', d => 'link ' + d.kind);
 
     const node = container.append('g')
       .selectAll('g')
       .data(data.nodes)
       .join('g')
-      .attr('class', d => `node ${d.type}`)
+      .attr('class', d => 'node ' + d.type)
       .call(d3.drag()
         .on('start', dragStarted)
         .on('drag', dragged)
@@ -498,7 +498,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         .attr('y2', d => d.target.y);
 
       node
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+        .attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
     }
 
     function dragStarted (event) {
