@@ -60,15 +60,81 @@ function loadCompilerOptions (): ts.CompilerOptions {
 }
 
 const compilerOptions = loadCompilerOptions()
+const baseUrl = compilerOptions.baseUrl ? path.resolve(projectRoot, compilerOptions.baseUrl) : srcRoot
+
+function resolvePathFromAlias (specifier: string): string | null {
+  if (!compilerOptions.paths) return null
+
+  for (const [alias, targets] of Object.entries(compilerOptions.paths)) {
+    const starIndex = alias.indexOf('*')
+    if (starIndex === -1 && alias !== specifier) continue
+
+    const prefix = starIndex === -1 ? alias : alias.slice(0, starIndex)
+    const suffix = starIndex === -1 ? '' : alias.slice(starIndex + 1)
+
+    if (!specifier.startsWith(prefix) || !specifier.endsWith(suffix)) continue
+
+    const matched = starIndex === -1 ? '' : specifier.slice(prefix.length, specifier.length - suffix.length)
+
+    for (const target of targets) {
+      const mapped = target.replace('*', matched)
+      const candidate = path.resolve(baseUrl, mapped)
+      const resolved = resolveFileLike(candidate)
+      if (resolved) return resolved
+    }
+  }
+
+  return null
+}
+
+function resolveFileLike (candidate: string): string | null {
+  const extensions = ['.ts', '.tsx', '.js', '.jsx']
+
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+    return normalizeResolvedPath(candidate)
+  }
+
+  for (const ext of extensions) {
+    const withExt = `${candidate}${ext}`
+    if (fs.existsSync(withExt) && fs.statSync(withExt).isFile()) {
+      return normalizeResolvedPath(withExt)
+    }
+  }
+
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+    for (const ext of extensions) {
+      const indexPath = path.join(candidate, `index${ext}`)
+      if (fs.existsSync(indexPath) && fs.statSync(indexPath).isFile()) {
+        return normalizeResolvedPath(indexPath)
+      }
+    }
+  }
+
+  return null
+}
+
+function normalizeResolvedPath (resolved: string): string | null {
+  const normalized = path.normalize(resolved)
+  if (!normalized.startsWith(srcRoot)) return null
+  if (normalized.endsWith('.d.ts')) return null
+  if (/\.(spec|test)\.tsx?$/i.test(normalized)) return null
+  return normalized
+}
 
 function resolveModule (importer: string, specifier: string): string | null {
   const { resolvedModule } = ts.resolveModuleName(specifier, importer, compilerOptions, ts.sys)
-  if (!resolvedModule || !resolvedModule.resolvedFileName) return null
-  const resolvedPath = path.normalize(resolvedModule.resolvedFileName)
-  if (!resolvedPath.startsWith(srcRoot)) return null
-  if (resolvedPath.endsWith('.d.ts')) return null
-  if (/\.(spec|test)\.tsx?$/i.test(resolvedPath)) return null
-  return resolvedPath
+  if (resolvedModule?.resolvedFileName) {
+    const normalized = normalizeResolvedPath(resolvedModule.resolvedFileName)
+    if (normalized) return normalized
+  }
+
+  const aliasResolved = resolvePathFromAlias(specifier)
+  if (aliasResolved) return aliasResolved
+
+  const relativeCandidate = resolveFileLike(path.resolve(path.dirname(importer), specifier))
+  if (relativeCandidate) return relativeCandidate
+
+  return null
 }
 
 function isExported (node: ts.Node): boolean {
