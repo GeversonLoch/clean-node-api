@@ -72,12 +72,42 @@ function buildGraph(cruiseOutput) {
   return { nodes: [...nodes], edges };
 }
 
-function buildDot(graph) {
-  const lines = ['digraph dependencies {', '  rankdir=LR;'];
+function groupNodesByTopLevel(nodes) {
+  const groups = new Map();
 
-  graph.nodes.forEach((node) => {
-    const label = node.replace(/^src\//, '');
-    lines.push(`  "${node}" [label="${label}"];`);
+  nodes.forEach((node) => {
+    const relativePath = node.replace(/^src\//, '');
+    const [topLevel = 'src'] = relativePath.split('/');
+    if (!groups.has(topLevel)) groups.set(topLevel, []);
+    groups.get(topLevel).push(node);
+  });
+
+  return groups;
+}
+
+function buildDot(graph) {
+  const lines = [
+    'digraph dependencies {',
+    '  graph [rankdir=LR, splines=ortho, nodesep=0.6, ranksep=1.0, concentrate=true, fontsize=10];',
+    '  node [shape=box, style="rounded,filled", fillcolor="#f8f9fb", color="#c0cad5", fontname="Inter,Helvetica,Arial,sans-serif", fontsize=10];',
+    '  edge [color="#8194b1", arrowsize=0.7, penwidth=0.9];',
+  ];
+
+  const groups = groupNodesByTopLevel(graph.nodes);
+  groups.forEach((nodes, groupName) => {
+    lines.push(`  subgraph "cluster_${groupName}" {`);
+    lines.push('    style=rounded;');
+    lines.push('    color="#d5ddea";');
+    lines.push(`    label="${groupName}";`);
+    lines.push('    fontname="Inter,Helvetica,Arial,sans-serif";');
+    lines.push('    fontsize=11;');
+
+    nodes.forEach((node) => {
+      const label = node.replace(/^src\//, '');
+      lines.push(`    "${node}" [label="${label}"];`);
+    });
+
+    lines.push('  }');
   });
 
   graph.edges.forEach(([from, to]) => {
