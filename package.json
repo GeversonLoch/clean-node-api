@@ -15,7 +15,8 @@
     "test:integration": "npm test -- --watch -c jest-integration-config.ts",
     "test:staged": "npm test -- --findRelatedTests",
     "test:ci": "npm test -- --coverage",
-    "deploy:heroku": "git push heroku master"
+    "deploy:heroku": "git push heroku master",
+    "generate:dep-graph": "ts-node --project tsconfig.json scripts/generate-dependency-graph.ts"
   },
   "keywords": [],
   "author": "Geverson Loch",
@@ -46,6 +47,7 @@
     "rimraf": "^6.0.1",
     "supertest": "^7.0.0",
     "ts-jest": "^28.0.5",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
