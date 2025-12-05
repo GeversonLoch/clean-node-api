@@ -11,6 +11,10 @@ function isSourceModule(source) {
   return /^src\//.test(source);
 }
 
+function isTestModule(source) {
+  return /\.(spec|test)\.ts$/.test(source);
+}
+
 function resolveNonIndexTargets(moduleBySource, start) {
   const stack = [start];
   const visited = new Set();
@@ -26,7 +30,7 @@ function resolveNonIndexTargets(moduleBySource, start) {
 
     (module.dependencies || []).forEach((dep) => {
       const target = dep.resolved || dep.module;
-      if (!target || !isSourceModule(target)) return;
+      if (!target || !isSourceModule(target) || isTestModule(target)) return;
 
       if (isIndexModule(target)) {
         stack.push(target);
@@ -47,12 +51,12 @@ function buildGraph(cruiseOutput) {
   const edges = [];
 
   (cruiseOutput.modules || []).forEach((mod) => {
-    if (isIndexModule(mod.source) || !isSourceModule(mod.source)) return;
+    if (isIndexModule(mod.source) || isTestModule(mod.source) || !isSourceModule(mod.source)) return;
     nodes.add(mod.source);
 
     (mod.dependencies || []).forEach((dep) => {
       const target = dep.resolved || dep.module;
-      if (!target || !isSourceModule(target)) return;
+      if (!target || !isSourceModule(target) || isTestModule(target)) return;
 
       if (isIndexModule(target)) {
         const forwardedTargets = resolveNonIndexTargets(moduleBySource, target);
