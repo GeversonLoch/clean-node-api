@@ -16,7 +16,7 @@
     "test:staged": "npm test -- --findRelatedTests",
     "test:ci": "npm test -- --coverage",
     "lint:deps": "depcruise --config dependency-cruiser.config.js --ts-config ./tsconfig.json src",
-    "lint:deps:svg": "depcruise --config dependency-cruiser.config.js --ts-config ./tsconfig.json --output-type dot src | node tools/convert-dot-to-svg.js > dependency-graph.svg",
+    "lint:deps:svg": "depcruise --config dependency-cruiser.config.js --ts-config ./tsconfig.json --output-type json src | node tools/convert-dot-to-svg.js > dependency-graph.svg",
     "deploy:heroku": "git push heroku master"
   },
   "keywords": [],

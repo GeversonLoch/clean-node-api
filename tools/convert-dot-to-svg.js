@@ -3,23 +3,125 @@ const { stdin, stdout, stderr, exit } = process;
 const Viz = require('viz.js');
 const { Module, render } = require('viz.js/full.render.js');
 
-let dotInput = '';
+function isIndexModule(source) {
+  return /(?:^|[\\/])index\.ts$/.test(source);
+}
 
+function isSourceModule(source) {
+  return /^src\//.test(source);
+}
+
+function resolveNonIndexTargets(moduleBySource, start) {
+  const stack = [start];
+  const visited = new Set();
+  const resolved = new Set();
+
+  while (stack.length) {
+    const current = stack.pop();
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    const module = moduleBySource.get(current);
+    if (!module) continue;
+
+    (module.dependencies || []).forEach((dep) => {
+      const target = dep.resolved || dep.module;
+      if (!target || !isSourceModule(target)) return;
+
+      if (isIndexModule(target)) {
+        stack.push(target);
+      } else {
+        resolved.add(target);
+      }
+    });
+  }
+
+  return [...resolved];
+}
+
+function buildGraph(cruiseOutput) {
+  const moduleBySource = new Map(
+    (cruiseOutput.modules || []).map((mod) => [mod.source, mod]),
+  );
+  const nodes = new Set();
+  const edges = [];
+
+  (cruiseOutput.modules || []).forEach((mod) => {
+    if (isIndexModule(mod.source) || !isSourceModule(mod.source)) return;
+    nodes.add(mod.source);
+
+    (mod.dependencies || []).forEach((dep) => {
+      const target = dep.resolved || dep.module;
+      if (!target || !isSourceModule(target)) return;
+
+      if (isIndexModule(target)) {
+        const forwardedTargets = resolveNonIndexTargets(moduleBySource, target);
+        if (forwardedTargets.length === 0) return;
+
+        forwardedTargets.forEach((resolvedTarget) => {
+          nodes.add(resolvedTarget);
+          edges.push([mod.source, resolvedTarget]);
+        });
+      } else {
+        nodes.add(target);
+        edges.push([mod.source, target]);
+      }
+    });
+  });
+
+  return { nodes: [...nodes], edges };
+}
+
+function buildDot(graph) {
+  const lines = ['digraph dependencies {', '  rankdir=LR;'];
+
+  graph.nodes.forEach((node) => {
+    const label = node.replace(/^src\//, '');
+    lines.push(`  "${node}" [label="${label}"];`);
+  });
+
+  graph.edges.forEach(([from, to]) => {
+    lines.push(`  "${from}" -> "${to}";`);
+  });
+
+  lines.push('}');
+  return lines.join('\n');
+}
+
+let rawInput = '';
 stdin.setEncoding('utf8');
 stdin.on('data', (chunk) => {
-  dotInput += chunk;
+  rawInput += chunk;
 });
 
 stdin.on('end', async () => {
-  if (!dotInput.trim()) {
-    stderr.write('No DOT input received. Make sure depcruise emitted data.\n');
+  if (!rawInput.trim()) {
+    stderr.write('No input received. Make sure depcruise emitted data.\n');
+    exit(1);
+    return;
+  }
+
+  let cruiseOutput;
+  try {
+    cruiseOutput = JSON.parse(rawInput);
+  } catch (error) {
+    stderr.write(
+      'Failed to parse depcruise JSON output. Ensure you run with --output-type json.\n',
+    );
+    exit(1);
+    return;
+  }
+
+  const graph = buildGraph(cruiseOutput);
+  if (graph.edges.length === 0) {
+    stderr.write('No dependencies found after filtering barrel index.ts files.\n');
     exit(1);
     return;
   }
 
   const viz = new Viz({ Module, render });
   try {
-    const svg = await viz.renderString(dotInput);
+    const svg = await viz.renderString(buildDot(graph));
     stdout.write(svg);
   } catch (error) {
     stderr.write(`Failed to convert DOT to SVG: ${error.message}\n`);

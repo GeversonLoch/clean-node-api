@@ -114,7 +114,7 @@ npm run lint:deps:svg
 
 > ⚠️ Use `npm run`, não `npx run`. O comando `npx run lint:deps:svg` tenta instalar/rodar o pacote `run` e falha porque não é um script executável do projeto.
 
-O comando usa a configuração do Dependency Cruiser e grava o resultado em `dependency-graph.svg` na raiz do projeto, convertendo o DOT para SVG via [`viz.js`](https://www.npmjs.com/package/viz.js) sem depender de uma instalação do Graphviz.
+O comando usa a configuração do Dependency Cruiser e grava o resultado em `dependency-graph.svg` na raiz do projeto. A saída JSON do `depcruise` é convertida para um grafo DOT/SVG via [`viz.js`](https://www.npmjs.com/package/viz.js), pulando os arquivos `index.ts` usados como *barrel* e conectando diretamente os módulos que eles reexportam.
 
 ---
 
