@@ -123,12 +123,24 @@ function buildDot(graph) {
 }
 
 function addInteractivity(svg) {
+  const defs = `
+  <defs>
+    <filter id="edge-glow" x="-5%" y="-5%" width="110%" height="110%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.3" result="blur" />
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0.63 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0" result="colorBlur" />
+      <feMerge>
+        <feMergeNode in="colorBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>`;
+
   const style = `
   <style>
     g.node { cursor: pointer; }
     g.node polygon, g.node path, g.node rect { transition: fill 120ms ease, stroke 120ms ease, opacity 120ms ease; }
     g.node text { transition: fill 120ms ease, opacity 120ms ease; }
-    g.edge path { transition: stroke 120ms ease, opacity 120ms ease; }
+    g.edge path { transition: stroke 120ms ease, opacity 120ms ease; stroke-width: 1.4; }
     g.edge polygon { transition: fill 120ms ease, stroke 120ms ease, opacity 120ms ease; }
     g.node.dim polygon, g.node.dim path, g.node.dim rect, g.node.dim text { opacity: 0.25; }
     g.edge.dim path, g.edge.dim polygon { opacity: 0.25; }
@@ -136,7 +148,8 @@ function addInteractivity(svg) {
     g.node.active text { fill: #6b3b00; }
     g.node.connected rect, g.node.connected polygon, g.node.connected path { fill: #e9f2ff; stroke: #6b9ce8; }
     g.node.connected text { fill: #1b4f9d; }
-    g.edge.active path, g.edge.active polygon { stroke: #f6a12a; fill: #f6a12a; opacity: 0.95; }
+    g.edge.active path { stroke: #f6a12a; stroke-width: 1.4; filter: url(#edge-glow); opacity: 0.95; }
+    g.edge.active polygon { stroke: #f6a12a; fill: #f6a12a; opacity: 0.95; }
   </style>`;
 
   const script = `
@@ -221,7 +234,7 @@ function addInteractivity(svg) {
     })();
   ]]></script>`;
 
-  return svg.replace('</svg>', `${style}\n${script}\n</svg>`);
+  return svg.replace('</svg>', `${defs}\n${style}\n${script}\n</svg>`);
 }
 
 let rawInput = '';
