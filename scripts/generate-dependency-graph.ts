@@ -619,14 +619,15 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     .link.type-dimmed {
       opacity: 0.05;
     }
-    .layer-bands rect {
-      fill: #161b22;
-      opacity: 0.18;
+    .type-bands rect {
+      fill: #0b0f16;
+      opacity: 0.16;
     }
-    .layer-bands text {
+    .type-bands text {
       fill: #8b949e;
       font-size: 11px;
       text-transform: uppercase;
+      text-anchor: middle;
     }
     .node-controls {
       position: fixed;
@@ -684,6 +685,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
+    // Layers (Y), usados só pra força de posição, sem desenhar faixas
     const layerY = {
       presentation: height * 0.15,
       domain:       height * 0.35,
@@ -691,13 +693,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       infra:        height * 0.75,
       main:         height * 0.9,
       other:        height * 0.5
-    };
-
-    // X alvo por tipo de nó (segregação horizontal)
-    const typeX = {
-      file: width * 0.2,
-      class: width * 0.5,
-      interface: width * 0.8
     };
 
     function getLayerY (d) {
@@ -726,26 +721,33 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     });
     svg.call(zoom);
 
-    // Faixas de camada (fundo)
-    const layerBands = container.append('g').attr('class', 'layer-bands');
-    const layerOrder = ['presentation', 'domain', 'data', 'infra', 'main', 'other'];
-    const bandHeight = 110;
+    // Tipos existentes no grafo (file/class/interface)
+    const nodeTypes = Array.from(new Set(data.nodes.map(n => n.type))).sort();
+    const typeBandWidth = width / Math.max(nodeTypes.length, 1);
 
-    layerOrder.forEach(key => {
-      const y = layerY[key];
-      if (!y) return;
-      layerBands.append('rect')
-        .attr('x', -width)
-        .attr('y', y - bandHeight / 2)
-        .attr('width', width * 3)
-        .attr('height', bandHeight);
-      layerBands.append('text')
-        .attr('x', 20)
-        .attr('y', y - bandHeight / 2 + 14)
-        .text(key.toUpperCase());
+    // X alvo por tipo de nó (colunas)
+    const typeX = {};
+    nodeTypes.forEach((type, index) => {
+      typeX[type] = (index + 0.5) * typeBandWidth;
     });
 
-    layerBands.lower();
+    // Faixas de tipo (fundo vertical)
+    const typeBands = container.append('g').attr('class', 'type-bands');
+    nodeTypes.forEach((type, index) => {
+      const x = index * typeBandWidth;
+      typeBands.append('rect')
+        .attr('x', x)
+        .attr('y', 0)
+        .attr('width', typeBandWidth)
+        .attr('height', height);
+      typeBands.append('text')
+        .attr('x', x + typeBandWidth / 2)
+        .attr('y', 16)
+        .text(type.toUpperCase());
+    });
+
+    // Garante que as faixas fiquem no fundo
+    typeBands.lower();
 
     const link = container.append('g')
       .attr('stroke-width', 1.2)
@@ -828,7 +830,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
 
     // ----- Filtro por tipo de nó (file / class / interface) -----
     const typeFilterEl = document.getElementById('type-filter');
-    const nodeTypes = Array.from(new Set(data.nodes.map(n => n.type))).sort();
     let activeType = null;
 
     const typeLabels = {
@@ -936,7 +937,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       )
       .force('type',
         d3.forceX(d => typeX[d.type] || (width / 2))
-          .strength(0.35)
+          .strength(0.4)
       )
       .on('tick', ticked);
 
