@@ -797,26 +797,24 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       updateVisibility();
     }
 
-    // ----- Filtro por camada -----
+    // ----- Filtro por camada (multi-seleção) -----
     const layerFilterEl = document.getElementById('layer-filter');
 
     const layers = Array.from(new Set(data.nodes.map(n => n.layer))).sort();
-    let activeLayer = null;
+    const activeLayers = new Set();
 
     if (layerFilterEl && layers.length) {
       layers.forEach(layer => {
         const btn = document.createElement('button');
         btn.textContent = layer;
         btn.addEventListener('click', () => {
-          if (activeLayer === layer) {
-            activeLayer = null;
+          if (activeLayers.has(layer)) {
+            activeLayers.delete(layer);
             btn.classList.remove('active');
-            applyLayerFilter();
-            return;
+          } else {
+            activeLayers.add(layer);
+            btn.classList.add('active');
           }
-          activeLayer = layer;
-          [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
           applyLayerFilter();
         });
         layerFilterEl.appendChild(btn);
@@ -824,14 +822,16 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     }
 
     function applyLayerFilter () {
-      if (!activeLayer) {
+      if (!activeLayers.size) {
         node.classed('layer-dimmed', false);
         link.classed('layer-dimmed', false);
         return;
       }
 
       const visibleIds = new Set(
-        data.nodes.filter(n => n.layer === activeLayer).map(n => n.id)
+        data.nodes
+          .filter(n => activeLayers.has(n.layer))
+          .map(n => n.id)
       );
 
       node.classed('layer-dimmed', n => !visibleIds.has(n.id));
@@ -840,9 +840,9 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       );
     }
 
-    // ----- Filtro por tipo de nó (file / class / interface) -----
+    // ----- Filtro por tipo de nó (file / class / interface) - multi-seleção -----
     const typeFilterEl = document.getElementById('type-filter');
-    let activeType = null;
+    const activeTypes = new Set();
 
     const typeLabels = {
       file: 'file',
@@ -855,15 +855,13 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         const btn = document.createElement('button');
         btn.textContent = typeLabels[type] || type;
         btn.addEventListener('click', () => {
-          if (activeType === type) {
-            activeType = null;
+          if (activeTypes.has(type)) {
+            activeTypes.delete(type);
             btn.classList.remove('active');
-            applyTypeFilter();
-            return;
+          } else {
+            activeTypes.add(type);
+            btn.classList.add('active');
           }
-          activeType = type;
-          [...typeFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
           applyTypeFilter();
         });
         typeFilterEl.appendChild(btn);
@@ -871,14 +869,16 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     }
 
     function applyTypeFilter () {
-      if (!activeType) {
+      if (!activeTypes.size) {
         node.classed('type-dimmed', false);
         link.classed('type-dimmed', false);
         return;
       }
 
       const visibleIds = new Set(
-        data.nodes.filter(n => n.type === activeType).map(n => n.id)
+        data.nodes
+          .filter(n => activeTypes.has(n.type))
+          .map(n => n.id)
       );
 
       node.classed('type-dimmed', n => !visibleIds.has(n.id));
@@ -944,15 +944,15 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
             .classed('type-dimmed', false)
             .classed('highlight', false);
 
-        // Reseta filtro de camada
-        activeLayer = null;
+        // Reseta filtro de camada (multi-select)
+        activeLayers.clear();
         if (layerFilterEl) {
           [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
         }
         applyLayerFilter();
 
-        // Reseta filtro de tipo
-        activeType = null;
+        // Reseta filtro de tipo (multi-select)
+        activeTypes.clear();
         if (typeFilterEl) {
           [...typeFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
         }
