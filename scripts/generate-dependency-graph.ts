@@ -438,7 +438,7 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
   }
 
   if (!entry.namedImports.length && !entry.defaultImport && !entry.namespaceImport) {
-    // Side-effect import, connect to file directly
+    // Import apenas com efeito colateral, liga diretamente o arquivo
     importTargets.push({ file: modulePath, originalName: path.basename(modulePath) })
   }
 
@@ -658,6 +658,8 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
+      width: 100%;
+      text-align: left;
     }
     .node.hidden circle,
     .node.hidden text {
@@ -686,7 +688,8 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
   <div class="layer-filter" id="layer-filter"></div>
   <div class="node-controls" id="node-controls">
     <div>Dica: dê <strong>duplo clique</strong> em um nó para ocultar/mostrar.</div>
-    <button id="reset-hidden">Mostrar todos</button>
+    <button id="reset-hidden">Mostrar todos os nós</button>
+    <button id="reset-filters">Limpar filtros</button>
   </div>
   <svg id="graph"></svg>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -923,6 +926,40 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       });
     }
 
+    // ----- Botão para limpar todos os filtros (busca, camada, tipo, highlight) -----
+    const resetFiltersBtn = document.getElementById('reset-filters');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', () => {
+        // Limpa texto de busca
+        if (searchInput) {
+          searchInput.value = '';
+        }
+
+        // Remove qualquer dimming e highlight
+        node.classed('dimmed', false)
+            .classed('layer-dimmed', false)
+            .classed('type-dimmed', false);
+        link.classed('dimmed', false)
+            .classed('layer-dimmed', false)
+            .classed('type-dimmed', false)
+            .classed('highlight', false);
+
+        // Reseta filtro de camada
+        activeLayer = null;
+        if (layerFilterEl) {
+          [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+        }
+        applyLayerFilter();
+
+        // Reseta filtro de tipo
+        activeType = null;
+        if (typeFilterEl) {
+          [...typeFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+        }
+        applyTypeFilter();
+      });
+    }
+
     const simulation = d3.forceSimulation(data.nodes)
       .force('link',
         d3.forceLink(data.links)
@@ -999,8 +1036,12 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         return isOutgoing || isIncoming;
       });
 
-      node.classed('dimmed', n => n.id !== selected.id && !incoming.has(n.id) && !outgoing.has(n.id));
-      link.classed('dimmed', l => l.source.id !== selected.id && l.target.id !== selected.id);
+      node.classed('dimmed', n =>
+        n.id !== selected.id && !incoming.has(n.id) && !outgoing.has(n.id)
+      );
+      link.classed('dimmed', l =>
+        l.source.id !== selected.id && l.target.id !== selected.id
+      );
     }
   </script>
 </body>
