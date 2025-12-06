@@ -521,7 +521,7 @@ function buildGraph (): void {
 function detectLayer (filePath: string): Layer {
   const rel = path
     .relative(srcRoot, filePath)
-    .replace(/\\/g, '/') // garante barra normal
+    .replace(/\\/g, '/')
 
   if (rel.startsWith('presentation/')) return 'presentation'
   if (rel.startsWith('domain/')) return 'domain'
@@ -588,6 +588,37 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     .link.layer-dimmed {
       opacity: 0.05;
     }
+    /* Filtro por tipo de nó */
+    .type-filter {
+      position: fixed;
+      bottom: 60px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .type-filter button {
+      margin: 2px 4px;
+      padding: 2px 6px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .type-filter button.active {
+      background: #1f6feb;
+      border-color: #388bfd;
+    }
+    .node.type-dimmed circle,
+    .node.type-dimmed text {
+      opacity: 0.15;
+    }
+    .link.type-dimmed {
+      opacity: 0.05;
+    }
     .layer-bands rect {
       fill: #161b22;
       opacity: 0.18;
@@ -640,6 +671,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     placeholder="Buscar nó (arquivo / classe / interface)..."
     style="position:fixed;top:10px;right:10px;z-index:10;padding:4px 8px;border-radius:4px;border:1px solid #333;background:#161b22;color:#e6edf3;font-size:13px;"
   />
+  <div class="type-filter" id="type-filter"></div>
   <div class="layer-filter" id="layer-filter"></div>
   <div class="node-controls" id="node-controls">
     <div>Dica: dê <strong>duplo clique</strong> em um nó para ocultar/mostrar.</div>
@@ -744,6 +776,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       updateVisibility();
     }
 
+    // ----- Filtro por camada -----
     const layerFilterEl = document.getElementById('layer-filter');
 
     const layers = Array.from(new Set(data.nodes.map(n => n.layer))).sort();
@@ -786,6 +819,54 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       );
     }
 
+    // ----- Filtro por tipo de nó (file / class / interface) -----
+    const typeFilterEl = document.getElementById('type-filter');
+    const nodeTypes = Array.from(new Set(data.nodes.map(n => n.type))).sort();
+    let activeType = null;
+
+    const typeLabels = {
+      file: 'file',
+      class: 'class',
+      interface: 'interface'
+    };
+
+    if (typeFilterEl && nodeTypes.length) {
+      nodeTypes.forEach(type => {
+        const btn = document.createElement('button');
+        btn.textContent = typeLabels[type] || type;
+        btn.addEventListener('click', () => {
+          if (activeType === type) {
+            activeType = null;
+            btn.classList.remove('active');
+            applyTypeFilter();
+            return;
+          }
+          activeType = type;
+          [...typeFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          applyTypeFilter();
+        });
+        typeFilterEl.appendChild(btn);
+      });
+    }
+
+    function applyTypeFilter () {
+      if (!activeType) {
+        node.classed('type-dimmed', false);
+        link.classed('type-dimmed', false);
+        return;
+      }
+
+      const visibleIds = new Set(
+        data.nodes.filter(n => n.type === activeType).map(n => n.id)
+      );
+
+      node.classed('type-dimmed', n => !visibleIds.has(n.id));
+      link.classed('type-dimmed', l =>
+        !visibleIds.has(l.source.id) && !visibleIds.has(l.target.id)
+      );
+    }
+
     node.append('circle')
       .attr('r', 10);
 
@@ -796,25 +877,27 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
 
     const searchInput = document.getElementById('search');
 
-    searchInput.addEventListener('input', () => {
-      const term = searchInput.value.toLowerCase().trim();
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const term = searchInput.value.toLowerCase().trim();
 
-      if (!term) {
-        // limpa filtro
-        node.classed('dimmed', false);
-        link.classed('dimmed', false);
-        return;
-      }
+        if (!term) {
+          // limpa filtro
+          node.classed('dimmed', false);
+          link.classed('dimmed', false);
+          return;
+        }
 
-      const matchedIds = new Set(
-        data.nodes
-          .filter(n => n.label.toLowerCase().includes(term))
-          .map(n => n.id)
-      );
+        const matchedIds = new Set(
+          data.nodes
+            .filter(n => n.label.toLowerCase().includes(term))
+            .map(n => n.id)
+        );
 
-      node.classed('dimmed', n => !matchedIds.has(n.id));
-      link.classed('dimmed', l => !matchedIds.has(l.source.id) && !matchedIds.has(l.target.id));
-    });
+        node.classed('dimmed', n => !matchedIds.has(n.id));
+        link.classed('dimmed', l => !matchedIds.has(l.source.id) && !matchedIds.has(l.target.id));
+      });
+    }
 
     const resetHiddenBtn = document.getElementById('reset-hidden');
     if (resetHiddenBtn) {
