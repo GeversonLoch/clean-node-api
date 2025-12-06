@@ -46,6 +46,7 @@ interface GraphLink {
   source: string
   target: string
   kind: 'imports' | 'declares'
+  lintViolation?: boolean
 }
 
 const projectRoot = path.resolve(__dirname, '..')
@@ -507,17 +508,6 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
   })
 }
 
-function buildGraph (): void {
-  registerDeclarationNodes()
-  importEntries.forEach((entries, importer) => {
-    entries.forEach(entry => {
-      const resolved = resolveModule(importer, entry.specifier)
-      if (!resolved) return
-      handleImportTargets(importer, resolved, entry)
-    })
-  })
-}
-
 function detectLayer (filePath: string): Layer {
   const rel = path
     .relative(srcRoot, filePath)
@@ -531,7 +521,54 @@ function detectLayer (filePath: string): Layer {
   return 'other'
 }
 
+// ranking de camadas para o "lint" de arquitetura
+function getLayerRank (layer: Layer): number {
+  switch (layer) {
+    case 'domain': return 0
+    case 'data': return 1
+    case 'infra': return 2
+    case 'other': return 2
+    case 'presentation': return 3
+    case 'main': return 4
+    default: return 2
+  }
+}
+
+// Regra de violação:
+// - Só consideramos links de "imports".
+// - Se o arquivo de origem estiver em uma camada MAIS INTERNA (rank menor)
+//   importando algo de uma camada MAIS EXTERNA (rank maior), é violação.
+function isArchitectureViolation (link: GraphLink): boolean {
+  if (link.kind !== 'imports') return false
+
+  const sourceNode = nodes.get(link.source)
+  const targetNode = nodes.get(link.target)
+  if (!sourceNode || !targetNode) return false
+
+  const sourceRank = getLayerRank(sourceNode.layer)
+  const targetRank = getLayerRank(targetNode.layer)
+
+  // Inner -> Outer (ex.: domain -> presentation) => violação
+  return sourceRank < targetRank
+}
+
+function buildGraph (): void {
+  registerDeclarationNodes()
+  importEntries.forEach((entries, importer) => {
+    entries.forEach(entry => {
+      const resolved = resolveModule(importer, entry.specifier)
+      if (!resolved) return
+      handleImportTargets(importer, resolved, entry)
+    })
+  })
+}
+
 buildGraph()
+
+// Calcula e marca os links que violam a "regra" de arquitetura
+links.forEach(link => {
+  link.lintViolation = isArchitectureViolation(link)
+})
 
 function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
   const data = { nodes: nodesList, links: linksList }
@@ -668,6 +705,12 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     .link.hidden {
       display: none;
     }
+    /* Linhas que violam a regra de arquitetura (lint) */
+    .link.lint-violation {
+      stroke: #ff4d4f;
+      stroke-opacity: 0.95;
+      stroke-width: 1.4px;
+    }
   </style>
 </head>
 <body>
@@ -690,6 +733,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     <div>Dica: dê <strong>duplo clique</strong> em um nó para ocultar/mostrar.</div>
     <button id="reset-hidden">Mostrar todos os nós</button>
     <button id="reset-filters">Limpar filtros</button>
+    <button id="toggle-lint">Ocultar violações de arquitetura</button>
   </div>
   <svg id="graph"></svg>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -780,11 +824,12 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         .on('end', dragEnded));
 
     const hiddenNodes = new Set();
+    let lintEnabled = true;
 
     function updateVisibility () {
       node.classed('hidden', n => hiddenNodes.has(n.id));
       link.classed('hidden', l =>
-        hiddenNodes.has(l.source.id) || hiddenNodes.has(l.target.id)
+        hiddenNodes.has(l.source.id || l.source) || hiddenNodes.has(l.target.id || l.target)
       );
     }
 
@@ -795,6 +840,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         hiddenNodes.add(n.id);
       }
       updateVisibility();
+    }
+
+    function applyLintStyles () {
+      link.classed('lint-violation', d => lintEnabled && d.lintViolation);
     }
 
     // ----- Filtro por camada (multi-seleção) -----
@@ -836,7 +885,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
 
       node.classed('layer-dimmed', n => !visibleIds.has(n.id));
       link.classed('layer-dimmed', l =>
-        !visibleIds.has(l.source.id) && !visibleIds.has(l.target.id)
+        !visibleIds.has(l.source.id || l.source) && !visibleIds.has(l.target.id || l.target)
       );
     }
 
@@ -883,7 +932,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
 
       node.classed('type-dimmed', n => !visibleIds.has(n.id));
       link.classed('type-dimmed', l =>
-        !visibleIds.has(l.source.id) && !visibleIds.has(l.target.id)
+        !visibleIds.has(l.source.id || l.source) && !visibleIds.has(l.target.id || l.target)
       );
     }
 
@@ -914,7 +963,11 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         );
 
         node.classed('dimmed', n => !matchedIds.has(n.id));
-        link.classed('dimmed', l => !matchedIds.has(l.source.id) && !matchedIds.has(l.target.id));
+        link.classed('dimmed', l => {
+          const sourceId = l.source.id || l.source;
+          const targetId = l.target.id || l.target;
+          return !matchedIds.has(sourceId) && !matchedIds.has(targetId);
+        });
       });
     }
 
@@ -926,7 +979,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       });
     }
 
-    // ----- Botão para limpar todos os filtros (busca, camada, tipo, highlight) -----
+    // ----- Botão para limpar todos os filtros -----
     const resetFiltersBtn = document.getElementById('reset-filters');
     if (resetFiltersBtn) {
       resetFiltersBtn.addEventListener('click', () => {
@@ -935,7 +988,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
           searchInput.value = '';
         }
 
-        // Remove qualquer dimming e highlight
+        // Remove qualquer dimming e highlight (lint continua separado)
         node.classed('dimmed', false)
             .classed('layer-dimmed', false)
             .classed('type-dimmed', false);
@@ -944,19 +997,31 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
             .classed('type-dimmed', false)
             .classed('highlight', false);
 
-        // Reseta filtro de camada (multi-select)
+        // Reseta filtro de camada
         activeLayers.clear();
         if (layerFilterEl) {
           [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
         }
         applyLayerFilter();
 
-        // Reseta filtro de tipo (multi-select)
+        // Reseta filtro de tipo
         activeTypes.clear();
         if (typeFilterEl) {
           [...typeFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
         }
         applyTypeFilter();
+      });
+    }
+
+    // ----- Botão para ativar/desativar o "lint" de arquitetura -----
+    const toggleLintBtn = document.getElementById('toggle-lint');
+    if (toggleLintBtn) {
+      toggleLintBtn.addEventListener('click', () => {
+        lintEnabled = !lintEnabled;
+        applyLintStyles();
+        toggleLintBtn.textContent = lintEnabled
+          ? 'Ocultar violações de arquitetura'
+          : 'Mostrar violações de arquitetura';
       });
     }
 
@@ -1029,20 +1094,25 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       const outgoing = new Set();
 
       link.classed('highlight', l => {
-        const isOutgoing = l.source.id === selected.id;
-        const isIncoming = l.target.id === selected.id;
-        if (isOutgoing) outgoing.add(l.target.id);
-        if (isIncoming) incoming.add(l.source.id);
+        const isOutgoing = (l.source.id || l.source) === selected.id;
+        const isIncoming = (l.target.id || l.target) === selected.id;
+        if (isOutgoing) outgoing.add(l.target.id || l.target);
+        if (isIncoming) incoming.add(l.source.id || l.source);
         return isOutgoing || isIncoming;
       });
 
       node.classed('dimmed', n =>
         n.id !== selected.id && !incoming.has(n.id) && !outgoing.has(n.id)
       );
-      link.classed('dimmed', l =>
-        l.source.id !== selected.id && l.target.id !== selected.id
-      );
+      link.classed('dimmed', l => {
+        const sourceId = l.source.id || l.source;
+        const targetId = l.target.id || l.target;
+        return sourceId !== selected.id && targetId !== selected.id;
+      });
     }
+
+    // Aplica o "lint" na carga inicial
+    applyLintStyles();
   </script>
 </body>
 </html>`
