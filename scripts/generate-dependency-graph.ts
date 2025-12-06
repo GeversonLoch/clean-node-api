@@ -693,6 +693,13 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       other:        height * 0.5
     };
 
+    // X alvo por tipo de nó (segregação horizontal)
+    const typeX = {
+      file: width * 0.2,
+      class: width * 0.5,
+      interface: width * 0.8
+    };
+
     function getLayerY (d) {
       return layerY[d.layer] || layerY.other;
     }
@@ -927,7 +934,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         d3.forceY(d => getLayerY(d))
           .strength(0.35)
       )
-      .force('center', d3.forceX(width / 2))
+      .force('type',
+        d3.forceX(d => typeX[d.type] || (width / 2))
+          .strength(0.35)
+      )
       .on('tick', ticked);
 
     function ticked () {
