@@ -32,11 +32,14 @@ interface ImportEntry {
   namedImports: { imported: string }[]
 }
 
+type Layer = 'presentation' | 'domain' | 'data' | 'infra' | 'main' | 'other'
+
 interface GraphNode {
   id: string
   label: string
   type: 'file' | 'class' | 'interface'
   file: string
+  layer: Layer
 }
 
 interface GraphLink {
@@ -46,9 +49,11 @@ interface GraphLink {
 }
 
 const projectRoot = path.resolve(__dirname, '..')
-const srcRoot = path.join(projectRoot, 'src')
+const srcRoot = path.normalize(path.join(projectRoot, 'src'))
 const outputFile = path.join(projectRoot, 'dependency-graph.html')
 const tsconfigPath = path.join(projectRoot, 'tsconfig.json')
+
+const normalizePath = (p: string) => path.normalize(p)
 
 function loadCompilerOptions (): ts.CompilerOptions {
   const configResult = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
@@ -114,7 +119,7 @@ function resolveFileLike (candidate: string): string | null {
 }
 
 function normalizeResolvedPath (resolved: string): string | null {
-  const normalized = path.normalize(resolved)
+  const normalized = normalizePath(resolved)
   if (!normalized.startsWith(srcRoot)) return null
   if (normalized.endsWith('.d.ts')) return null
   if (/\.(spec|test)\.tsx?$/i.test(normalized)) return null
@@ -145,23 +150,25 @@ const files = fg.sync(['src/**/*.{ts,tsx}'], {
   cwd: projectRoot,
   absolute: true,
   ignore: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts']
-})
+}).map(normalizePath)
 
 const fileInfos = new Map<string, FileInfo>()
 const importEntries = new Map<string, ImportEntry[]>()
 
 function ensureFileInfo (filePath: string): FileInfo {
-  let info = fileInfos.get(filePath)
+  const normalized = normalizePath(filePath)
+
+  let info = fileInfos.get(normalized)
   if (!info) {
     info = {
-      path: filePath,
-      isIndex: path.basename(filePath) === 'index.ts' || path.basename(filePath) === 'index.tsx',
+      path: normalized,
+      isIndex: path.basename(normalized) === 'index.ts' || path.basename(normalized) === 'index.tsx',
       declarations: [],
       exports: new Map(),
       exportAlls: [],
       hasDefaultExport: false
     }
-    fileInfos.set(filePath, info)
+    fileInfos.set(normalized, info)
   }
   return info
 }
@@ -173,9 +180,10 @@ function addExportTarget (fileInfo: FileInfo, exportedName: string, target: Expo
 }
 
 function collectFileData (filePath: string): void {
-  const sourceText = fs.readFileSync(filePath, 'utf-8')
-  const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true)
-  const fileInfo = ensureFileInfo(filePath)
+  const normalized = normalizePath(filePath)
+  const sourceText = fs.readFileSync(normalized, 'utf-8')
+  const sourceFile = ts.createSourceFile(normalized, sourceText, ts.ScriptTarget.Latest, true)
+  const fileInfo = ensureFileInfo(normalized)
   const imports: ImportEntry[] = []
 
   sourceFile.forEachChild(node => {
@@ -258,7 +266,7 @@ function collectFileData (filePath: string): void {
   })
 
   if (imports.length) {
-    importEntries.set(filePath, imports)
+    importEntries.set(normalized, imports)
   }
 
   // Handle `export default class Foo {}` pattern
@@ -370,7 +378,8 @@ function addFileNode (filePath: string): GraphNode {
       id,
       label: path.relative(projectRoot, filePath),
       type: 'file',
-      file: filePath
+      file: filePath,
+      layer: detectLayer(filePath)
     }
     nodes.set(id, node)
   }
@@ -385,7 +394,8 @@ function addSymbolNode (filePath: string, declaration: DeclarationInfo): GraphNo
       id,
       label: `${declaration.name} (${declaration.kind})`,
       type: declaration.kind,
-      file: filePath
+      file: filePath,
+      layer: detectLayer(filePath)
     }
     nodes.set(id, node)
   }
@@ -508,6 +518,19 @@ function buildGraph (): void {
   })
 }
 
+function detectLayer (filePath: string): Layer {
+  const rel = path
+    .relative(srcRoot, filePath)
+    .replace(/\\/g, '/') // garante barra normal
+
+  if (rel.startsWith('presentation/')) return 'presentation'
+  if (rel.startsWith('domain/')) return 'domain'
+  if (rel.startsWith('data/')) return 'data'
+  if (rel.startsWith('infra/') || rel.startsWith('infrastructure/')) return 'infra'
+  if (rel.startsWith('main/')) return 'main'
+  return 'other'
+}
+
 buildGraph()
 
 function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
@@ -535,6 +558,36 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     .link.dimmed { opacity: 0.1; }
     .link.imports.highlight { stroke: #ff6b6b; stroke-opacity: 0.9; }
     .link.declares.highlight { stroke: #94d82d; stroke-opacity: 0.9; }
+    .layer-filter {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .layer-filter button {
+      margin: 2px 4px;
+      padding: 2px 6px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .layer-filter button.active {
+      background: #238636;
+      border-color: #2ea043;
+    }
+    .node.layer-dimmed circle,
+    .node.layer-dimmed text {
+      opacity: 0.15;
+    }
+    .link.layer-dimmed {
+      opacity: 0.05;
+    }
   </style>
 </head>
 <body>
@@ -545,14 +598,49 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     <div>Vermelho: arquivos/símbolos importados</div>
     <div>Verde: declarações internas</div>
   </div>
+  <input
+    id="search"
+    type="text"
+    placeholder="Buscar nó (arquivo / classe / interface)..."
+    style="position:fixed;top:10px;right:10px;z-index:10;padding:4px 8px;border-radius:4px;border:1px solid #333;background:#161b22;color:#e6edf3;font-size:13px;"
+  />
+  <div class="layer-filter" id="layer-filter"></div>
   <svg id="graph"></svg>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script>
     const data = ${graphData};
     const width = window.innerWidth;
     const height = window.innerHeight;
+
+    const layerY = {
+      presentation: height * 0.15,
+      domain:       height * 0.35,
+      data:         height * 0.55,
+      infra:        height * 0.75,
+      main:         height * 0.9,
+      other:        height * 0.5
+    };
+
+    function getLayerY (d) {
+      return layerY[d.layer] || layerY.other;
+    }
+
     const svg = d3.select('#graph').attr('width', width).attr('height', height);
     const container = svg.append('g');
+
+    const defs = svg.append('defs');
+
+    defs.append('marker')
+      .attr('id', 'arrow')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 12) // ajusta distância da ponta da seta em relação ao nó
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#5d636f');
 
     const zoom = d3.zoom().scaleExtent([0.1, 5]).on('zoom', (event) => {
       container.attr('transform', event.transform);
@@ -564,7 +652,8 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       .selectAll('line')
       .data(data.links)
       .join('line')
-      .attr('class', d => 'link ' + d.kind);
+      .attr('class', d => 'link ' + d.kind)
+      .attr('marker-end', d => d.kind === 'imports' ? 'url(#arrow)' : null);
 
     const node = container.append('g')
       .selectAll('g')
@@ -576,6 +665,46 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         .on('drag', dragged)
         .on('end', dragEnded));
 
+    const layerFilterEl = document.getElementById('layer-filter');
+
+    const layers = Array.from(new Set(data.nodes.map(n => n.layer))).sort();
+    let activeLayer = null;
+
+    layers.forEach(layer => {
+      const btn = document.createElement('button');
+      btn.textContent = layer;
+      btn.addEventListener('click', () => {
+        if (activeLayer === layer) {
+          activeLayer = null;
+          btn.classList.remove('active');
+          applyLayerFilter();
+          return;
+        }
+        activeLayer = layer;
+        [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyLayerFilter();
+      });
+      layerFilterEl.appendChild(btn);
+    });
+
+    function applyLayerFilter () {
+      if (!activeLayer) {
+        node.classed('layer-dimmed', false);
+        link.classed('layer-dimmed', false);
+        return;
+      }
+
+      const visibleIds = new Set(
+        data.nodes.filter(n => n.layer === activeLayer).map(n => n.id)
+      );
+
+      node.classed('layer-dimmed', n => !visibleIds.has(n.id));
+      link.classed('layer-dimmed', l =>
+        !visibleIds.has(l.source.id) && !visibleIds.has(l.target.id)
+      );
+    }
+
     node.append('circle')
       .attr('r', 10);
 
@@ -584,10 +713,49 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       .attr('y', '0.31em')
       .text(d => d.label);
 
+      const searchInput = document.getElementById('search');
+
+      searchInput.addEventListener('input', () => {
+        const term = searchInput.value.toLowerCase().trim();
+
+        if (!term) {
+          // limpa filtro
+          node.classed('dimmed', false);
+          link.classed('dimmed', false);
+          return;
+        }
+
+        const matchedIds = new Set(
+          data.nodes
+            .filter(n => n.label.toLowerCase().includes(term))
+            .map(n => n.id)
+        );
+
+        node.classed('dimmed', n => !matchedIds.has(n.id));
+        link.classed('dimmed', l => !matchedIds.has(l.source.id) && !matchedIds.has(l.target.id));
+      });
+
     const simulation = d3.forceSimulation(data.nodes)
-      .force('link', d3.forceLink(data.links).id(d => d.id).distance(120))
-      .force('charge', d3.forceManyBody().strength(-400))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('link',
+        d3.forceLink(data.links)
+          .id(d => d.id)
+          .distance(1000)       // aumenta o comprimento "ideal" das arestas
+          .strength(0.8)
+      )
+      .force('charge',
+        d3.forceManyBody()
+          .strength(-900)
+      )
+      .force('collide',
+        d3.forceCollide()
+          .radius(d => d.type === 'file' ? 38 : 30) // "bolha" maior em volta de cada nó
+          .iterations(2)
+      )
+      .force('layer',
+        d3.forceY(d => getLayerY(d))
+          .strength(0.35) // quanto maior, mais “alinhadinho” por faixa
+      )
+      .force('center', d3.forceX(width / 2))
       .on('tick', ticked);
 
     function ticked () {
