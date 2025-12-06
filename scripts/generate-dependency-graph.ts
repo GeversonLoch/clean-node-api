@@ -548,14 +548,24 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     .legend div { margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
     .legend .color { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
     .node text { pointer-events: none; font-size: 12px; fill: #e6edf3; }
-    .link { stroke: #5d636f; stroke-opacity: 0.5; }
-    .link.declares { stroke-dasharray: 4 2; }
+    /* Linhas mais discretas */
+    .link {
+      stroke: #30363d;
+      stroke-opacity: 0.18;
+    }
+    .link.imports {
+      stroke: #30363d;
+    }
+    .link.declares {
+      stroke: #30363d;
+      stroke-dasharray: 3 3;
+    }
     .node circle { stroke: #0d1117; stroke-width: 1px; }
     .node.file circle { fill: #4c8bf5; }
     .node.class circle { fill: #2fb344; }
     .node.interface circle { fill: #f59f00; }
     .node.dimmed circle, .node.dimmed text { opacity: 0.2; }
-    .link.dimmed { opacity: 0.1; }
+    .link.dimmed { stroke-opacity: 0.04; }
     .link.imports.highlight { stroke: #ff6b6b; stroke-opacity: 0.9; }
     .link.declares.highlight { stroke: #94d82d; stroke-opacity: 0.9; }
     .layer-filter {
@@ -586,7 +596,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       opacity: 0.15;
     }
     .link.layer-dimmed {
-      opacity: 0.05;
+      stroke-opacity: 0.04;
     }
     /* Filtro por tipo de nó */
     .type-filter {
@@ -617,7 +627,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       opacity: 0.15;
     }
     .link.type-dimmed {
-      opacity: 0.05;
+      stroke-opacity: 0.04;
     }
     .type-bands rect {
       fill: #0b0f16;
@@ -685,7 +695,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // Layers (Y), usados só pra força de posição, sem desenhar faixas
+    // Layers (Y) só pra posicionamento
     const layerY = {
       presentation: height * 0.15,
       domain:       height * 0.35,
@@ -714,7 +724,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       .attr('orient', 'auto')
       .append('path')
       .attr('d', 'M0,-5L10,0L0,5')
-      .attr('fill', '#5d636f');
+      .attr('fill', '#30363d');
 
     const zoom = d3.zoom().scaleExtent([0.1, 5]).on('zoom', (event) => {
       container.attr('transform', event.transform);
@@ -746,11 +756,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         .text(type.toUpperCase());
     });
 
-    // Garante que as faixas fiquem no fundo
     typeBands.lower();
 
     const link = container.append('g')
-      .attr('stroke-width', 1.2)
+      .attr('stroke-width', 0.7)
       .selectAll('line')
       .data(data.links)
       .join('line')
@@ -890,7 +899,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         const term = searchInput.value.toLowerCase().trim();
 
         if (!term) {
-          // limpa filtro
           node.classed('dimmed', false);
           link.classed('dimmed', false);
           return;
@@ -970,7 +978,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     }
 
     node.on('click', (event, d) => {
-      // se for duplo-clique, ignora o highlight (será tratado no dblclick)
       if (event.detail > 1) return;
       highlightDependencies(d);
     });
