@@ -588,6 +588,42 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     .link.layer-dimmed {
       opacity: 0.05;
     }
+    .layer-bands rect {
+      fill: #161b22;
+      opacity: 0.18;
+    }
+    .layer-bands text {
+      fill: #8b949e;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .node-controls {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      max-width: 220px;
+    }
+    .node-controls button {
+      margin-top: 4px;
+      padding: 2px 6px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .node.hidden circle,
+    .node.hidden text {
+      display: none;
+    }
+    .link.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -605,6 +641,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     style="position:fixed;top:10px;right:10px;z-index:10;padding:4px 8px;border-radius:4px;border:1px solid #333;background:#161b22;color:#e6edf3;font-size:13px;"
   />
   <div class="layer-filter" id="layer-filter"></div>
+  <div class="node-controls" id="node-controls">
+    <div>Dica: dê <strong>duplo clique</strong> em um nó para ocultar/mostrar.</div>
+    <button id="reset-hidden">Mostrar todos</button>
+  </div>
   <svg id="graph"></svg>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script>
@@ -633,7 +673,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     defs.append('marker')
       .attr('id', 'arrow')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 12) // ajusta distância da ponta da seta em relação ao nó
+      .attr('refX', 12)
       .attr('refY', 0)
       .attr('markerWidth', 6)
       .attr('markerHeight', 6)
@@ -646,6 +686,27 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       container.attr('transform', event.transform);
     });
     svg.call(zoom);
+
+    // Faixas de camada (fundo)
+    const layerBands = container.append('g').attr('class', 'layer-bands');
+    const layerOrder = ['presentation', 'domain', 'data', 'infra', 'main', 'other'];
+    const bandHeight = 110;
+
+    layerOrder.forEach(key => {
+      const y = layerY[key];
+      if (!y) return;
+      layerBands.append('rect')
+        .attr('x', -width)
+        .attr('y', y - bandHeight / 2)
+        .attr('width', width * 3)
+        .attr('height', bandHeight);
+      layerBands.append('text')
+        .attr('x', 20)
+        .attr('y', y - bandHeight / 2 + 14)
+        .text(key.toUpperCase());
+    });
+
+    layerBands.lower();
 
     const link = container.append('g')
       .attr('stroke-width', 1.2)
@@ -665,28 +726,48 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         .on('drag', dragged)
         .on('end', dragEnded));
 
+    const hiddenNodes = new Set();
+
+    function updateVisibility () {
+      node.classed('hidden', n => hiddenNodes.has(n.id));
+      link.classed('hidden', l =>
+        hiddenNodes.has(l.source.id) || hiddenNodes.has(l.target.id)
+      );
+    }
+
+    function toggleNodeVisibility (n) {
+      if (hiddenNodes.has(n.id)) {
+        hiddenNodes.delete(n.id);
+      } else {
+        hiddenNodes.add(n.id);
+      }
+      updateVisibility();
+    }
+
     const layerFilterEl = document.getElementById('layer-filter');
 
     const layers = Array.from(new Set(data.nodes.map(n => n.layer))).sort();
     let activeLayer = null;
 
-    layers.forEach(layer => {
-      const btn = document.createElement('button');
-      btn.textContent = layer;
-      btn.addEventListener('click', () => {
-        if (activeLayer === layer) {
-          activeLayer = null;
-          btn.classList.remove('active');
+    if (layerFilterEl && layers.length) {
+      layers.forEach(layer => {
+        const btn = document.createElement('button');
+        btn.textContent = layer;
+        btn.addEventListener('click', () => {
+          if (activeLayer === layer) {
+            activeLayer = null;
+            btn.classList.remove('active');
+            applyLayerFilter();
+            return;
+          }
+          activeLayer = layer;
+          [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
           applyLayerFilter();
-          return;
-        }
-        activeLayer = layer;
-        [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        applyLayerFilter();
+        });
+        layerFilterEl.appendChild(btn);
       });
-      layerFilterEl.appendChild(btn);
-    });
+    }
 
     function applyLayerFilter () {
       if (!activeLayer) {
@@ -713,33 +794,41 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       .attr('y', '0.31em')
       .text(d => d.label);
 
-      const searchInput = document.getElementById('search');
+    const searchInput = document.getElementById('search');
 
-      searchInput.addEventListener('input', () => {
-        const term = searchInput.value.toLowerCase().trim();
+    searchInput.addEventListener('input', () => {
+      const term = searchInput.value.toLowerCase().trim();
 
-        if (!term) {
-          // limpa filtro
-          node.classed('dimmed', false);
-          link.classed('dimmed', false);
-          return;
-        }
+      if (!term) {
+        // limpa filtro
+        node.classed('dimmed', false);
+        link.classed('dimmed', false);
+        return;
+      }
 
-        const matchedIds = new Set(
-          data.nodes
-            .filter(n => n.label.toLowerCase().includes(term))
-            .map(n => n.id)
-        );
+      const matchedIds = new Set(
+        data.nodes
+          .filter(n => n.label.toLowerCase().includes(term))
+          .map(n => n.id)
+      );
 
-        node.classed('dimmed', n => !matchedIds.has(n.id));
-        link.classed('dimmed', l => !matchedIds.has(l.source.id) && !matchedIds.has(l.target.id));
+      node.classed('dimmed', n => !matchedIds.has(n.id));
+      link.classed('dimmed', l => !matchedIds.has(l.source.id) && !matchedIds.has(l.target.id));
+    });
+
+    const resetHiddenBtn = document.getElementById('reset-hidden');
+    if (resetHiddenBtn) {
+      resetHiddenBtn.addEventListener('click', () => {
+        hiddenNodes.clear();
+        updateVisibility();
       });
+    }
 
     const simulation = d3.forceSimulation(data.nodes)
       .force('link',
         d3.forceLink(data.links)
           .id(d => d.id)
-          .distance(1000)       // aumenta o comprimento "ideal" das arestas
+          .distance(1000)
           .strength(0.8)
       )
       .force('charge',
@@ -748,12 +837,12 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       )
       .force('collide',
         d3.forceCollide()
-          .radius(d => d.type === 'file' ? 38 : 30) // "bolha" maior em volta de cada nó
+          .radius(d => d.type === 'file' ? 38 : 30)
           .iterations(2)
       )
       .force('layer',
         d3.forceY(d => getLayerY(d))
-          .strength(0.35) // quanto maior, mais “alinhadinho” por faixa
+          .strength(0.35)
       )
       .force('center', d3.forceX(width / 2))
       .on('tick', ticked);
@@ -786,7 +875,16 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       event.subject.fy = null;
     }
 
-    node.on('click', (_, d) => highlightDependencies(d));
+    node.on('click', (event, d) => {
+      // se for duplo-clique, ignora o highlight (será tratado no dblclick)
+      if (event.detail > 1) return;
+      highlightDependencies(d);
+    });
+
+    node.on('dblclick', (event, d) => {
+      event.stopPropagation();
+      toggleNodeVisibility(d);
+    });
 
     function highlightDependencies (selected) {
       const incoming = new Set();
