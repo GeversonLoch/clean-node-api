@@ -444,10 +444,47 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
 
   const importerNode = addFileNode(importer)
   const seenTargets = new Set<string>()
+  const seenFiles = new Set<string>()
+
+  const expandedTargets: ExportTarget[] = []
+
+  const pushTargetsFromIndex = (indexPath: string): void => {
+    const exported = collectAllExports(indexPath)
+    if (exported.length) {
+      expandedTargets.push(...exported)
+    }
+    const indexInfo = fileInfos.get(indexPath)
+    indexInfo?.exportAlls.forEach(targetPath => {
+      expandedTargets.push({ file: targetPath, originalName: path.basename(targetPath) })
+    })
+  }
 
   importTargets.forEach(target => {
     const resolvedInfo = fileInfos.get(target.file)
-    if (!resolvedInfo || resolvedInfo.isIndex) return
+    if (resolvedInfo?.isIndex) {
+      pushTargetsFromIndex(target.file)
+      return
+    }
+    expandedTargets.push(target)
+  })
+
+  if (!expandedTargets.length && moduleInfo.isIndex) {
+    pushTargetsFromIndex(modulePath)
+  }
+
+  if (!expandedTargets.length) {
+    expandedTargets.push({ file: modulePath, originalName: path.basename(modulePath) })
+  }
+
+  expandedTargets.forEach(target => {
+    const resolvedInfo = fileInfos.get(target.file)
+    if (!resolvedInfo) return
+    const targetFileNode = addFileNode(resolvedInfo.path)
+    if (!seenFiles.has(targetFileNode.id)) {
+      links.push({ source: importerNode.id, target: targetFileNode.id, kind: 'imports' })
+      seenFiles.add(targetFileNode.id)
+    }
+
     const targetKey = `${target.file}::${target.originalName}`
     if (seenTargets.has(targetKey)) return
     seenTargets.add(targetKey)
@@ -456,9 +493,6 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
     if (declaration) {
       const symbolNode = addSymbolNode(target.file, declaration)
       links.push({ source: importerNode.id, target: symbolNode.id, kind: 'imports' })
-    } else {
-      const fileNode = addFileNode(target.file)
-      links.push({ source: importerNode.id, target: fileNode.id, kind: 'imports' })
     }
   })
 }
