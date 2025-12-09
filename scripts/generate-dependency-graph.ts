@@ -847,8 +847,9 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
           {
             selector: 'node[type]',
             style: {
-              'width': 18,
-              'height': 18,
+              'shape': 'hexagon',
+              'width': 90,
+              'height': 40,
               'background-color': '#4c8bf5',
               'border-color': '#0d1117',
               'border-width': 1,
@@ -856,10 +857,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               'font-size': 8,
               'color': '#e6edf3',
               'text-wrap': 'wrap',
-              'text-max-width': 220,
+              'text-max-width': 80,
               'text-valign': 'center',
-              'text-halign': 'right',
-              'text-margin-x': 10,
+              'text-halign': 'center',
+              'text-margin-x': 0,
               'text-outline-width': 0
             }
           },
