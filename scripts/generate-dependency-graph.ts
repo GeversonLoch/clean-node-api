@@ -40,6 +40,7 @@ interface GraphNode {
   type: 'file' | 'class' | 'interface'
   file: string
   layer: Layer
+  directory: string
 }
 
 interface GraphLink {
@@ -248,7 +249,6 @@ function collectFileData (filePath: string): void {
           }
         })
       } else if (!node.exportClause && resolvedModule) {
-        // export * from './module'
         fileInfo.exportAlls.push(resolvedModule)
       }
     }
@@ -270,7 +270,7 @@ function collectFileData (filePath: string): void {
     importEntries.set(normalized, imports)
   }
 
-  // Handle `export default class Foo {}` pattern
+  // export default class Foo {}
   sourceFile.statements.forEach(statement => {
     if (ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement)) {
       const hasDefault = statement.modifiers?.some(mod => mod.kind === ts.SyntaxKind.DefaultKeyword)
@@ -330,7 +330,6 @@ function resolveExportTargets (filePath: string, exportName: string, visited = n
   }
 
   if (!results.length && !fileInfo.isIndex) {
-    // Fallback to file declarations
     const declaration = fileInfo.declarations.find(decl => decl.name === exportName && decl.exported)
     if (declaration) {
       results.push({ file: filePath, originalName: exportName })
@@ -371,16 +370,37 @@ function symbolNodeId (filePath: string, name: string): string {
   return `symbol:${path.relative(projectRoot, filePath)}::${name}`
 }
 
+function detectLayer (filePath: string): Layer {
+  const rel = path
+    .relative(srcRoot, filePath)
+    .replace(/\\/g, '/')
+
+  if (rel.startsWith('presentation/')) return 'presentation'
+  if (rel.startsWith('domain/')) return 'domain'
+  if (rel.startsWith('data/')) return 'data'
+  if (rel.startsWith('infra/') || rel.startsWith('infrastructure/')) return 'infra'
+  if (rel.startsWith('main/')) return 'main'
+  return 'other'
+}
+
+function getDirectoryKey (filePath: string): string {
+  const relDir = path
+    .relative(srcRoot, path.dirname(filePath))
+    .replace(/\\/g, '/')
+  return relDir || '.'
+}
+
 function addFileNode (filePath: string): GraphNode {
   const id = fileNodeId(filePath)
   let node = nodes.get(id)
   if (!node) {
     node = {
       id,
-      label: path.relative(projectRoot, filePath),
+      label: path.basename(filePath),
       type: 'file',
       file: filePath,
-      layer: detectLayer(filePath)
+      layer: detectLayer(filePath),
+      directory: getDirectoryKey(filePath)
     }
     nodes.set(id, node)
   }
@@ -396,7 +416,8 @@ function addSymbolNode (filePath: string, declaration: DeclarationInfo): GraphNo
       label: `${declaration.name} (${declaration.kind})`,
       type: declaration.kind,
       file: filePath,
-      layer: detectLayer(filePath)
+      layer: detectLayer(filePath),
+      directory: getDirectoryKey(filePath)
     }
     nodes.set(id, node)
   }
@@ -439,7 +460,6 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
   }
 
   if (!entry.namedImports.length && !entry.defaultImport && !entry.namespaceImport) {
-    // Import apenas com efeito colateral, liga diretamente o arquivo
     importTargets.push({ file: modulePath, originalName: path.basename(modulePath) })
   }
 
@@ -508,20 +528,7 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
   })
 }
 
-function detectLayer (filePath: string): Layer {
-  const rel = path
-    .relative(srcRoot, filePath)
-    .replace(/\\/g, '/')
-
-  if (rel.startsWith('presentation/')) return 'presentation'
-  if (rel.startsWith('domain/')) return 'domain'
-  if (rel.startsWith('data/')) return 'data'
-  if (rel.startsWith('infra/') || rel.startsWith('infrastructure/')) return 'infra'
-  if (rel.startsWith('main/')) return 'main'
-  return 'other'
-}
-
-// ranking de camadas para o "lint" de arquitetura
+// ranking de camadas para o lint
 function getLayerRank (layer: Layer): number {
   switch (layer) {
     case 'domain': return 0
@@ -534,10 +541,6 @@ function getLayerRank (layer: Layer): number {
   }
 }
 
-// Regra de violação:
-// - Só consideramos links de "imports".
-// - Se o arquivo de origem estiver em uma camada MAIS INTERNA (rank menor)
-//   importando algo de uma camada MAIS EXTERNA (rank maior), é violação.
 function isArchitectureViolation (link: GraphLink): boolean {
   if (link.kind !== 'imports') return false
 
@@ -548,7 +551,6 @@ function isArchitectureViolation (link: GraphLink): boolean {
   const sourceRank = getLayerRank(sourceNode.layer)
   const targetRank = getLayerRank(targetNode.layer)
 
-  // Inner -> Outer (ex.: domain -> presentation) => violação
   return sourceRank < targetRank
 }
 
@@ -565,7 +567,6 @@ function buildGraph (): void {
 
 buildGraph()
 
-// Calcula e marca os links que violam a "regra" de arquitetura
 links.forEach(link => {
   link.lintViolation = isArchitectureViolation(link)
 })
@@ -573,48 +574,78 @@ links.forEach(link => {
 function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
   const data = { nodes: nodesList, links: linksList }
   const graphData = JSON.stringify(data)
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Dependency Graph</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #0d1117; color: #e6edf3; }
-    #graph { width: 100vw; height: 100vh; }
-    .legend { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 6px; font-size: 14px; }
-    .legend div { margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-    .legend .color { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
-    .node text { pointer-events: none; font-size: 12px; fill: #e6edf3; }
-    /* Linhas mais discretas */
-    .link {
-      stroke: #30363d;
-      stroke-opacity: 0.18;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #0d1117;
+      color: #e6edf3;
     }
-    .link.imports {
-      stroke: #30363d;
+    #graph {
+      width: 100vw;
+      height: 100vh;
     }
-    .link.declares {
-      stroke: #30363d;
-      stroke-dasharray: 3 3;
-    }
-    .node circle { stroke: #0d1117; stroke-width: 1px; }
-    .node.file circle { fill: #4c8bf5; }
-    .node.class circle { fill: #2fb344; }
-    .node.interface circle { fill: #f59f00; }
-    .node.dimmed circle, .node.dimmed text { opacity: 0.2; }
-    .link.dimmed { stroke-opacity: 0.04; }
-    .link.imports.highlight { stroke: #ff6b6b; stroke-opacity: 0.9; }
-    .link.declares.highlight { stroke: #94d82d; stroke-opacity: 0.9; }
-    .layer-filter {
+    .legend {
       position: fixed;
-      bottom: 10px;
+      top: 10px;
       left: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 20;
+    }
+    .legend div {
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend .color {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    #search {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 20;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #161b22;
+      color: #e6edf3;
+      font-size: 13px;
+    }
+    .layer-filter,
+    .type-filter,
+    .node-controls {
+      position: fixed;
       background: rgba(0,0,0,0.6);
       padding: 6px 8px;
       border-radius: 6px;
       font-size: 12px;
+      z-index: 20;
     }
-    .layer-filter button {
+    .layer-filter {
+      bottom: 10px;
+      left: 10px;
+    }
+    .type-filter {
+      bottom: 60px;
+      left: 10px;
+    }
+    .layer-filter button,
+    .type-filter button,
+    .node-controls button {
       margin: 2px 4px;
       padding: 2px 6px;
       background: #161b22;
@@ -628,491 +659,666 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       background: #238636;
       border-color: #2ea043;
     }
-    .node.layer-dimmed circle,
-    .node.layer-dimmed text {
-      opacity: 0.15;
-    }
-    .link.layer-dimmed {
-      stroke-opacity: 0.04;
-    }
-    /* Filtro por tipo de nó */
-    .type-filter {
-      position: fixed;
-      bottom: 60px;
-      left: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-    }
-    .type-filter button {
-      margin: 2px 4px;
-      padding: 2px 6px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      color: #e6edf3;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-    }
     .type-filter button.active {
       background: #1f6feb;
       border-color: #388bfd;
     }
-    .node.type-dimmed circle,
-    .node.type-dimmed text {
-      opacity: 0.15;
-    }
-    .link.type-dimmed {
-      stroke-opacity: 0.04;
-    }
-    .type-bands rect {
-      fill: #0b0f16;
-      opacity: 0.16;
-    }
-    .type-bands text {
-      fill: #8b949e;
-      font-size: 11px;
-      text-transform: uppercase;
-      text-anchor: middle;
-    }
     .node-controls {
-      position: fixed;
       bottom: 10px;
       right: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      max-width: 220px;
+      max-width: 260px;
     }
     .node-controls button {
-      margin-top: 4px;
-      padding: 2px 6px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      color: #e6edf3;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
+      display: block;
       width: 100%;
       text-align: left;
-    }
-    .node.hidden circle,
-    .node.hidden text {
-      display: none;
-    }
-    .link.hidden {
-      display: none;
-    }
-    /* Linhas que violam a regra de arquitetura (lint) */
-    .link.lint-violation {
-      stroke: #ff4d4f;
-      stroke-opacity: 0.95;
-      stroke-width: 1.4px;
+      margin-top: 4px;
     }
   </style>
+  <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
 </head>
 <body>
   <div class="legend">
     <div><span class="color" style="background:#4c8bf5"></span>Arquivo</div>
     <div><span class="color" style="background:#2fb344"></span>Classe</div>
     <div><span class="color" style="background:#f59f00"></span>Interface</div>
-    <div>Vermelho: arquivos/símbolos importados</div>
+    <div>Vermelho: imports (dependências)</div>
     <div>Verde: declarações internas</div>
+    <div>Tracejado: relação de declaração</div>
+    <div style="margin-top:4px;">Borda vermelha: violação de arquitetura</div>
   </div>
+
   <input
     id="search"
     type="text"
     placeholder="Buscar nó (arquivo / classe / interface)..."
-    style="position:fixed;top:10px;right:10px;z-index:10;padding:4px 8px;border-radius:4px;border:1px solid #333;background:#161b22;color:#e6edf3;font-size:13px;"
   />
+
   <div class="type-filter" id="type-filter"></div>
   <div class="layer-filter" id="layer-filter"></div>
+
   <div class="node-controls" id="node-controls">
-    <div>Dica: dê <strong>duplo clique</strong> em um nó para ocultar/mostrar.</div>
+    <div>Dica: clique em um nó para destacar dependências.</div>
+    <div>Segure <strong>Alt</strong> e clique em um nó para ocultar/mostrar.</div>
+    <button id="organize-nodes">Organizar nós</button>
     <button id="reset-hidden">Mostrar todos os nós</button>
     <button id="reset-filters">Limpar filtros</button>
     <button id="toggle-lint">Ocultar violações de arquitetura</button>
   </div>
-  <svg id="graph"></svg>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <div id="graph"></div>
+
   <script>
-    const data = ${graphData};
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    (function () {
+      const rawData = ${graphData};
 
-    // Layers (Y) só pra posicionamento
-    const layerY = {
-      presentation: height * 0.15,
-      domain:       height * 0.35,
-      data:         height * 0.55,
-      infra:        height * 0.75,
-      main:         height * 0.9,
-      other:        height * 0.5
-    };
+      const width = window.innerWidth;
+      const height = window.innerHeight;
 
-    function getLayerY (d) {
-      return layerY[d.layer] || layerY.other;
-    }
+      const nodeTypes = Array.from(new Set(rawData.nodes.map(n => n.type))).sort();
+      const layers = Array.from(new Set(rawData.nodes.map(n => n.layer))).sort();
 
-    const svg = d3.select('#graph').attr('width', width).attr('height', height);
-    const container = svg.append('g');
+      const preferredLayerOrder = ['main', 'infra', 'data', 'domain', 'presentation', 'other'];
+      const orderedLayers = preferredLayerOrder
+        .filter(l => layers.includes(l))
+        .concat(layers.filter(l => !preferredLayerOrder.includes(l)));
 
-    const defs = svg.append('defs');
-
-    defs.append('marker')
-      .attr('id', 'arrow')
-      .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 12)
-      .attr('refY', 0)
-      .attr('markerWidth', 6)
-      .attr('markerHeight', 6)
-      .attr('orient', 'auto')
-      .append('path')
-      .attr('d', 'M0,-5L10,0L0,5')
-      .attr('fill', '#30363d');
-
-    const zoom = d3.zoom().scaleExtent([0.1, 5]).on('zoom', (event) => {
-      container.attr('transform', event.transform);
-    });
-    svg.call(zoom);
-
-    // Tipos existentes no grafo (file/class/interface)
-    const nodeTypes = Array.from(new Set(data.nodes.map(n => n.type))).sort();
-    const typeBandWidth = width / Math.max(nodeTypes.length, 1);
-
-    // X alvo por tipo de nó (colunas)
-    const typeX = {};
-    nodeTypes.forEach((type, index) => {
-      typeX[type] = (index + 0.5) * typeBandWidth;
-    });
-
-    // Faixas de tipo (fundo vertical)
-    const typeBands = container.append('g').attr('class', 'type-bands');
-    nodeTypes.forEach((type, index) => {
-      const x = index * typeBandWidth;
-      typeBands.append('rect')
-        .attr('x', x)
-        .attr('y', 0)
-        .attr('width', typeBandWidth)
-        .attr('height', height);
-      typeBands.append('text')
-        .attr('x', x + typeBandWidth / 2)
-        .attr('y', 16)
-        .text(type.toUpperCase());
-    });
-
-    typeBands.lower();
-
-    const link = container.append('g')
-      .attr('stroke-width', 0.7)
-      .selectAll('line')
-      .data(data.links)
-      .join('line')
-      .attr('class', d => 'link ' + d.kind)
-      .attr('marker-end', d => d.kind === 'imports' ? 'url(#arrow)' : null);
-
-    const node = container.append('g')
-      .selectAll('g')
-      .data(data.nodes)
-      .join('g')
-      .attr('class', d => 'node ' + d.type)
-      .call(d3.drag()
-        .on('start', dragStarted)
-        .on('drag', dragged)
-        .on('end', dragEnded));
-
-    const hiddenNodes = new Set();
-    let lintEnabled = true;
-
-    function updateVisibility () {
-      node.classed('hidden', n => hiddenNodes.has(n.id));
-      link.classed('hidden', l =>
-        hiddenNodes.has(l.source.id || l.source) || hiddenNodes.has(l.target.id || l.target)
-      );
-    }
-
-    function toggleNodeVisibility (n) {
-      if (hiddenNodes.has(n.id)) {
-        hiddenNodes.delete(n.id);
-      } else {
-        hiddenNodes.add(n.id);
+      // ----- Diretórios (containers compostos) -----
+      function normalizeDirPath (dir) {
+        if (!dir || dir === '') return '.';
+        return dir;
       }
-      updateVisibility();
-    }
 
-    function applyLintStyles () {
-      link.classed('lint-violation', d => lintEnabled && d.lintViolation);
-    }
+      const dirMap = new Map();
+      function ensureDir (dirPath) {
+        dirPath = normalizeDirPath(dirPath);
+        if (dirMap.has(dirPath)) return dirMap.get(dirPath);
 
-    // ----- Filtro por camada (multi-seleção) -----
-    const layerFilterEl = document.getElementById('layer-filter');
+        let parentPath = null;
+        if (dirPath !== '.') {
+          const idx = dirPath.lastIndexOf('/');
+          parentPath = idx > -1 ? dirPath.slice(0, idx) : '.';
+          if (parentPath) ensureDir(parentPath);
+        }
 
-    const layers = Array.from(new Set(data.nodes.map(n => n.layer))).sort();
-    const activeLayers = new Set();
+        const info = {
+          id: 'dir:' + dirPath,
+          path: dirPath,
+          name: dirPath === '.' ? 'src' : dirPath.split('/').slice(-1)[0],
+          parentPath
+        };
+        dirMap.set(dirPath, info);
+        return info;
+      }
 
-    if (layerFilterEl && layers.length) {
-      layers.forEach(layer => {
-        const btn = document.createElement('button');
-        btn.textContent = layer;
-        btn.addEventListener('click', () => {
-          if (activeLayers.has(layer)) {
-            activeLayers.delete(layer);
-            btn.classList.remove('active');
-          } else {
-            activeLayers.add(layer);
-            btn.classList.add('active');
-          }
-          applyLayerFilter();
-        });
-        layerFilterEl.appendChild(btn);
+      // Cria todos os diretórios necessários
+      rawData.nodes.forEach(n => {
+        ensureDir(n.directory);
       });
-    }
 
-    function applyLayerFilter () {
-      if (!activeLayers.size) {
-        node.classed('layer-dimmed', false);
-        link.classed('layer-dimmed', false);
-        return;
-      }
+      const elements = [];
 
-      const visibleIds = new Set(
-        data.nodes
-          .filter(n => activeLayers.has(n.layer))
-          .map(n => n.id)
-      );
-
-      node.classed('layer-dimmed', n => !visibleIds.has(n.id));
-      link.classed('layer-dimmed', l =>
-        !visibleIds.has(l.source.id || l.source) && !visibleIds.has(l.target.id || l.target)
-      );
-    }
-
-    // ----- Filtro por tipo de nó (file / class / interface) - multi-seleção -----
-    const typeFilterEl = document.getElementById('type-filter');
-    const activeTypes = new Set();
-
-    const typeLabels = {
-      file: 'file',
-      class: 'class',
-      interface: 'interface'
-    };
-
-    if (typeFilterEl && nodeTypes.length) {
-      nodeTypes.forEach(type => {
-        const btn = document.createElement('button');
-        btn.textContent = typeLabels[type] || type;
-        btn.addEventListener('click', () => {
-          if (activeTypes.has(type)) {
-            activeTypes.delete(type);
-            btn.classList.remove('active');
-          } else {
-            activeTypes.add(type);
-            btn.classList.add('active');
-          }
-          applyTypeFilter();
-        });
-        typeFilterEl.appendChild(btn);
+      // Containers de diretório:
+      // - NÃO criamos container para '.' (src)
+      // - Se o parentPath for '.', não setamos parent (top-level)
+      Array.from(dirMap.values()).forEach(info => {
+        if (info.path === '.') {
+          // não cria quadrado para src
+          return;
+        }
+        const data = {
+          id: info.id,
+          label: info.name,
+          fullPath: info.path,
+          dirContainer: true
+        };
+        if (info.parentPath && info.parentPath !== '.') {
+          data.parent = 'dir:' + info.parentPath;
+        }
+        elements.push({ data });
       });
-    }
 
-    function applyTypeFilter () {
-      if (!activeTypes.size) {
-        node.classed('type-dimmed', false);
-        link.classed('type-dimmed', false);
-        return;
+      // Nós reais (file/class/interface)
+      rawData.nodes.forEach(n => {
+        const dirKey = normalizeDirPath(n.directory);
+        const data = {
+          id: n.id,
+          label: n.label,
+          type: n.type,
+          file: n.file,
+          layer: n.layer,
+          directory: dirKey
+        };
+        if (dirKey !== '.') {
+          data.parent = 'dir:' + dirKey;
+        }
+        elements.push({
+          data,
+          position: { x: width / 2, y: height / 2 }
+        });
+      });
+
+      // Arestas
+      rawData.links.forEach((l, index) => {
+        const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
+        const targetId = typeof l.target === 'string' ? l.target : l.target.id;
+
+        elements.push({
+          data: {
+            id: sourceId + '->' + targetId + ':' + l.kind + ':' + index,
+            source: sourceId,
+            target: targetId,
+            kind: l.kind,
+            lintViolation: Boolean(l.lintViolation)
+          },
+          classes: l.kind
+        });
+      });
+
+      const cy = cytoscape({
+        container: document.getElementById('graph'),
+        elements: elements,
+        layout: {
+          name: 'preset',
+          fit: true,
+          padding: 40
+        },
+        wheelSensitivity: 0.2,
+        style: [
+          {
+            selector: 'node[dirContainer]',
+            style: {
+              'shape': 'round-rectangle',
+              'background-color': '#111827',
+              'background-opacity': 0.26,
+              'border-color': '#30363d',
+              'border-width': 1,
+              'padding': '16px',
+              'label': 'data(label)',
+              'font-size': 11,
+              'color': '#9ca3af',
+              'text-valign': 'top',
+              'text-halign': 'left',
+              'text-margin-y': -2,
+              'text-margin-x': 6,
+              'z-compound-depth': 'bottom'
+            }
+          },
+          {
+            selector: 'node[type]',
+            style: {
+              'width': 18,
+              'height': 18,
+              'background-color': '#4c8bf5',
+              'border-color': '#0d1117',
+              'border-width': 1,
+              'label': 'data(label)',
+              'font-size': 8,
+              'color': '#e6edf3',
+              'text-wrap': 'wrap',
+              'text-max-width': 220,
+              'text-valign': 'center',
+              'text-halign': 'right',
+              'text-margin-x': 10,
+              'text-outline-width': 0
+            }
+          },
+          {
+            selector: 'node[type = "file"]',
+            style: { 'background-color': '#4c8bf5' }
+          },
+          {
+            selector: 'node[type = "class"]',
+            style: { 'background-color': '#2fb344' }
+          },
+          {
+            selector: 'node[type = "interface"]',
+            style: { 'background-color': '#f59f00' }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 0.7,
+              'line-color': '#30363d',
+              'opacity': 0.18,
+              'curve-style': 'bezier',
+              'target-arrow-shape': 'none'
+            }
+          },
+          {
+            selector: 'edge[kind = "imports"]',
+            style: {
+              'line-color': '#30363d',
+              'target-arrow-shape': 'triangle',
+              'target-arrow-color': '#30363d'
+            }
+          },
+          {
+            selector: 'edge[kind = "declares"]',
+            style: {
+              'line-style': 'dotted'
+            }
+          },
+          {
+            selector: 'edge.highlight[kind = "imports"]',
+            style: {
+              'line-color': '#ff6b6b',
+              'target-arrow-color': '#ff6b6b',
+              'opacity': 0.95,
+              'width': 1.4
+            }
+          },
+          {
+            selector: 'edge.highlight[kind = "declares"]',
+            style: {
+              'line-color': '#94d82d',
+              'opacity': 0.95,
+              'width': 1.4
+            }
+          },
+          {
+            selector: 'node.highlight',
+            style: {
+              'border-color': '#ffffff',
+              'border-width': 1.4,
+              'opacity': 1
+            }
+          },
+          {
+            selector: 'node.dimmed, node.layer-dimmed, node.type-dimmed',
+            style: {
+              'opacity': 0.18,
+              'text-opacity': 0.18
+            }
+          },
+          {
+            selector: 'edge.dimmed, edge.layer-dimmed, edge.type-dimmed',
+            style: {
+              'opacity': 0.04
+            }
+          },
+          {
+            selector: 'node.hidden, edge.hidden',
+            style: { 'display': 'none' }
+          },
+          {
+            selector: 'edge.lint-violation',
+            style: {
+              'line-color': '#ff4d4f',
+              'target-arrow-color': '#ff4d4f',
+              'opacity': 0.95,
+              'width': 1.6
+            }
+          }
+        ]
+      });
+
+      const hiddenNodes = new Set();
+      let lintEnabled = true;
+
+      const inputSearch = document.getElementById('search');
+      const layerFilterEl = document.getElementById('layer-filter');
+      const typeFilterEl = document.getElementById('type-filter');
+      const resetHiddenBtn = document.getElementById('reset-hidden');
+      const resetFiltersBtn = document.getElementById('reset-filters');
+      const toggleLintBtn = document.getElementById('toggle-lint');
+      const organizeBtn = document.getElementById('organize-nodes');
+
+      const activeLayers = new Set();
+      const activeTypes = new Set();
+
+      const typeLabels = { file: 'file', class: 'class', interface: 'interface' };
+
+      // Layout: camadas (Y) x diretórios (X), com margem maior
+      // Layout: camadas (Y) x diretórios (X), evitando sobreposição de containers irmãos
+      function organizeByLayerAndType () {
+        const verticalGapBetweenLayers = 200;  // distância entre faixas de layer
+        const rowGap = 26;                     // distância entre linhas de nós
+        const dirGapMargin = 140;              // margem extra entre diretórios irmãos
+        const colGapWithinDir = 110;           // distância entre tipos dentro do mesmo diretório
+        const leftMargin = 220;
+        const topMargin = 80;
+
+        let currentY = topMargin;
+
+        cy.batch(() => {
+          orderedLayers.forEach(layerName => {
+            const nodesInLayer = cy.nodes('[type][layer = "' + layerName + '"]');
+            if (!nodesInLayer.length) return;
+
+            // Agrupa nós por diretório (mesmo nível = mesmo parent)
+            const groupByDir = {};
+            nodesInLayer.forEach(n => {
+              const dir = n.data('directory') || '.';
+              if (!groupByDir[dir]) {
+                groupByDir[dir] = [];
+              }
+              groupByDir[dir].push(n);
+            });
+
+            const dirKeys = Object.keys(groupByDir).sort();
+            if (!dirKeys.length) return;
+
+            let maxRowsLayer = 1;
+            let currentX = leftMargin;
+
+            dirKeys.forEach(dirPath => {
+              const dirNodes = groupByDir[dirPath];
+
+              // Dentro do diretório, separa por tipo (file/class/interface)
+              const groupByType = {};
+              nodeTypes.forEach(t => { groupByType[t] = []; });
+              dirNodes.forEach(n => {
+                const t = n.data('type');
+                if (!groupByType[t]) groupByType[t] = [];
+                groupByType[t].push(n);
+              });
+
+              const activeTypesForDir = nodeTypes.filter(
+                t => groupByType[t] && groupByType[t].length > 0
+              );
+              if (!activeTypesForDir.length) return;
+
+              // Calcula quantas linhas esse diretório vai usar
+              let maxRowsDir = 1;
+              activeTypesForDir.forEach(type => {
+                const colNodes = groupByType[type];
+                if (colNodes.length > maxRowsDir) maxRowsDir = colNodes.length;
+              });
+
+              // Largura aproximada do diretório (para não colidir com o próximo)
+              const dirWidth = Math.max(
+                260, // largura mínima
+                (activeTypesForDir.length - 1) * colGapWithinDir + 160 // + padding
+              );
+
+              // Posiciona os nós desse diretório dentro desse “bloco” horizontal
+              activeTypesForDir.forEach((type, typeIndex) => {
+                const colNodes = groupByType[type];
+                const baseX = currentX + typeIndex * colGapWithinDir;
+
+                colNodes.forEach((node, i) => {
+                  const x = baseX;
+                  const y = currentY + i * rowGap;
+                  node.position({ x, y });
+                });
+              });
+
+              if (maxRowsDir > maxRowsLayer) maxRowsLayer = maxRowsDir;
+
+              // Avança o cursor horizontal para o próximo diretório irmão
+              currentX += dirWidth + dirGapMargin;
+            });
+
+            // Avança o cursor vertical para a próxima camada (layer)
+            currentY += maxRowsLayer * rowGap + verticalGapBetweenLayers;
+          });
+        });
+
+        cy.fit(cy.nodes('[type]'), 60);
       }
 
-      const visibleIds = new Set(
-        data.nodes
-          .filter(n => activeTypes.has(n.type))
-          .map(n => n.id)
-      );
+      function applyLintStyles () {
+        cy.edges().forEach(e => {
+          const isViolation = !!e.data('lintViolation');
+          if (isViolation && lintEnabled) {
+            e.addClass('lint-violation');
+          } else {
+            e.removeClass('lint-violation');
+          }
+        });
+      }
+      applyLintStyles();
 
-      node.classed('type-dimmed', n => !visibleIds.has(n.id));
-      link.classed('type-dimmed', l =>
-        !visibleIds.has(l.source.id || l.source) && !visibleIds.has(l.target.id || l.target)
-      );
-    }
+      function updateVisibility () {
+        cy.nodes('[type]').forEach(n => {
+          const id = n.id();
+          if (hiddenNodes.has(id)) {
+            n.addClass('hidden');
+          } else {
+            n.removeClass('hidden');
+          }
+        });
 
-    node.append('circle')
-      .attr('r', 10);
+        cy.edges().forEach(e => {
+          const sourceHidden = hiddenNodes.has(e.data('source'));
+          const targetHidden = hiddenNodes.has(e.data('target'));
+          if (sourceHidden || targetHidden) {
+            e.addClass('hidden');
+          } else {
+            e.removeClass('hidden');
+          }
+        });
+      }
 
-    node.append('text')
-      .attr('x', 14)
-      .attr('y', '0.31em')
-      .text(d => d.label);
+      function toggleNodeVisibility (node) {
+        const id = node.id();
+        if (hiddenNodes.has(id)) {
+          hiddenNodes.delete(id);
+        } else {
+          hiddenNodes.add(id);
+        }
+        updateVisibility();
+      }
 
-    const searchInput = document.getElementById('search');
+      // Filtro por camada
+      if (layerFilterEl && orderedLayers.length) {
+        orderedLayers.forEach(layer => {
+          const btn = document.createElement('button');
+          btn.textContent = layer;
+          btn.addEventListener('click', () => {
+            if (activeLayers.has(layer)) {
+              activeLayers.delete(layer);
+              btn.classList.remove('active');
+            } else {
+              activeLayers.add(layer);
+              btn.classList.add('active');
+            }
+            applyLayerFilter();
+          });
+          layerFilterEl.appendChild(btn);
+        });
+      }
 
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        const term = searchInput.value.toLowerCase().trim();
-
-        if (!term) {
-          node.classed('dimmed', false);
-          link.classed('dimmed', false);
+      function applyLayerFilter () {
+        if (!activeLayers.size) {
+          cy.nodes('[type]').removeClass('layer-dimmed');
+          cy.edges().removeClass('layer-dimmed');
           return;
         }
 
-        const matchedIds = new Set(
-          data.nodes
-            .filter(n => n.label.toLowerCase().includes(term))
-            .map(n => n.id)
-        );
-
-        node.classed('dimmed', n => !matchedIds.has(n.id));
-        link.classed('dimmed', l => {
-          const sourceId = l.source.id || l.source;
-          const targetId = l.target.id || l.target;
-          return !matchedIds.has(sourceId) && !matchedIds.has(targetId);
+        cy.nodes('[type]').forEach(n => {
+          const nodeLayer = n.data('layer');
+          if (activeLayers.has(nodeLayer)) {
+            n.removeClass('layer-dimmed');
+          } else {
+            n.addClass('layer-dimmed');
+          }
         });
-      });
-    }
 
-    const resetHiddenBtn = document.getElementById('reset-hidden');
-    if (resetHiddenBtn) {
-      resetHiddenBtn.addEventListener('click', () => {
-        hiddenNodes.clear();
-        updateVisibility();
-      });
-    }
+        cy.edges().forEach(e => {
+          const src = cy.getElementById(e.data('source'));
+          const tgt = cy.getElementById(e.data('target'));
+          const sLayer = src.data('layer');
+          const tLayer = tgt.data('layer');
 
-    // ----- Botão para limpar todos os filtros -----
-    const resetFiltersBtn = document.getElementById('reset-filters');
-    if (resetFiltersBtn) {
-      resetFiltersBtn.addEventListener('click', () => {
-        // Limpa texto de busca
-        if (searchInput) {
-          searchInput.value = '';
+          if (activeLayers.has(sLayer) || activeLayers.has(tLayer)) {
+            e.removeClass('layer-dimmed');
+          } else {
+            e.addClass('layer-dimmed');
+          }
+        });
+      }
+
+      // Filtro por tipo
+      if (typeFilterEl && nodeTypes.length) {
+        nodeTypes.forEach(type => {
+          const btn = document.createElement('button');
+          btn.textContent = typeLabels[type] || type;
+          btn.addEventListener('click', () => {
+            if (activeTypes.has(type)) {
+              activeTypes.delete(type);
+              btn.classList.remove('active');
+            } else {
+              activeTypes.add(type);
+              btn.classList.add('active');
+            }
+            applyTypeFilter();
+          });
+          typeFilterEl.appendChild(btn);
+        });
+      }
+
+      function applyTypeFilter () {
+        if (!activeTypes.size) {
+          cy.nodes('[type]').removeClass('type-dimmed');
+          cy.edges().removeClass('type-dimmed');
+          return;
         }
 
-        // Remove qualquer dimming e highlight (lint continua separado)
-        node.classed('dimmed', false)
-            .classed('layer-dimmed', false)
-            .classed('type-dimmed', false);
-        link.classed('dimmed', false)
-            .classed('layer-dimmed', false)
-            .classed('type-dimmed', false)
-            .classed('highlight', false);
+        cy.nodes('[type]').forEach(n => {
+          const nodeType = n.data('type');
+          if (activeTypes.has(nodeType)) {
+            n.removeClass('type-dimmed');
+          } else {
+            n.addClass('type-dimmed');
+          }
+        });
 
-        // Reseta filtro de camada
-        activeLayers.clear();
-        if (layerFilterEl) {
-          [...layerFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+        cy.edges().forEach(e => {
+          const src = cy.getElementById(e.data('source'));
+          const tgt = cy.getElementById(e.data('target'));
+          const sType = src.data('type');
+          const tType = tgt.data('type');
+
+          if (activeTypes.has(sType) || activeTypes.has(tType)) {
+            e.removeClass('type-dimmed');
+          } else {
+            e.addClass('type-dimmed');
+          }
+        });
+      }
+
+      // Busca
+      if (inputSearch) {
+        inputSearch.addEventListener('input', () => {
+          const term = inputSearch.value.toLowerCase().trim();
+
+          cy.nodes('[type]').removeClass('dimmed');
+          cy.edges().removeClass('dimmed');
+
+          if (!term) return;
+
+          const matchedNodes = cy.nodes('[type]').filter(n =>
+            String(n.data('label') || '').toLowerCase().includes(term)
+          );
+
+          const matchedIds = new Set();
+          matchedNodes.forEach(n => matchedIds.add(n.id()));
+
+          cy.nodes('[type]').forEach(n => {
+            if (!matchedIds.has(n.id())) {
+              n.addClass('dimmed');
+            }
+          });
+
+          cy.edges().forEach(e => {
+            const sId = e.data('source');
+            const tId = e.data('target');
+            if (!matchedIds.has(sId) && !matchedIds.has(tId)) {
+              e.addClass('dimmed');
+            }
+          });
+        });
+      }
+
+      if (resetHiddenBtn) {
+        resetHiddenBtn.addEventListener('click', () => {
+          hiddenNodes.clear();
+          updateVisibility();
+        });
+      }
+
+      if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', () => {
+          if (inputSearch) inputSearch.value = '';
+
+          cy.nodes('[type]').removeClass('dimmed layer-dimmed type-dimmed highlight');
+          cy.edges().removeClass('dimmed layer-dimmed type-dimmed highlight');
+
+          activeLayers.clear();
+          if (layerFilterEl) {
+            Array.from(layerFilterEl.querySelectorAll('button')).forEach(btn => {
+              btn.classList.remove('active');
+            });
+          }
+          applyLayerFilter();
+
+          activeTypes.clear();
+          if (typeFilterEl) {
+            Array.from(typeFilterEl.querySelectorAll('button')).forEach(btn => {
+              btn.classList.remove('active');
+            });
+          }
+          applyTypeFilter();
+        });
+      }
+
+      if (toggleLintBtn) {
+        toggleLintBtn.addEventListener('click', () => {
+          lintEnabled = !lintEnabled;
+          applyLintStyles();
+          toggleLintBtn.textContent = lintEnabled
+            ? 'Ocultar violações de arquitetura'
+            : 'Mostrar violações de arquitetura';
+        });
+      }
+
+      if (organizeBtn) {
+        organizeBtn.addEventListener('click', () => {
+          organizeByLayerAndType();
+        });
+      }
+
+      function highlightDependencies (node) {
+        if (!node.data('type')) return;
+
+        cy.nodes('[type]').removeClass('highlight dimmed');
+        cy.edges().removeClass('highlight dimmed');
+
+        const neighborhood = node.closedNeighborhood();
+        neighborhood.addClass('highlight');
+
+        const others = cy.elements().difference(neighborhood);
+        others.addClass('dimmed');
+      }
+
+      cy.on('tap', 'node', (evt) => {
+        const node = evt.target;
+        const original = evt.originalEvent || {};
+
+        if (!node.data('type')) {
+          if (original.altKey) toggleNodeVisibility(node);
+          return;
         }
-        applyLayerFilter();
 
-        // Reseta filtro de tipo
-        activeTypes.clear();
-        if (typeFilterEl) {
-          [...typeFilterEl.querySelectorAll('button')].forEach(b => b.classList.remove('active'));
+        if (original.altKey) {
+          toggleNodeVisibility(node);
+          return;
         }
-        applyTypeFilter();
-      });
-    }
 
-    // ----- Botão para ativar/desativar o "lint" de arquitetura -----
-    const toggleLintBtn = document.getElementById('toggle-lint');
-    if (toggleLintBtn) {
-      toggleLintBtn.addEventListener('click', () => {
-        lintEnabled = !lintEnabled;
-        applyLintStyles();
-        toggleLintBtn.textContent = lintEnabled
-          ? 'Ocultar violações de arquitetura'
-          : 'Mostrar violações de arquitetura';
-      });
-    }
-
-    const simulation = d3.forceSimulation(data.nodes)
-      .force('link',
-        d3.forceLink(data.links)
-          .id(d => d.id)
-          .distance(1000)
-          .strength(0.8)
-      )
-      .force('charge',
-        d3.forceManyBody()
-          .strength(-900)
-      )
-      .force('collide',
-        d3.forceCollide()
-          .radius(d => d.type === 'file' ? 38 : 30)
-          .iterations(2)
-      )
-      .force('layer',
-        d3.forceY(d => getLayerY(d))
-          .strength(0.35)
-      )
-      .force('type',
-        d3.forceX(d => typeX[d.type] || (width / 2))
-          .strength(0.4)
-      )
-      .on('tick', ticked);
-
-    function ticked () {
-      link
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
-
-      node
-        .attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
-    }
-
-    function dragStarted (event) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      event.subject.fx = event.subject.x;
-      event.subject.fy = event.subject.y;
-    }
-
-    function dragged (event) {
-      event.subject.fx = event.x;
-      event.subject.fy = event.y;
-    }
-
-    function dragEnded (event) {
-      if (!event.active) simulation.alphaTarget(0);
-      event.subject.fx = null;
-      event.subject.fy = null;
-    }
-
-    node.on('click', (event, d) => {
-      if (event.detail > 1) return;
-      highlightDependencies(d);
-    });
-
-    node.on('dblclick', (event, d) => {
-      event.stopPropagation();
-      toggleNodeVisibility(d);
-    });
-
-    function highlightDependencies (selected) {
-      const incoming = new Set();
-      const outgoing = new Set();
-
-      link.classed('highlight', l => {
-        const isOutgoing = (l.source.id || l.source) === selected.id;
-        const isIncoming = (l.target.id || l.target) === selected.id;
-        if (isOutgoing) outgoing.add(l.target.id || l.target);
-        if (isIncoming) incoming.add(l.source.id || l.source);
-        return isOutgoing || isIncoming;
+        highlightDependencies(node);
       });
 
-      node.classed('dimmed', n =>
-        n.id !== selected.id && !incoming.has(n.id) && !outgoing.has(n.id)
-      );
-      link.classed('dimmed', l => {
-        const sourceId = l.source.id || l.source;
-        const targetId = l.target.id || l.target;
-        return sourceId !== selected.id && targetId !== selected.id;
+      cy.on('tap', (evt) => {
+        if (evt.target === cy) {
+          cy.nodes('[type]').removeClass('highlight dimmed');
+          cy.edges().removeClass('highlight dimmed');
+        }
       });
-    }
 
-    // Aplica o "lint" na carga inicial
-    applyLintStyles();
+      organizeByLayerAndType();
+    })();
   </script>
 </body>
 </html>`
