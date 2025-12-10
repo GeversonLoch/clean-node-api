@@ -550,6 +550,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       background: #0d1117;
       color: #e6edf3;
       overflow: hidden;
+      user-select: none;
     }
     #graph {
       width: 100vw;
@@ -578,6 +579,24 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       height: 12px;
       border-radius: 3px;
       display: inline-block;
+    }
+    .legend .key-hint {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #30363d;
+      font-size: 11px;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kbd {
+      background: #30363d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #e6edf3;
+      font-family: monospace;
+      border: 1px solid #6e7681;
     }
     .controls-container {
         position: fixed;
@@ -658,9 +677,11 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     <div><span class="color" style="background:#2fb344"></span>Classe</div>
     <div><span class="color" style="background:#f59f00"></span>Interface</div>
     <div><span class="color" style="background:transparent; border: 1px dashed #9ca3af"></span>Diretório</div>
-    <hr style="border:0; border-top:1px solid #30363d; width:100%; margin:8px 0;">
-    <div style="font-size:11px; color:#8b949e">Linha Sólida: Import</div>
+    <div style="font-size:11px; color:#8b949e; margin-top:8px">Linha Sólida: Import</div>
     <div style="font-size:11px; color:#8b949e">Linha Pontilhada: Declaração</div>
+    <div class="key-hint">
+      <span class="kbd">Ctrl</span> + Arrastar para mover nós
+    </div>
   </div>
 
   <input id="search" type="text" placeholder="Buscar nó (arquivo / classe)..." />
@@ -681,7 +702,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
   <script>
     (function () {
       const rawData = ${graphData};
-      
       const nodeTypes = Array.from(new Set(rawData.nodes.map(n => n.type))).sort();
       const layers = Array.from(new Set(rawData.nodes.map(n => n.layer))).sort();
       const preferredLayerOrder = ['main', 'infra', 'data', 'domain', 'presentation', 'other'];
@@ -766,7 +786,8 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       const cy = cytoscape({
         container: document.getElementById('graph'),
         elements: elements,
-        
+        autoungrabify: true,
+        boxSelectionEnabled: false,
         layout: {
           name: 'dagre',
           rankDir: 'TB',
@@ -897,9 +918,32 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               'opacity': 0.1,
               'z-index': 1
             }
+          },
+          {
+              selector: 'core',
+              style: {
+                  'active-bg-opacity': 0
+              }
           }
         ]
       });
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Control') {
+          cy.autoungrabify(false); // Habilita mover
+          document.body.style.cursor = 'grab'; // Muda cursor para indicar que pode pegar
+        }
+      };
+
+      const handleKeyUp = (e) => {
+        if (e.key === 'Control') {
+          cy.autoungrabify(true); // Desabilita mover (padrão)
+          document.body.style.cursor = 'default';
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keyup', handleKeyUp);
 
       const activeLayers = new Set();
       const activeTypes = new Set();
@@ -928,7 +972,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       function updateVisibility() {
           const nodes = cy.nodes('[type]');
           const edges = cy.edges();
-          
+
           cy.batch(() => {
               nodes.removeClass('dimmed');
               edges.removeClass('dimmed');
@@ -941,7 +985,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               nodes.forEach(n => {
                   const layerMatch = !hasLayerFilter || activeLayers.has(n.data('layer'));
                   const typeMatch = !hasTypeFilter || activeTypes.has(n.data('type'));
-                  
+
                   if (!layerMatch || !typeMatch) {
                       n.addClass('dimmed');
                   }
@@ -969,10 +1013,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
                   updateVisibility();
                   return;
               }
-              
+
               const matches = cy.nodes('[type]').filter(n => n.data('label').toLowerCase().includes(term));
               const neighborhood = matches.neighborhood().add(matches);
-              
+
               cy.elements().addClass('dimmed').removeClass('highlight');
               neighborhood.removeClass('dimmed').addClass('highlight');
               matches.parents().removeClass('dimmed'); 
