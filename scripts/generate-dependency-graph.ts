@@ -555,7 +555,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       width: 100vw;
       height: 100vh;
     }
-    /* Legenda simplificada e mais bonita */
     .legend {
       position: fixed;
       top: 20px;
@@ -580,8 +579,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       border-radius: 3px;
       display: inline-block;
     }
-    
-    /* Controles e filtros agrupados */
     .controls-container {
         position: fixed;
         bottom: 20px;
@@ -591,7 +588,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         gap: 10px;
         z-index: 20;
     }
-
     .filter-group {
       background: rgba(22, 27, 34, 0.95);
       padding: 10px;
@@ -599,7 +595,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       border: 1px solid #30363d;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-
     .filter-group button {
       margin: 2px;
       padding: 4px 8px;
@@ -615,11 +610,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         background: #30363d;
     }
     .filter-group button.active {
-      background: #1f6feb; /* Azul GitHub */
+      background: #1f6feb;
       border-color: #388bfd;
       color: white;
     }
-    
     #search {
       position: fixed;
       top: 20px;
@@ -638,7 +632,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         outline: none;
         border-color: #58a6ff;
     }
-
     #reset-filters {
         position: fixed;
         bottom: 20px;
@@ -654,7 +647,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
   </style>
-
   <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
   <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
   <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
@@ -667,7 +659,7 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     <div><span class="color" style="background:#f59f00"></span>Interface</div>
     <div><span class="color" style="background:transparent; border: 1px dashed #9ca3af"></span>Diretório</div>
     <hr style="border:0; border-top:1px solid #30363d; width:100%; margin:8px 0;">
-    <div style="font-size:11px; color:#8b949e">Linha Sólida: Import (Dependência)</div>
+    <div style="font-size:11px; color:#8b949e">Linha Sólida: Import</div>
     <div style="font-size:11px; color:#8b949e">Linha Pontilhada: Declaração</div>
   </div>
 
@@ -690,7 +682,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     (function () {
       const rawData = ${graphData};
       
-      // Preparação dos dados (igual ao original)
       const nodeTypes = Array.from(new Set(rawData.nodes.map(n => n.type))).sort();
       const layers = Array.from(new Set(rawData.nodes.map(n => n.layer))).sort();
       const preferredLayerOrder = ['main', 'infra', 'data', 'domain', 'presentation', 'other'];
@@ -698,7 +689,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         .filter(l => layers.includes(l))
         .concat(layers.filter(l => !preferredLayerOrder.includes(l)));
 
-      // ----- Tratamento de Diretórios -----
       function normalizeDirPath (dir) {
         if (!dir || dir === '') return '.';
         return dir;
@@ -730,9 +720,8 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
 
       const elements = [];
 
-      // Adiciona nós de diretório
       Array.from(dirMap.values()).forEach(info => {
-        if (info.path === '.') return; // Ignora raiz src visualmente se preferir
+        if (info.path === '.') return;
         const data = {
           id: info.id,
           label: info.name,
@@ -745,7 +734,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         elements.push({ data });
       });
 
-      // Adiciona nós de conteúdo
       rawData.nodes.forEach(n => {
         const dirKey = normalizeDirPath(n.directory);
         const data = {
@@ -755,14 +743,12 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
           layer: n.layer,
           directory: dirKey
         };
-        // Associação crucial para o layout composto: define quem é o pai
         if (dirKey !== '.') {
           data.parent = 'dir:' + dirKey;
         }
         elements.push({ data });
       });
 
-      // Adiciona arestas
       rawData.links.forEach((l, index) => {
         const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
         const targetId = typeof l.target === 'string' ? l.target : l.target.id;
@@ -777,32 +763,29 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         });
       });
 
-      // Inicialização do Cytoscape
       const cy = cytoscape({
         container: document.getElementById('graph'),
         elements: elements,
         
-        // --- ALTERAÇÃO PRINCIPAL: Layout Dagre ---
         layout: {
           name: 'dagre',
-          rankDir: 'TB', // Top to Bottom (Vertical)
-          ranker: 'network-simplex', // Algoritmo de ranking
-          nodeDimensionsIncludeLabels: true, // Evita sobreposição de labels
+          rankDir: 'TB',
+          ranker: 'network-simplex',
+          nodeDimensionsIncludeLabels: true,
           padding: 30,
-          spacingFactor: 1.0, // Fator de espaçamento global
-          rankSep: 80, // Separação vertical entre níveis
-          nodeSep: 30, // Separação horizontal entre nós irmãos
+          spacingFactor: 1.0,
+          rankSep: 80,
+          nodeSep: 30,
           edgeSep: 10,
           animate: true,
           animationDuration: 500
         },
-        
-        wheelSensitivity: 0.3,
-        minZoom: 0.2,
-        maxZoom: 3,
+
+        wheelSensitivity: 1.0,
+        minZoom: 0.05,
+        maxZoom: 5,
 
         style: [
-          // Estilo dos Diretórios (Containers)
           {
             selector: 'node[dirContainer]',
             style: {
@@ -822,7 +805,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               'text-margin-y': -8,
             }
           },
-          // Nós gerais (arquivo, classe, interface)
           {
             selector: 'node[type]',
             style: {
@@ -845,8 +827,8 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
           {
             selector: 'node[type = "file"]',
             style: { 
-                'background-color': '#1f2937', // Cinza escuro azulado
-                'border-left-color': '#4c8bf5', // Borda esquerda colorida para indicar tipo
+                'background-color': '#1f2937',
+                'border-left-color': '#4c8bf5',
                 'border-left-width': 4
             }
           },
@@ -866,14 +848,13 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
                 'border-left-width': 4
             }
           },
-          // Arestas
           {
             selector: 'edge',
             style: {
               'width': 1,
               'line-color': '#30363d',
               'opacity': 0.4,
-              'curve-style': 'taxi', // Linhas estilo circuito, melhor para hierarquias
+              'curve-style': 'taxi',
               'taxi-direction': 'vertical',
               'target-arrow-shape': 'none'
             }
@@ -892,7 +873,6 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               'width': 1
             }
           },
-          // Estados de Highlight
           {
             selector: '.highlight',
             style: {
@@ -921,12 +901,10 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         ]
       });
 
-      // --- Lógica de Filtros e Interação (Mantida e Organizada) ---
       const activeLayers = new Set();
       const activeTypes = new Set();
       const typeLabels = { file: 'File', class: 'Class', interface: 'Interface' };
 
-      // Helper para criar botões de filtro
       function createFilterButtons(containerId, items, activeSet, labelMap, callback) {
           const container = document.getElementById(containerId);
           if(!container) return;
@@ -982,14 +960,13 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       if (orderedLayers.length) createFilterButtons('layer-filter', orderedLayers, activeLayers, null, updateVisibility);
       if (nodeTypes.length) createFilterButtons('type-filter', nodeTypes, activeTypes, typeLabels, updateVisibility);
 
-      // Busca
       const searchInput = document.getElementById('search');
       searchInput.addEventListener('input', (e) => {
           const term = e.target.value.toLowerCase();
           cy.batch(() => {
               if (!term) {
                   cy.elements().removeClass('dimmed highlight');
-                  updateVisibility(); // Reaplica filtros se houver
+                  updateVisibility();
                   return;
               }
               
@@ -998,22 +975,19 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               
               cy.elements().addClass('dimmed').removeClass('highlight');
               neighborhood.removeClass('dimmed').addClass('highlight');
-              // Garante que containers pais fiquem visíveis se o filho for encontrado
               matches.parents().removeClass('dimmed'); 
           });
       });
 
-      // Reset
       document.getElementById('reset-filters').addEventListener('click', () => {
           activeLayers.clear();
           activeTypes.clear();
           document.querySelectorAll('.filter-group button').forEach(b => b.classList.remove('active'));
           searchInput.value = '';
           cy.elements().removeClass('dimmed highlight');
-          cy.layout({ name: 'dagre', rankDir: 'TB', animate: true }).run(); // Re-executa layout
+          cy.layout({ name: 'dagre', rankDir: 'TB', animate: true }).run();
       });
 
-      // Click para destacar vizinhança
       cy.on('tap', 'node[type]', (evt) => {
           const node = evt.target;
           cy.batch(() => {
