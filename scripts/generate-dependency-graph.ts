@@ -555,6 +555,16 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
     #graph {
       width: 100vw;
       height: 100vh;
+      cursor: grab;
+    }
+    #graph:active {
+      cursor: grabbing;
+    }
+    body.ctrl-active #graph {
+      cursor: default;
+    }
+    body.ctrl-active #graph .cy-node {
+      cursor: move;
     }
     .legend {
       position: fixed;
@@ -918,27 +928,25 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
               'opacity': 0.1,
               'z-index': 1
             }
-          },
-          {
-              selector: 'core',
-              style: {
-                  'active-bg-opacity': 0
-              }
           }
         ]
       });
 
+      cy.nodes().pannable(true);
+
       const handleKeyDown = (e) => {
         if (e.key === 'Control') {
-          cy.autoungrabify(false); // Habilita mover
-          document.body.style.cursor = 'grab'; // Muda cursor para indicar que pode pegar
+          cy.autoungrabify(false);
+          cy.nodes().pannable(false);
+          document.body.classList.add('ctrl-active');
         }
       };
 
       const handleKeyUp = (e) => {
         if (e.key === 'Control') {
-          cy.autoungrabify(true); // Desabilita mover (padrão)
-          document.body.style.cursor = 'default';
+          cy.autoungrabify(true);
+          cy.nodes().pannable(true);
+          document.body.classList.remove('ctrl-active');
         }
       };
 
