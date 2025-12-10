@@ -26,7 +26,6 @@ interface FileInfo {
 
 interface ImportEntry {
   specifier: string
-  isTypeOnly: boolean
   defaultImport?: string
   namespaceImport?: string
   namedImports: { imported: string }[]
@@ -38,7 +37,6 @@ interface GraphNode {
   id: string
   label: string
   type: 'file' | 'class' | 'interface'
-  file: string
   layer: Layer
   directory: string
 }
@@ -47,7 +45,6 @@ interface GraphLink {
   source: string
   target: string
   kind: 'imports' | 'declares'
-  lintViolation?: boolean
 }
 
 const projectRoot = path.resolve(__dirname, '..')
@@ -210,7 +207,6 @@ function collectFileData (filePath: string): void {
 
       imports.push({
         specifier: node.moduleSpecifier.text,
-        isTypeOnly: Boolean(node.importClause?.isTypeOnly),
         defaultImport,
         namespaceImport,
         namedImports
@@ -270,7 +266,6 @@ function collectFileData (filePath: string): void {
     importEntries.set(normalized, imports)
   }
 
-  // export default class Foo {}
   sourceFile.statements.forEach(statement => {
     if (ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement)) {
       const hasDefault = statement.modifiers?.some(mod => mod.kind === ts.SyntaxKind.DefaultKeyword)
@@ -398,7 +393,6 @@ function addFileNode (filePath: string): GraphNode {
       id,
       label: path.basename(filePath),
       type: 'file',
-      file: filePath,
       layer: detectLayer(filePath),
       directory: getDirectoryKey(filePath)
     }
@@ -415,7 +409,6 @@ function addSymbolNode (filePath: string, declaration: DeclarationInfo): GraphNo
       id,
       label: `${declaration.name} (${declaration.kind})`,
       type: declaration.kind,
-      file: filePath,
       layer: detectLayer(filePath),
       directory: getDirectoryKey(filePath)
     }
@@ -528,32 +521,6 @@ function handleImportTargets (importer: string, modulePath: string, entry: Impor
   })
 }
 
-// ranking de camadas para o lint
-function getLayerRank (layer: Layer): number {
-  switch (layer) {
-    case 'domain': return 0
-    case 'data': return 1
-    case 'infra': return 2
-    case 'other': return 2
-    case 'presentation': return 3
-    case 'main': return 4
-    default: return 2
-  }
-}
-
-function isArchitectureViolation (link: GraphLink): boolean {
-  if (link.kind !== 'imports') return false
-
-  const sourceNode = nodes.get(link.source)
-  const targetNode = nodes.get(link.target)
-  if (!sourceNode || !targetNode) return false
-
-  const sourceRank = getLayerRank(sourceNode.layer)
-  const targetRank = getLayerRank(targetNode.layer)
-
-  return sourceRank < targetRank
-}
-
 function buildGraph (): void {
   registerDeclarationNodes()
   importEntries.forEach((entries, importer) => {
@@ -567,10 +534,6 @@ function buildGraph (): void {
 
 buildGraph()
 
-links.forEach(link => {
-  link.lintViolation = isArchitectureViolation(link)
-})
-
 function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
   const data = { nodes: nodesList, links: linksList }
   const graphData = JSON.stringify(data)
@@ -582,148 +545,160 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
   <title>Dependency Graph</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       background: #0d1117;
       color: #e6edf3;
+      overflow: hidden;
     }
     #graph {
       width: 100vw;
       height: 100vh;
     }
+    /* Legenda simplificada e mais bonita */
     .legend {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 14px;
+      top: 20px;
+      left: 20px;
+      background: rgba(22, 27, 34, 0.95);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      font-size: 13px;
       z-index: 20;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
     .legend div {
-      margin-bottom: 4px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .legend .color {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
       display: inline-block;
     }
+    
+    /* Controles e filtros agrupados */
+    .controls-container {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 20;
+    }
+
+    .filter-group {
+      background: rgba(22, 27, 34, 0.95);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .filter-group button {
+      margin: 2px;
+      padding: 4px 8px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+    .filter-group button:hover {
+        background: #30363d;
+    }
+    .filter-group button.active {
+      background: #1f6feb; /* Azul GitHub */
+      border-color: #388bfd;
+      color: white;
+    }
+    
     #search {
       position: fixed;
-      top: 10px;
-      right: 10px;
+      top: 20px;
+      right: 20px;
       z-index: 20;
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid #333;
-      background: #161b22;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: rgba(22, 27, 34, 0.95);
       color: #e6edf3;
       font-size: 13px;
+      width: 250px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    .layer-filter,
-    .type-filter,
-    .node-controls {
-      position: fixed;
-      background: rgba(0,0,0,0.6);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      z-index: 20;
+    #search:focus {
+        outline: none;
+        border-color: #58a6ff;
     }
-    .layer-filter {
-      bottom: 10px;
-      left: 10px;
-    }
-    .type-filter {
-      bottom: 60px;
-      left: 10px;
-    }
-    .layer-filter button,
-    .type-filter button,
-    .node-controls button {
-      margin: 2px 4px;
-      padding: 2px 6px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      color: #e6edf3;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    .layer-filter button.active {
-      background: #238636;
-      border-color: #2ea043;
-    }
-    .type-filter button.active {
-      background: #1f6feb;
-      border-color: #388bfd;
-    }
-    .node-controls {
-      bottom: 10px;
-      right: 10px;
-      max-width: 260px;
-    }
-    .node-controls button {
-      display: block;
-      width: 100%;
-      text-align: left;
-      margin-top: 4px;
+
+    #reset-filters {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 8px 16px;
+        background: #238636;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        z-index: 20;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
   </style>
+
   <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
 </head>
 <body>
   <div class="legend">
+    <div style="font-weight:bold; margin-bottom:10px; color:#fff">Legenda</div>
     <div><span class="color" style="background:#4c8bf5"></span>Arquivo</div>
     <div><span class="color" style="background:#2fb344"></span>Classe</div>
     <div><span class="color" style="background:#f59f00"></span>Interface</div>
-    <div>Vermelho: imports (dependências)</div>
-    <div>Verde: declarações internas</div>
-    <div>Tracejado: relação de declaração</div>
-    <div style="margin-top:4px;">Borda vermelha: violação de arquitetura</div>
+    <div><span class="color" style="background:transparent; border: 1px dashed #9ca3af"></span>Diretório</div>
+    <hr style="border:0; border-top:1px solid #30363d; width:100%; margin:8px 0;">
+    <div style="font-size:11px; color:#8b949e">Linha Sólida: Import (Dependência)</div>
+    <div style="font-size:11px; color:#8b949e">Linha Pontilhada: Declaração</div>
   </div>
 
-  <input
-    id="search"
-    type="text"
-    placeholder="Buscar nó (arquivo / classe / interface)..."
-  />
+  <input id="search" type="text" placeholder="Buscar nó (arquivo / classe)..." />
 
-  <div class="type-filter" id="type-filter"></div>
-  <div class="layer-filter" id="layer-filter"></div>
-
-  <div class="node-controls" id="node-controls">
-    <div>Dica: clique em um nó para destacar dependências.</div>
-    <div>Segure <strong>Alt</strong> e clique em um nó para ocultar/mostrar.</div>
-    <button id="organize-nodes">Organizar nós</button>
-    <button id="reset-hidden">Mostrar todos os nós</button>
-    <button id="reset-filters">Limpar filtros</button>
-    <button id="toggle-lint">Ocultar violações de arquitetura</button>
+  <div class="controls-container">
+      <div class="filter-group" id="type-filter">
+          <div style="margin-bottom:5px; font-size:11px; font-weight:bold; color:#8b949e">FILTRAR TIPO</div>
+      </div>
+      <div class="filter-group" id="layer-filter">
+          <div style="margin-bottom:5px; font-size:11px; font-weight:bold; color:#8b949e">FILTRAR CAMADA</div>
+      </div>
   </div>
+
+  <button id="reset-filters">Resetar Visualização</button>
 
   <div id="graph"></div>
 
   <script>
     (function () {
       const rawData = ${graphData};
-
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-
+      
+      // Preparação dos dados (igual ao original)
       const nodeTypes = Array.from(new Set(rawData.nodes.map(n => n.type))).sort();
       const layers = Array.from(new Set(rawData.nodes.map(n => n.layer))).sort();
-
       const preferredLayerOrder = ['main', 'infra', 'data', 'domain', 'presentation', 'other'];
       const orderedLayers = preferredLayerOrder
         .filter(l => layers.includes(l))
         .concat(layers.filter(l => !preferredLayerOrder.includes(l)));
 
-      // ----- Diretórios (containers compostos) -----
+      // ----- Tratamento de Diretórios -----
       function normalizeDirPath (dir) {
         if (!dir || dir === '') return '.';
         return dir;
@@ -751,21 +726,13 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         return info;
       }
 
-      // Cria todos os diretórios necessários
-      rawData.nodes.forEach(n => {
-        ensureDir(n.directory);
-      });
+      rawData.nodes.forEach(n => { ensureDir(n.directory); });
 
       const elements = [];
 
-      // Containers de diretório:
-      // - NÃO criamos container para '.' (src)
-      // - Se o parentPath for '.', não setamos parent (top-level)
+      // Adiciona nós de diretório
       Array.from(dirMap.values()).forEach(info => {
-        if (info.path === '.') {
-          // não cria quadrado para src
-          return;
-        }
+        if (info.path === '.') return; // Ignora raiz src visualmente se preferir
         const data = {
           id: info.id,
           label: info.name,
@@ -778,118 +745,142 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         elements.push({ data });
       });
 
-      // Nós reais (file/class/interface)
+      // Adiciona nós de conteúdo
       rawData.nodes.forEach(n => {
         const dirKey = normalizeDirPath(n.directory);
         const data = {
           id: n.id,
           label: n.label,
           type: n.type,
-          file: n.file,
           layer: n.layer,
           directory: dirKey
         };
+        // Associação crucial para o layout composto: define quem é o pai
         if (dirKey !== '.') {
           data.parent = 'dir:' + dirKey;
         }
-        elements.push({
-          data,
-          position: { x: width / 2, y: height / 2 }
-        });
+        elements.push({ data });
       });
 
-      // Arestas
+      // Adiciona arestas
       rawData.links.forEach((l, index) => {
         const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
         const targetId = typeof l.target === 'string' ? l.target : l.target.id;
-
         elements.push({
           data: {
             id: sourceId + '->' + targetId + ':' + l.kind + ':' + index,
             source: sourceId,
             target: targetId,
-            kind: l.kind,
-            lintViolation: Boolean(l.lintViolation)
+            kind: l.kind
           },
           classes: l.kind
         });
       });
 
+      // Inicialização do Cytoscape
       const cy = cytoscape({
         container: document.getElementById('graph'),
         elements: elements,
+        
+        // --- ALTERAÇÃO PRINCIPAL: Layout Dagre ---
         layout: {
-          name: 'preset',
-          fit: true,
-          padding: 40
+          name: 'dagre',
+          rankDir: 'TB', // Top to Bottom (Vertical)
+          ranker: 'network-simplex', // Algoritmo de ranking
+          nodeDimensionsIncludeLabels: true, // Evita sobreposição de labels
+          padding: 30,
+          spacingFactor: 1.0, // Fator de espaçamento global
+          rankSep: 80, // Separação vertical entre níveis
+          nodeSep: 30, // Separação horizontal entre nós irmãos
+          edgeSep: 10,
+          animate: true,
+          animationDuration: 500
         },
-        wheelSensitivity: 0.2,
+        
+        wheelSensitivity: 0.3,
+        minZoom: 0.2,
+        maxZoom: 3,
+
         style: [
+          // Estilo dos Diretórios (Containers)
           {
             selector: 'node[dirContainer]',
             style: {
               'shape': 'round-rectangle',
-              'background-color': '#111827',
-              'background-opacity': 0.26,
+              'background-color': '#161b22',
+              'background-opacity': 0.4,
               'border-color': '#30363d',
               'border-width': 1,
-              'padding': '16px',
+              'border-style': 'dashed',
+              'padding': '12px',
               'label': 'data(label)',
-              'font-size': 11,
-              'color': '#9ca3af',
+              'font-size': 14,
+              'font-weight': 'bold',
+              'color': '#8b949e',
               'text-valign': 'top',
-              'text-halign': 'left',
-              'text-margin-y': -2,
-              'text-margin-x': 6,
-              'z-compound-depth': 'bottom'
+              'text-halign': 'center',
+              'text-margin-y': -8,
             }
           },
+          // Nós gerais (arquivo, classe, interface)
           {
             selector: 'node[type]',
             style: {
-              'shape': 'hexagon',
-              'width': 90,
-              'height': 40,
-              'background-color': '#4c8bf5',
-              'border-color': '#0d1117',
+              'shape': 'round-rectangle',
+              'width': 'label',
+              'height': 'label',
+              'padding': '8px',
+              'border-color': 'rgba(255,255,255,0.1)',
               'border-width': 1,
               'label': 'data(label)',
-              'font-size': 8,
+              'font-size': 10,
+              'font-family': 'Consolas, monospace',
               'color': '#e6edf3',
-              'text-wrap': 'wrap',
-              'text-max-width': 80,
               'text-valign': 'center',
               'text-halign': 'center',
-              'text-margin-x': 0,
-              'text-outline-width': 0
+              'text-wrap': 'wrap',
+              'text-max-width': 120
             }
           },
           {
             selector: 'node[type = "file"]',
-            style: { 'background-color': '#4c8bf5' }
+            style: { 
+                'background-color': '#1f2937', // Cinza escuro azulado
+                'border-left-color': '#4c8bf5', // Borda esquerda colorida para indicar tipo
+                'border-left-width': 4
+            }
           },
           {
             selector: 'node[type = "class"]',
-            style: { 'background-color': '#2fb344' }
+            style: { 
+                'background-color': '#1f2937',
+                'border-left-color': '#2fb344',
+                'border-left-width': 4
+            }
           },
           {
             selector: 'node[type = "interface"]',
-            style: { 'background-color': '#f59f00' }
+            style: { 
+                'background-color': '#1f2937',
+                'border-left-color': '#f59f00',
+                'border-left-width': 4
+            }
           },
+          // Arestas
           {
             selector: 'edge',
             style: {
-              'width': 0.7,
+              'width': 1,
               'line-color': '#30363d',
-              'opacity': 0.18,
-              'curve-style': 'bezier',
+              'opacity': 0.4,
+              'curve-style': 'taxi', // Linhas estilo circuito, melhor para hierarquias
+              'taxi-direction': 'vertical',
               'target-arrow-shape': 'none'
             }
           },
           {
             selector: 'edge[kind = "imports"]',
             style: {
-              'line-color': '#30363d',
               'target-arrow-shape': 'triangle',
               'target-arrow-color': '#30363d'
             }
@@ -897,428 +888,149 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
           {
             selector: 'edge[kind = "declares"]',
             style: {
-              'line-style': 'dotted'
+              'line-style': 'dashed',
+              'width': 1
+            }
+          },
+          // Estados de Highlight
+          {
+            selector: '.highlight',
+            style: {
+              'border-color': '#fff',
+              'border-width': 2,
+              'opacity': 1,
+              'z-index': 999
             }
           },
           {
-            selector: 'edge.highlight[kind = "imports"]',
-            style: {
-              'line-color': '#ff6b6b',
-              'target-arrow-color': '#ff6b6b',
-              'opacity': 0.95,
-              'width': 1.4
-            }
+             selector: 'edge.highlight',
+             style: {
+                 'line-color': '#58a6ff',
+                 'target-arrow-color': '#58a6ff',
+                 'width': 2,
+                 'opacity': 1
+             }
           },
           {
-            selector: 'edge.highlight[kind = "declares"]',
+            selector: '.dimmed',
             style: {
-              'line-color': '#94d82d',
-              'opacity': 0.95,
-              'width': 1.4
-            }
-          },
-          {
-            selector: 'node.highlight',
-            style: {
-              'border-color': '#ffffff',
-              'border-width': 1.4,
-              'opacity': 1
-            }
-          },
-          {
-            selector: 'node.dimmed, node.layer-dimmed, node.type-dimmed',
-            style: {
-              'opacity': 0.18,
-              'text-opacity': 0.18
-            }
-          },
-          {
-            selector: 'edge.dimmed, edge.layer-dimmed, edge.type-dimmed',
-            style: {
-              'opacity': 0.04
-            }
-          },
-          {
-            selector: 'node.hidden, edge.hidden',
-            style: { 'display': 'none' }
-          },
-          {
-            selector: 'edge.lint-violation',
-            style: {
-              'line-color': '#ff4d4f',
-              'target-arrow-color': '#ff4d4f',
-              'opacity': 0.95,
-              'width': 1.6
+              'opacity': 0.1,
+              'z-index': 1
             }
           }
         ]
       });
 
-      const hiddenNodes = new Set();
-      let lintEnabled = true;
-
-      const inputSearch = document.getElementById('search');
-      const layerFilterEl = document.getElementById('layer-filter');
-      const typeFilterEl = document.getElementById('type-filter');
-      const resetHiddenBtn = document.getElementById('reset-hidden');
-      const resetFiltersBtn = document.getElementById('reset-filters');
-      const toggleLintBtn = document.getElementById('toggle-lint');
-      const organizeBtn = document.getElementById('organize-nodes');
-
+      // --- Lógica de Filtros e Interação (Mantida e Organizada) ---
       const activeLayers = new Set();
       const activeTypes = new Set();
+      const typeLabels = { file: 'File', class: 'Class', interface: 'Interface' };
 
-      const typeLabels = { file: 'file', class: 'class', interface: 'interface' };
+      // Helper para criar botões de filtro
+      function createFilterButtons(containerId, items, activeSet, labelMap, callback) {
+          const container = document.getElementById(containerId);
+          if(!container) return;
+          items.forEach(item => {
+              const btn = document.createElement('button');
+              btn.textContent = labelMap ? (labelMap[item] || item) : item;
+              btn.onclick = () => {
+                  if(activeSet.has(item)) {
+                      activeSet.delete(item);
+                      btn.classList.remove('active');
+                  } else {
+                      activeSet.add(item);
+                      btn.classList.add('active');
+                  }
+                  callback();
+              };
+              container.appendChild(btn);
+          });
+      }
 
-      // Layout: camadas (Y) x diretórios (X), com margem maior
-      // Layout: camadas (Y) x diretórios (X), evitando sobreposição de containers irmãos
-      function organizeByLayerAndType () {
-        const verticalGapBetweenLayers = 200;  // distância entre faixas de layer
-        const rowGap = 26;                     // distância entre linhas de nós
-        const dirGapMargin = 140;              // margem extra entre diretórios irmãos
-        const colGapWithinDir = 110;           // distância entre tipos dentro do mesmo diretório
-        const leftMargin = 220;
-        const topMargin = 80;
+      function updateVisibility() {
+          const nodes = cy.nodes('[type]');
+          const edges = cy.edges();
+          
+          cy.batch(() => {
+              nodes.removeClass('dimmed');
+              edges.removeClass('dimmed');
 
-        let currentY = topMargin;
+              const hasLayerFilter = activeLayers.size > 0;
+              const hasTypeFilter = activeTypes.size > 0;
 
-        cy.batch(() => {
-          orderedLayers.forEach(layerName => {
-            const nodesInLayer = cy.nodes('[type][layer = "' + layerName + '"]');
-            if (!nodesInLayer.length) return;
+              if (!hasLayerFilter && !hasTypeFilter) return;
 
-            // Agrupa nós por diretório (mesmo nível = mesmo parent)
-            const groupByDir = {};
-            nodesInLayer.forEach(n => {
-              const dir = n.data('directory') || '.';
-              if (!groupByDir[dir]) {
-                groupByDir[dir] = [];
-              }
-              groupByDir[dir].push(n);
-            });
-
-            const dirKeys = Object.keys(groupByDir).sort();
-            if (!dirKeys.length) return;
-
-            let maxRowsLayer = 1;
-            let currentX = leftMargin;
-
-            dirKeys.forEach(dirPath => {
-              const dirNodes = groupByDir[dirPath];
-
-              // Dentro do diretório, separa por tipo (file/class/interface)
-              const groupByType = {};
-              nodeTypes.forEach(t => { groupByType[t] = []; });
-              dirNodes.forEach(n => {
-                const t = n.data('type');
-                if (!groupByType[t]) groupByType[t] = [];
-                groupByType[t].push(n);
+              nodes.forEach(n => {
+                  const layerMatch = !hasLayerFilter || activeLayers.has(n.data('layer'));
+                  const typeMatch = !hasTypeFilter || activeTypes.has(n.data('type'));
+                  
+                  if (!layerMatch || !typeMatch) {
+                      n.addClass('dimmed');
+                  }
               });
 
-              const activeTypesForDir = nodeTypes.filter(
-                t => groupByType[t] && groupByType[t].length > 0
-              );
-              if (!activeTypesForDir.length) return;
-
-              // Calcula quantas linhas esse diretório vai usar
-              let maxRowsDir = 1;
-              activeTypesForDir.forEach(type => {
-                const colNodes = groupByType[type];
-                if (colNodes.length > maxRowsDir) maxRowsDir = colNodes.length;
+              edges.forEach(e => {
+                  const src = e.source();
+                  const tgt = e.target();
+                  if (src.hasClass('dimmed') || tgt.hasClass('dimmed')) {
+                      e.addClass('dimmed');
+                  }
               });
-
-              // Largura aproximada do diretório (para não colidir com o próximo)
-              const dirWidth = Math.max(
-                260, // largura mínima
-                (activeTypesForDir.length - 1) * colGapWithinDir + 160 // + padding
-              );
-
-              // Posiciona os nós desse diretório dentro desse “bloco” horizontal
-              activeTypesForDir.forEach((type, typeIndex) => {
-                const colNodes = groupByType[type];
-                const baseX = currentX + typeIndex * colGapWithinDir;
-
-                colNodes.forEach((node, i) => {
-                  const x = baseX;
-                  const y = currentY + i * rowGap;
-                  node.position({ x, y });
-                });
-              });
-
-              if (maxRowsDir > maxRowsLayer) maxRowsLayer = maxRowsDir;
-
-              // Avança o cursor horizontal para o próximo diretório irmão
-              currentX += dirWidth + dirGapMargin;
-            });
-
-            // Avança o cursor vertical para a próxima camada (layer)
-            currentY += maxRowsLayer * rowGap + verticalGapBetweenLayers;
           });
-        });
-
-        cy.fit(cy.nodes('[type]'), 60);
       }
 
-      function applyLintStyles () {
-        cy.edges().forEach(e => {
-          const isViolation = !!e.data('lintViolation');
-          if (isViolation && lintEnabled) {
-            e.addClass('lint-violation');
-          } else {
-            e.removeClass('lint-violation');
-          }
-        });
-      }
-      applyLintStyles();
-
-      function updateVisibility () {
-        cy.nodes('[type]').forEach(n => {
-          const id = n.id();
-          if (hiddenNodes.has(id)) {
-            n.addClass('hidden');
-          } else {
-            n.removeClass('hidden');
-          }
-        });
-
-        cy.edges().forEach(e => {
-          const sourceHidden = hiddenNodes.has(e.data('source'));
-          const targetHidden = hiddenNodes.has(e.data('target'));
-          if (sourceHidden || targetHidden) {
-            e.addClass('hidden');
-          } else {
-            e.removeClass('hidden');
-          }
-        });
-      }
-
-      function toggleNodeVisibility (node) {
-        const id = node.id();
-        if (hiddenNodes.has(id)) {
-          hiddenNodes.delete(id);
-        } else {
-          hiddenNodes.add(id);
-        }
-        updateVisibility();
-      }
-
-      // Filtro por camada
-      if (layerFilterEl && orderedLayers.length) {
-        orderedLayers.forEach(layer => {
-          const btn = document.createElement('button');
-          btn.textContent = layer;
-          btn.addEventListener('click', () => {
-            if (activeLayers.has(layer)) {
-              activeLayers.delete(layer);
-              btn.classList.remove('active');
-            } else {
-              activeLayers.add(layer);
-              btn.classList.add('active');
-            }
-            applyLayerFilter();
-          });
-          layerFilterEl.appendChild(btn);
-        });
-      }
-
-      function applyLayerFilter () {
-        if (!activeLayers.size) {
-          cy.nodes('[type]').removeClass('layer-dimmed');
-          cy.edges().removeClass('layer-dimmed');
-          return;
-        }
-
-        cy.nodes('[type]').forEach(n => {
-          const nodeLayer = n.data('layer');
-          if (activeLayers.has(nodeLayer)) {
-            n.removeClass('layer-dimmed');
-          } else {
-            n.addClass('layer-dimmed');
-          }
-        });
-
-        cy.edges().forEach(e => {
-          const src = cy.getElementById(e.data('source'));
-          const tgt = cy.getElementById(e.data('target'));
-          const sLayer = src.data('layer');
-          const tLayer = tgt.data('layer');
-
-          if (activeLayers.has(sLayer) || activeLayers.has(tLayer)) {
-            e.removeClass('layer-dimmed');
-          } else {
-            e.addClass('layer-dimmed');
-          }
-        });
-      }
-
-      // Filtro por tipo
-      if (typeFilterEl && nodeTypes.length) {
-        nodeTypes.forEach(type => {
-          const btn = document.createElement('button');
-          btn.textContent = typeLabels[type] || type;
-          btn.addEventListener('click', () => {
-            if (activeTypes.has(type)) {
-              activeTypes.delete(type);
-              btn.classList.remove('active');
-            } else {
-              activeTypes.add(type);
-              btn.classList.add('active');
-            }
-            applyTypeFilter();
-          });
-          typeFilterEl.appendChild(btn);
-        });
-      }
-
-      function applyTypeFilter () {
-        if (!activeTypes.size) {
-          cy.nodes('[type]').removeClass('type-dimmed');
-          cy.edges().removeClass('type-dimmed');
-          return;
-        }
-
-        cy.nodes('[type]').forEach(n => {
-          const nodeType = n.data('type');
-          if (activeTypes.has(nodeType)) {
-            n.removeClass('type-dimmed');
-          } else {
-            n.addClass('type-dimmed');
-          }
-        });
-
-        cy.edges().forEach(e => {
-          const src = cy.getElementById(e.data('source'));
-          const tgt = cy.getElementById(e.data('target'));
-          const sType = src.data('type');
-          const tType = tgt.data('type');
-
-          if (activeTypes.has(sType) || activeTypes.has(tType)) {
-            e.removeClass('type-dimmed');
-          } else {
-            e.addClass('type-dimmed');
-          }
-        });
-      }
+      if (orderedLayers.length) createFilterButtons('layer-filter', orderedLayers, activeLayers, null, updateVisibility);
+      if (nodeTypes.length) createFilterButtons('type-filter', nodeTypes, activeTypes, typeLabels, updateVisibility);
 
       // Busca
-      if (inputSearch) {
-        inputSearch.addEventListener('input', () => {
-          const term = inputSearch.value.toLowerCase().trim();
-
-          cy.nodes('[type]').removeClass('dimmed');
-          cy.edges().removeClass('dimmed');
-
-          if (!term) return;
-
-          const matchedNodes = cy.nodes('[type]').filter(n =>
-            String(n.data('label') || '').toLowerCase().includes(term)
-          );
-
-          const matchedIds = new Set();
-          matchedNodes.forEach(n => matchedIds.add(n.id()));
-
-          cy.nodes('[type]').forEach(n => {
-            if (!matchedIds.has(n.id())) {
-              n.addClass('dimmed');
-            }
+      const searchInput = document.getElementById('search');
+      searchInput.addEventListener('input', (e) => {
+          const term = e.target.value.toLowerCase();
+          cy.batch(() => {
+              if (!term) {
+                  cy.elements().removeClass('dimmed highlight');
+                  updateVisibility(); // Reaplica filtros se houver
+                  return;
+              }
+              
+              const matches = cy.nodes('[type]').filter(n => n.data('label').toLowerCase().includes(term));
+              const neighborhood = matches.neighborhood().add(matches);
+              
+              cy.elements().addClass('dimmed').removeClass('highlight');
+              neighborhood.removeClass('dimmed').addClass('highlight');
+              // Garante que containers pais fiquem visíveis se o filho for encontrado
+              matches.parents().removeClass('dimmed'); 
           });
+      });
 
-          cy.edges().forEach(e => {
-            const sId = e.data('source');
-            const tId = e.data('target');
-            if (!matchedIds.has(sId) && !matchedIds.has(tId)) {
-              e.addClass('dimmed');
-            }
-          });
-        });
-      }
-
-      if (resetHiddenBtn) {
-        resetHiddenBtn.addEventListener('click', () => {
-          hiddenNodes.clear();
-          updateVisibility();
-        });
-      }
-
-      if (resetFiltersBtn) {
-        resetFiltersBtn.addEventListener('click', () => {
-          if (inputSearch) inputSearch.value = '';
-
-          cy.nodes('[type]').removeClass('dimmed layer-dimmed type-dimmed highlight');
-          cy.edges().removeClass('dimmed layer-dimmed type-dimmed highlight');
-
+      // Reset
+      document.getElementById('reset-filters').addEventListener('click', () => {
           activeLayers.clear();
-          if (layerFilterEl) {
-            Array.from(layerFilterEl.querySelectorAll('button')).forEach(btn => {
-              btn.classList.remove('active');
-            });
-          }
-          applyLayerFilter();
-
           activeTypes.clear();
-          if (typeFilterEl) {
-            Array.from(typeFilterEl.querySelectorAll('button')).forEach(btn => {
-              btn.classList.remove('active');
-            });
-          }
-          applyTypeFilter();
-        });
-      }
+          document.querySelectorAll('.filter-group button').forEach(b => b.classList.remove('active'));
+          searchInput.value = '';
+          cy.elements().removeClass('dimmed highlight');
+          cy.layout({ name: 'dagre', rankDir: 'TB', animate: true }).run(); // Re-executa layout
+      });
 
-      if (toggleLintBtn) {
-        toggleLintBtn.addEventListener('click', () => {
-          lintEnabled = !lintEnabled;
-          applyLintStyles();
-          toggleLintBtn.textContent = lintEnabled
-            ? 'Ocultar violações de arquitetura'
-            : 'Mostrar violações de arquitetura';
-        });
-      }
-
-      if (organizeBtn) {
-        organizeBtn.addEventListener('click', () => {
-          organizeByLayerAndType();
-        });
-      }
-
-      function highlightDependencies (node) {
-        if (!node.data('type')) return;
-
-        cy.nodes('[type]').removeClass('highlight dimmed');
-        cy.edges().removeClass('highlight dimmed');
-
-        const neighborhood = node.closedNeighborhood();
-        neighborhood.addClass('highlight');
-
-        const others = cy.elements().difference(neighborhood);
-        others.addClass('dimmed');
-      }
-
-      cy.on('tap', 'node', (evt) => {
-        const node = evt.target;
-        const original = evt.originalEvent || {};
-
-        if (!node.data('type')) {
-          if (original.altKey) toggleNodeVisibility(node);
-          return;
-        }
-
-        if (original.altKey) {
-          toggleNodeVisibility(node);
-          return;
-        }
-
-        highlightDependencies(node);
+      // Click para destacar vizinhança
+      cy.on('tap', 'node[type]', (evt) => {
+          const node = evt.target;
+          cy.batch(() => {
+            cy.elements().addClass('dimmed').removeClass('highlight');
+            const neighborhood = node.closedNeighborhood();
+            neighborhood.removeClass('dimmed').addClass('highlight');
+            neighborhood.parents().removeClass('dimmed');
+          });
       });
 
       cy.on('tap', (evt) => {
-        if (evt.target === cy) {
-          cy.nodes('[type]').removeClass('highlight dimmed');
-          cy.edges().removeClass('highlight dimmed');
-        }
+          if (evt.target === cy) {
+              cy.elements().removeClass('dimmed highlight');
+              updateVisibility();
+          }
       });
 
-      organizeByLayerAndType();
     })();
   </script>
 </body>
