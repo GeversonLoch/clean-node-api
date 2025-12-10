@@ -675,6 +675,71 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
         z-index: 20;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
+
+    .nav-panel {
+      position: fixed;
+      bottom: 70px; /* Acima do botão reset */
+      right: 20px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .d-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      background: rgba(22, 27, 34, 0.95);
+      padding: 6px;
+      border-radius: 50%; /* Formato redondo geral */
+      border: 1px solid #30363d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .zoom-group {
+      display: flex;
+      flex-direction: column;
+      background: rgba(22, 27, 34, 0.95);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #30363d;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .nav-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #21262d;
+      color: #e6edf3;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .nav-btn:hover { background: #30363d; color: #58a6ff; }
+    .nav-btn:active { background: #1f6feb; color: #fff; }
+
+    #nav-up { grid-column: 2; grid-row: 1; }
+    #nav-left { grid-column: 1; grid-row: 2; }
+    #nav-fit { grid-column: 2; grid-row: 2; font-size: 12px; }
+    #nav-right { grid-column: 3; grid-row: 2; }
+    #nav-down { grid-column: 2; grid-row: 3; }
+
+    .zoom-group .nav-btn {
+      border-radius: 0;
+      width: 36px;
+      height: 36px;
+      border-bottom: 1px solid #30363d;
+    }
+    .zoom-group .nav-btn:last-child { border-bottom: none; }
   </style>
   <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
   <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
@@ -703,6 +768,21 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
       <div class="filter-group" id="layer-filter">
           <div style="margin-bottom:5px; font-size:11px; font-weight:bold; color:#8b949e">FILTRAR CAMADA</div>
       </div>
+  </div>
+
+  <div class="nav-panel">
+    <div class="d-pad">
+      <button id="nav-up" class="nav-btn" title="Mover Cima">▴</button>
+      <button id="nav-left" class="nav-btn" title="Mover Esquerda">◂</button>
+      <button id="nav-fit" class="nav-btn" title="Centralizar">◎</button>
+      <button id="nav-right" class="nav-btn" title="Mover Direita">▸</button>
+      <button id="nav-down" class="nav-btn" title="Mover Baixo">▾</button>
+    </div>
+
+    <div class="zoom-group">
+      <button id="nav-zoom-in" class="nav-btn" title="Zoom In">+</button>
+      <button id="nav-zoom-out" class="nav-btn" title="Zoom Out">-</button>
+    </div>
   </div>
 
   <button id="reset-filters">Resetar Visualização</button>
@@ -1037,7 +1117,42 @@ function generateHtml (nodesList: GraphNode[], linksList: GraphLink[]): string {
           document.querySelectorAll('.filter-group button').forEach(b => b.classList.remove('active'));
           searchInput.value = '';
           cy.elements().removeClass('dimmed highlight');
-          cy.layout({ name: 'dagre', rankDir: 'TB', animate: true }).run();
+          cy.fit(); // Ajuste para usar fit() ao invés de rodar layout novamente
+      });
+
+      const panStep = 100;
+
+      document.getElementById('nav-up').addEventListener('click', () => {
+        cy.panBy({ x: 0, y: panStep }); // Move o grafo para baixo (vista sobe)
+      });
+      document.getElementById('nav-down').addEventListener('click', () => {
+        cy.panBy({ x: 0, y: -panStep }); // Move o grafo para cima (vista desce)
+      });
+      document.getElementById('nav-left').addEventListener('click', () => {
+        cy.panBy({ x: panStep, y: 0 }); // Move o grafo para direita (vista vai p/ esq)
+      });
+      document.getElementById('nav-right').addEventListener('click', () => {
+        cy.panBy({ x: -panStep, y: 0 }); // Move o grafo para esquerda (vista vai p/ dir)
+      });
+
+      document.getElementById('nav-fit').addEventListener('click', () => {
+        cy.fit(undefined, 30);
+      });
+
+      document.getElementById('nav-zoom-in').addEventListener('click', () => {
+        const zoom = cy.zoom();
+        cy.zoom({
+          level: zoom * 1.2,
+          renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+        });
+      });
+
+      document.getElementById('nav-zoom-out').addEventListener('click', () => {
+        const zoom = cy.zoom();
+        cy.zoom({
+          level: zoom / 1.2,
+          renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+        });
       });
 
       cy.on('tap', 'node[type]', (evt) => {
