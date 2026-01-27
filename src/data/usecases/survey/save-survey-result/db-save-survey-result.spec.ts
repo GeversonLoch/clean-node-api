@@ -1,5 +1,5 @@
 import { ISaveSurveyResultRepository } from '@data/protocols'
-import { ISaveSurveyResultModel } from '@domain/usecases'
+import { ISaveSurveyResultParams } from '@domain/usecases'
 import { ISurveyResultModel } from '@domain/models'
 import { DbSaveSurveyResult } from '@data/usecases'
 import MockDate from 'mockdate'
@@ -12,7 +12,7 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const makeFakeSaveSurveyResultPayload = (): ISaveSurveyResultModel => ({
+const makeFakeSaveSurveyResultPayload = (): ISaveSurveyResultParams => ({
     surveyId: 'any_survey_id',
     accountId: 'any_account_id',
     question: 'any_question',
@@ -26,7 +26,7 @@ const makeFakeSaveSurveyResultData = (): ISurveyResultModel => Object.assign({},
 
 const makeSaveSurveyResultRepository = (): ISaveSurveyResultRepository => {
     class SaveSurveyResultRepositoryStub implements ISaveSurveyResultRepository {
-        async save(surveyData: ISaveSurveyResultModel): Promise<ISurveyResultModel> {
+        async save(surveyData: ISaveSurveyResultParams): Promise<ISurveyResultModel> {
             return Promise.resolve(makeFakeSaveSurveyResultData())
         }
     }

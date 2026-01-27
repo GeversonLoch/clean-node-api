@@ -2,7 +2,7 @@ import { IHttpRequest, IHttpResponse, IValidation } from '@presentation/protocol
 import { AddSurveyController } from '@presentation/controllers'
 import { badRequest, internalServerError, noContent } from '@presentation/helpers'
 import { IAddSurvey } from '@domain/usecases'
-import { IAddSurveyModel } from '@domain/models'
+import { IAddSurveyParams } from '@domain/usecases'
 import MockDate from 'mockdate'
 
 beforeAll(() => {
@@ -37,7 +37,7 @@ const makeValidation = (): IValidation => {
 
 const makeAddSurvey = (): IAddSurvey => {
     class AddSurveyStub implements IAddSurvey {
-        async add(surveyData: IAddSurveyModel): Promise<void> {
+        async add(surveyData: IAddSurveyParams): Promise<void> {
             return Promise.resolve()
         }
     }

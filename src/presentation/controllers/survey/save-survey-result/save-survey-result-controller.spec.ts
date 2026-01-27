@@ -1,5 +1,5 @@
 import { ISurveyModel, ISurveyResultModel } from '@domain/models'
-import { ILoadSurveyById, ISaveSurveyResult, ISaveSurveyResultModel } from '@domain/usecases'
+import { ILoadSurveyById, ISaveSurveyResult, ISaveSurveyResultParams } from '@domain/usecases'
 import { SaveSurveyResultController } from '@presentation/controllers'
 import { InvalidParamError } from '@presentation/errors'
 import { forbidden, internalServerError, success } from '@presentation/helpers'
@@ -14,7 +14,7 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const makeFakeSaveSurveyResultPayload = (): ISaveSurveyResultModel => ({
+const makeFakeSaveSurveyResultPayload = (): ISaveSurveyResultParams => ({
     surveyId: 'any_survey_id',
     accountId: 'any_account_id',
     question: 'any_question',
@@ -68,7 +68,7 @@ const makeLoadSurveyById = (): ILoadSurveyById => {
 
 const makeSaveSurveyResult = (): ISaveSurveyResult => {
     class SaveSurveyResultStub implements ISaveSurveyResult {
-        async save(surveyData: ISaveSurveyResultModel): Promise<ISurveyResultModel> {
+        async save(surveyData: ISaveSurveyResultParams): Promise<ISurveyResultModel> {
             return Promise.resolve(makeFakeSaveSurveyResultData())
         }
     }

@@ -1,6 +1,6 @@
-import { IAddAccountRepository, IHasher, ILoadAccountByEmailRepository } from "@data/protocols"
-import { IAccountModel, IAddAccountModel } from "@domain/models"
-import { IAddAccount } from "@domain/usecases"
+import { IAddAccountRepository, IHasher, ILoadAccountByEmailRepository } from '@data/protocols'
+import { IAccountModel } from '@domain/models'
+import { IAddAccount, IAddAccountParams } from '@domain/usecases'
 
 export class DbAddAccount implements IAddAccount {
     constructor (
@@ -9,7 +9,7 @@ export class DbAddAccount implements IAddAccount {
         private readonly loadAccountByEmailRepository: ILoadAccountByEmailRepository,
     ) {}
 
-    async add(accountData: IAddAccountModel): Promise<IAccountModel> {
+    async add(accountData: IAddAccountParams): Promise<IAccountModel> {
         const accountExists = await this.loadAccountByEmailRepository.loadByEmail(accountData.email)
         if (!accountExists) {
             const hashed_password = await this.hasher.hash(accountData.password)

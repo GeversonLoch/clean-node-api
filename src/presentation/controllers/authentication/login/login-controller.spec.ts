@@ -1,4 +1,4 @@
-import { IAuthenticationModel } from "@domain/models"
+import { IAuthenticationParams } from "@domain/models"
 import { IAuthentication } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
@@ -21,7 +21,7 @@ const makeFakeServerError = (): IHttpResponse => {
 
 const makeAuthentication = () => {
     class AuthenticationStub implements IAuthentication {
-        async auth(authentication: IAuthenticationModel): Promise<string> {
+        async auth(authentication: IAuthenticationParams): Promise<string> {
             return new Promise(resolve => resolve('any_token'))
         }
     }

@@ -1,4 +1,4 @@
-import { IAddSurveyModel } from '@domain/models'
+import { IAddSurveyParams } from '@domain/usecases'
 import { SurveyMongoRepository } from '@infrastructure/db'
 import { mongoDBAdapter } from '@main/config/db-connection'
 import { Collection } from 'mongodb'
@@ -21,7 +21,7 @@ afterAll(async () => {
     MockDate.reset()
 })
 
-const makeFakeSurveyCollection = (): IAddSurveyModel[] => [
+const makeFakeSurveyCollection = (): IAddSurveyParams[] => [
     {
         question: 'any_question',
         answers: [

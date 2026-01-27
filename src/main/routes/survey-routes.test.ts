@@ -2,7 +2,7 @@ import request from 'supertest'
 import app from '@main/config/app'
 import { mongoDBAdapter } from '@main/config/db-connection'
 import { Collection } from 'mongodb'
-import { IAddSurveyModel } from '@domain/models'
+import { IAddSurveyParams } from '@domain/usecases'
 import { sign } from 'jsonwebtoken'
 
 let surveyCollection: Collection
@@ -35,7 +35,7 @@ const makeFakeAccount = (extra?: object): any => {
     return extra ? { ...account, ...extra } : account
 }
 
-const makeFakeSurveyPayload = (): IAddSurveyModel => ({
+const makeFakeSurveyPayload = (): IAddSurveyParams => ({
     question: 'any_question',
     answers: [
         {
@@ -48,7 +48,7 @@ const makeFakeSurveyPayload = (): IAddSurveyModel => ({
     ],
 })
 
-const makeFakeSurveyCollection = (): IAddSurveyModel[] => [
+const makeFakeSurveyCollection = (): IAddSurveyParams[] => [
     {
         question: 'any_question',
         answers: [

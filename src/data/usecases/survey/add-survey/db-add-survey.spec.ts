@@ -1,6 +1,6 @@
 import { IAddSurveyRepository } from '@data/protocols'
 import { DbAddSurvey } from '@data/usecases'
-import { IAddSurveyModel } from '@domain/models'
+import { IAddSurveyParams } from '@domain/usecases'
 import MockDate from 'mockdate'
 
 beforeAll(() => {
@@ -11,7 +11,7 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const makeFakeSurveyData = (): IAddSurveyModel => ({
+const makeFakeSurveyData = (): IAddSurveyParams => ({
     answers: [
         {
             answer: 'any_answer',
@@ -24,7 +24,7 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
 
 const makeAddSurveyRepository = (): IAddSurveyRepository => {
     class AddSurveyRepositoryStub implements IAddSurveyRepository {
-        async add(surveyData: IAddSurveyModel): Promise<void> {
+        async add(surveyData: IAddSurveyParams): Promise<void> {
             return Promise.resolve()
         }
     }

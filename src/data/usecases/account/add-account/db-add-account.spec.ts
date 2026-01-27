@@ -1,6 +1,7 @@
-import { DbAddAccount } from "@data/usecases"
-import { IAddAccountRepository, IHasher, ILoadAccountByEmailRepository } from "@data/protocols"
-import { IAccountModel, IAddAccountModel } from "@domain/models"
+import { DbAddAccount } from '@data/usecases'
+import { IAddAccountRepository, IHasher, ILoadAccountByEmailRepository } from '@data/protocols'
+import { IAccountModel } from '@domain/models'
+import { IAddAccountParams } from '@domain/usecases'
 
 interface SutTypes {
     sut: DbAddAccount
@@ -16,7 +17,7 @@ const makeFakeAccount = (): IAccountModel => ({
     password: 'hashed_password'
 })
 
-const makeFakeAccountData = (): IAddAccountModel => ({
+const makeFakeAccountData = (): IAddAccountParams => ({
     name: 'any_name',
     email: 'any_email@mail.com',
     password: 'any_password'
@@ -37,7 +38,7 @@ const makeAddAccountRepository = (): IAddAccountRepository => {
     // Classe fictícia AddAccountRepositoryStub usada para simular o comportamento da classe real AddAccountRepository
     class AddAccountRepositoryStub implements IAddAccountRepository {
         // Simula o retorno do método add e sempre retorna uma conta mock
-        async add(account: IAddAccountModel): Promise<IAccountModel> {
+        async add(account: IAddAccountParams): Promise<IAccountModel> {
             return new Promise(resolve => resolve(makeFakeAccount()))
         }
     }

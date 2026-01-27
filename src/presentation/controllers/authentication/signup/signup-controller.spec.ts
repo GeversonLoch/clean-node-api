@@ -1,10 +1,10 @@
-import { SignUpController } from "@presentation/controllers"
-import { IAccountModel, IAddAccountModel, IAuthenticationModel } from "@domain/models"
-import { IAddAccount, IAuthentication } from "@domain/usecases"
-import { InternalServerError, InvalidCredentialsError, MissingParamError } from "@presentation/errors"
-import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
-import { success, internalServerError, badRequest, forbidden } from "@presentation/helpers"
-import { IValidation } from "@presentation/protocols"
+import { SignUpController } from '@presentation/controllers'
+import { IAccountModel, IAuthenticationParams } from '@domain/models'
+import { IAddAccount, IAddAccountParams, IAuthentication } from '@domain/usecases'
+import { InternalServerError, InvalidCredentialsError, MissingParamError } from '@presentation/errors'
+import { IHttpRequest, IHttpResponse } from '@presentation/protocols'
+import { success, internalServerError, badRequest, forbidden } from '@presentation/helpers'
+import { IValidation } from '@presentation/protocols'
 
 interface ISutTypes {
   sut: SignUpController,
@@ -37,7 +37,7 @@ const makeFakeServerError = (): IHttpResponse => {
 
 const makeAddAccount = (): IAddAccount => {
   class AddAccountStub implements IAddAccount {
-    async add (account: IAddAccountModel): Promise<IAccountModel> {
+    async add (account: IAddAccountParams): Promise<IAccountModel> {
       return Promise.resolve(makeFakeAccount())
     }
   }
@@ -55,7 +55,7 @@ const makeValidation = (): IValidation => {
 
 const makeAuthentication = (): IAuthentication => {
   class AuthenticationStub implements IAuthentication {
-    async auth(authentication: IAuthenticationModel): Promise<string> {
+    async auth(authentication: IAuthenticationParams): Promise<string> {
       return Promise.resolve('any_token')
     }
   }
