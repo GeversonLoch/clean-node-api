@@ -5,7 +5,9 @@ import { Request, Response } from 'express'
 export const expressRouteAdapter = (controller: IController) => {
     return async (req: Request, res: Response) => {
         const httpRequest: IHttpRequest = {
-            body: req.body
+            body: req.body,
+            params: req.params,
+            accountId: req.accountId
         }
 
         const logControllerDecorator = makeLogControllerDecorator(controller)

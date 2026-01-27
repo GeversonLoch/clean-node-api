@@ -46,7 +46,7 @@ const makeEncrypterStub = (): IEncrypter => {
     return new EncrypterStub()
 }
 
-const makeUpdateAccessTokenRepositoryStub = (): IUpdateAccessTokenRepository => {
+const makeUpdateAccessTokenRepository = (): IUpdateAccessTokenRepository => {
     class UpdateAccessTokenRepositoryStub implements IUpdateAccessTokenRepository {
         async updateAccessToken(id: string, token: string): Promise<void> {
             return new Promise(resolve => resolve())
@@ -59,7 +59,7 @@ const makeSut = () => {
     const loadAccountByEmailRepositoryStub = makeLoadAccountByEmailRepository()
     const hashComparerStub = makeHashComparerStub()
     const encrypterStub = makeEncrypterStub()
-    const updateAccessTokenRepositoryStub = makeUpdateAccessTokenRepositoryStub()
+    const updateAccessTokenRepositoryStub = makeUpdateAccessTokenRepository()
     const sut = new DbAuthentication(
         loadAccountByEmailRepositoryStub,
         hashComparerStub,

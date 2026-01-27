@@ -9,4 +9,6 @@ export * from './db/account/load-account-by-token-repository.interface'
 export * from './db/account/update-access-token-repository.interface'
 export * from './db/survey/add-survey-repository'
 export * from './db/survey/load-surveys-repository'
+export * from './db/survey/load-survey-by-id-repository'
+export * from './db/survey-result/save-survey-result-repository'
 export * from './db/database-adapter.interface' // TODO: Validar se esse adapter realmente pertence a camada data!

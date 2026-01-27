@@ -3,12 +3,103 @@
     "configurations": [
         {
             "type": "node",
+            "request": "launch",
+            "name": "NPM: Start (Prod Mode)",
+            "program": "${workspaceFolder}/dist/main/server.js",
+            "preLaunchTask": "npm: build",
+            "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "NPM: Start:Debug (TS Mode)",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "start:debug"],
+            "port": 9229,
+            "skipFiles": ["<node_internals>/**"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
             "request": "attach",
-            "name": "Debug on Docker",
+            "name": "Docker: Attach Debugger",
             "remoteRoot": "/usr/api",
             "port": 9222,
             "restart": true,
-            "sourceMaps": true,
+            "sourceMaps": true
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Docker: Up (Build)",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "docker:up"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Docker: Down",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "docker:down"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Test: All",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "test"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Test: Unit",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "test:unit"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Test: Integration",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "test:integration"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Test: Staged",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "test:staged"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Test: CI (Coverage)",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "test:ci"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Utils: Generate Dep Graph",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "generate:dep-graph"],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Deploy: Heroku",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "deploy:heroku"],
+            "console": "integratedTerminal"
+        }
     ]
 }

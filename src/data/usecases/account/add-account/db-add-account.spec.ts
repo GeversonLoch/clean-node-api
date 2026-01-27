@@ -35,7 +35,7 @@ const makeHasher = (): IHasher => {
 
 const makeAddAccountRepository = (): IAddAccountRepository => {
     // Classe fictícia AddAccountRepositoryStub usada para simular o comportamento da classe real AddAccountRepository
-    class AddAccountRepositoryStub {
+    class AddAccountRepositoryStub implements IAddAccountRepository {
         // Simula o retorno do método add e sempre retorna uma conta mock
         async add(account: IAddAccountModel): Promise<IAccountModel> {
             return new Promise(resolve => resolve(makeFakeAccount()))

@@ -1,0 +1,8 @@
+export interface ISurveyResultModel {
+    id: string
+    surveyId: string
+    accountId: string
+    question: string
+    answer: string
+    date: Date
+}
