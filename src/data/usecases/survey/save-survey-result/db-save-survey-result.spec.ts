@@ -55,7 +55,7 @@ describe('DbSaveSurveyResult Usecase', () => {
     // Garante que DbSaveSurveyResult lance uma exceção se o SaveSurveyResultRepository lançar
     test('Should throw if SaveSurveyResultRepository throws', async () => {
         const { sut, saveSurveyResultRepositoryStub } = makeSut()
-        jest.spyOn(saveSurveyResultRepositoryStub, 'save').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(saveSurveyResultRepositoryStub, 'save').mockImplementationOnce(() => { throw new Error() })
         const promise = sut.save(makeFakeSaveSurveyResultPayload())
         await expect(promise).rejects.toThrow()
     })

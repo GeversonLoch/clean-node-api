@@ -62,7 +62,7 @@ describe('DbLoadSurveyById Usecase', () => {
     // Garante que DbLoadSurveyById lance uma exceção se o LoadSurveyByIdRepository lançar
     test('Should throw if LoadSurveyByIdRepository throws', async () => {
         const { sut, loadSurveyByIdRepositoryStub } = makeSut()
-        jest.spyOn(loadSurveyByIdRepositoryStub, 'loadById').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(loadSurveyByIdRepositoryStub, 'loadById').mockImplementationOnce(() => { throw new Error() })
         const promise = sut.loadById('any_id')
         await expect(promise).rejects.toThrow()
     })

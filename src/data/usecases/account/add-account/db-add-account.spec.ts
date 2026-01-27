@@ -2,6 +2,7 @@ import { DbAddAccount } from '@data/usecases'
 import { IAddAccountRepository, IHasher, ILoadAccountByEmailRepository } from '@data/protocols'
 import { IAccountModel } from '@domain/models'
 import { IAddAccountParams } from '@domain/usecases'
+import { mockAccountModel, mockAddAccountParams } from '@domain/test'
 
 interface SutTypes {
     sut: DbAddAccount
@@ -9,19 +10,6 @@ interface SutTypes {
     addAccountRepositoryStub: IAddAccountRepository,
     loadAccountByEmailRepositoryStub: ILoadAccountByEmailRepository,
 }
-
-const makeFakeAccount = (): IAccountModel => ({
-    id: 'any_id',
-    name: 'any_name',
-    email: 'any_email@mail.com',
-    password: 'hashed_password'
-})
-
-const makeFakeAccountData = (): IAddAccountParams => ({
-    name: 'any_name',
-    email: 'any_email@mail.com',
-    password: 'any_password'
-})
 
 const makeHasher = (): IHasher => {
     // Classe fictícia HasherStub usada para simular o comportamento da classe real Hasher
@@ -39,7 +27,7 @@ const makeAddAccountRepository = (): IAddAccountRepository => {
     class AddAccountRepositoryStub implements IAddAccountRepository {
         // Simula o retorno do método add e sempre retorna uma conta mock
         async add(account: IAddAccountParams): Promise<IAccountModel> {
-            return new Promise(resolve => resolve(makeFakeAccount()))
+            return new Promise(resolve => resolve(mockAccountModel()))
         }
     }
     return new AddAccountRepositoryStub()
@@ -84,7 +72,7 @@ describe('DbAddAccount Usecase', () => {
         const hasherSpy = jest.spyOn(hasherStub, 'hash')
 
         // Chama o método add da instância DbAddAccount
-        await sut.add(makeFakeAccountData())
+        await sut.add(mockAddAccountParams())
 
         // Verifica se o espião hasherSpy foi chamado com a senha 'any_password'
         expect(hasherSpy).toHaveBeenCalledWith('any_password')
@@ -96,10 +84,10 @@ describe('DbAddAccount Usecase', () => {
         const { sut, hasherStub } = makeSut()
 
         // Simula que o método 'hash' lance um erro
-        jest.spyOn(hasherStub, 'hash').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(hasherStub, 'hash').mockImplementationOnce(() => { throw new Error() })
 
         // Chama o método add da instância DbAddAccount e armazena a promise
-        const accountPromise = sut.add(makeFakeAccountData())
+        const accountPromise = sut.add(mockAddAccountParams())
 
         // Verifica se o método add repassa a exceção lançada pelo Hasher
         await expect(accountPromise).rejects.toThrow()
@@ -114,7 +102,7 @@ describe('DbAddAccount Usecase', () => {
         const addSpy = jest.spyOn(addAccountRepositoryStub, 'add')
 
         // Chama o método add da instância DbAddAccount
-        await sut.add(makeFakeAccountData())
+        await sut.add(mockAddAccountParams())
 
         // Verifica se o espião addSpy foi chamado com os valores esperados,
         // sendo que a senha já deve estar criptografada ('hashed_password')
@@ -131,10 +119,10 @@ describe('DbAddAccount Usecase', () => {
         const { sut, addAccountRepositoryStub } = makeSut()
 
         // Simula que o método 'add' lance um erro
-        jest.spyOn(addAccountRepositoryStub, 'add').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(addAccountRepositoryStub, 'add').mockImplementationOnce(() => { throw new Error() })
 
         // Chama o método add da instância DbAddAccount e armazena a promise
-        const accountPromise = sut.add(makeFakeAccountData())
+        const accountPromise = sut.add(mockAddAccountParams())
 
         // Verifica se o método add repassa a exceção lançada pelo AddAccountRepository
         await expect(accountPromise).rejects.toThrow()
@@ -146,17 +134,17 @@ describe('DbAddAccount Usecase', () => {
         const { sut } = makeSut()
 
         // Chama o método add da instância DbAddAccount e armazena o resultado
-        const account = await sut.add(makeFakeAccountData())
+        const account = await sut.add(mockAddAccountParams())
 
         // Verifica se o método add retorna a conta esperada
-        expect(account).toEqual(makeFakeAccount())
+        expect(account).toEqual(mockAccountModel())
     })
 
     // Garante que LoadAccountByEmailRepository seja chamado com o email correto
     test('Should call LoadAccountByEmailRepository with correct email', async () => {
         const { sut, loadAccountByEmailRepositoryStub } = makeSut()
         const loadSpy = jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail')
-        await sut.add(makeFakeAccountData())
+        await sut.add(mockAddAccountParams())
         expect(loadSpy).toHaveBeenCalledWith('any_email@mail.com')
     })
 
@@ -164,9 +152,9 @@ describe('DbAddAccount Usecase', () => {
     test('Should return null if LoadAccountByEmailRepository not return null', async () => {
         const { sut, loadAccountByEmailRepositoryStub } = makeSut()
         jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail').mockReturnValueOnce(
-            Promise.resolve(makeFakeAccount())
+            Promise.resolve(mockAccountModel())
         )
-        const account = await sut.add(makeFakeAccountData())
+        const account = await sut.add(mockAddAccountParams())
         expect(account).toBeNull()
     })
 })

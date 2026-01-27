@@ -75,7 +75,7 @@ describe('DbLoadSurveys Usecase', () => {
     // Garante que DbLoadSurveys lance uma exceção se o LoadSurveysRepository lançar
     test('Should throw if LoadSurveysRepository throws', async () => {
         const { sut, loadSurveysRepositoryStub } = makeSut()
-        jest.spyOn(loadSurveysRepositoryStub, 'loadAll').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(loadSurveysRepositoryStub, 'loadAll').mockImplementationOnce(() => { throw new Error() })
         const promise = sut.load()
         await expect(promise).rejects.toThrow()
     })

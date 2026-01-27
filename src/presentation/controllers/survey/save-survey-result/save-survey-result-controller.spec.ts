@@ -107,7 +107,7 @@ describe('SaveSurveyResult Controller', () => {
     // Garante que retorne erro 500 se o loadSurveyByIdStub lançar uma exceção.
     test('Should return 500 if loadSurveyByIdStub throws an exception', async () => {
         const { sut, loadSurveyByIdStub } = makeSut()
-        jest.spyOn(loadSurveyByIdStub, 'loadById').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(loadSurveyByIdStub, 'loadById').mockImplementationOnce(() => { throw new Error() })
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(makeFakeServerError())
     })
@@ -132,7 +132,7 @@ describe('SaveSurveyResult Controller', () => {
     // Garante que retorne erro 500 se o SaveSurveyResult lançar uma exceção.
     test('Should return 500 if SaveSurveyResult throws an exception', async () => {
         const { sut, saveSurveyResultStub } = makeSut()
-        jest.spyOn(saveSurveyResultStub, 'save').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(saveSurveyResultStub, 'save').mockImplementationOnce(() => { throw new Error() })
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(makeFakeServerError())
     })

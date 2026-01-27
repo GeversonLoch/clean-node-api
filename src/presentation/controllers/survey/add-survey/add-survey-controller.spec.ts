@@ -91,7 +91,7 @@ describe('AddSurvey Controller', () => {
     // Garante que retorne erro 500 se o AddSurvey lançar uma exceção.
     test('Should return 500 if AddSurvey throws an exception', async () => {
         const { sut, addSurveyStub } = makeSut()
-        jest.spyOn(addSurveyStub, 'add').mockReturnValueOnce(Promise.reject(new Error()))
+        jest.spyOn(addSurveyStub, 'add').mockImplementationOnce(() => { throw new Error() })
         const httpResponse = await sut.handle(makeFakeRequest())
         expect(httpResponse).toEqual(makeFakeServerError())
     })
