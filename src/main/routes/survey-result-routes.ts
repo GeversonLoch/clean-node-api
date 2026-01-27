@@ -1,0 +1,8 @@
+import { Router } from 'express'
+import { auth } from '@main/middlewares/auth'
+import { expressRouteAdapter } from '@main/adapters/express/express-route-adapter'
+import { makeSaveSurveyResultController } from '@main/factories/controllers/survey/save-survey-result/save-survey-result-controller-factory'
+
+export default (router: Router): void => {
+    router.put('/surveys/:surveyId/results', auth, expressRouteAdapter(makeSaveSurveyResultController()))
+}

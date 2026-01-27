@@ -23,7 +23,7 @@ const makeFakeSurveyData = (): IAddSurveyModel => ({
 })
 
 const makeAddSurveyRepository = (): IAddSurveyRepository => {
-    class AddSurveyRepositoryStub {
+    class AddSurveyRepositoryStub implements IAddSurveyRepository {
         async add(surveyData: IAddSurveyModel): Promise<void> {
             return Promise.resolve()
         }

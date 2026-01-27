@@ -22,7 +22,7 @@ const makeFakeAccount = (): IAccountModel => ({
     password: 'any_password',
 })
 
-const makeLoadAccountByTokenRepositoryStub = (): ILoadAccountByTokenRepository => {
+const makeLoadAccountByTokenRepository = (): ILoadAccountByTokenRepository => {
     class LoadAccountByTokenRepository implements ILoadAccountByTokenRepository {
         async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
             return Promise.resolve(makeFakeAccount())
@@ -33,7 +33,7 @@ const makeLoadAccountByTokenRepositoryStub = (): ILoadAccountByTokenRepository =
 
 const makeSut = () => {
     const decrypterStub = makeDecrypterStub()
-    const loadAccountByTokenRepositoryStub = makeLoadAccountByTokenRepositoryStub()
+    const loadAccountByTokenRepositoryStub = makeLoadAccountByTokenRepository()
     const sut = new DbLoadAccountByToken(decrypterStub, loadAccountByTokenRepositoryStub)
     return {
         sut,
