@@ -12,7 +12,7 @@ export const mockHasher = (): IHasher => {
 export const mockHashComparer = (): IHashComparer => {
     class HashComparerStub implements IHashComparer {
         async compare(value: string, hash: string): Promise<boolean> {
-            return new Promise(resolve => resolve(true))
+            return Promise.resolve(true)
         }
     }
     return new HashComparerStub()
@@ -21,7 +21,7 @@ export const mockHashComparer = (): IHashComparer => {
 export const mockEncrypter = (): IEncrypter => {
     class EncrypterStub implements IEncrypter {
         async encrypt(value: string): Promise<string> {
-            return new Promise(resolve => resolve('any_token'))
+            return Promise.resolve('any_token')
         }
     }
     return new EncrypterStub()

@@ -12,10 +12,10 @@ bcrypt.hash retorne sempre 'any_hashed_value' por padrão.
 */
 jest.mock('bcrypt', () => ({
     async hash(): Promise<string> {
-        return new Promise(resolve => resolve('any_hashed_value'))
+        return Promise.resolve('any_hashed_value')
     },
     async compare(): Promise<boolean> {
-        return new Promise(resolve => resolve(true))
+        return Promise.resolve(true)
     },
 }))
 

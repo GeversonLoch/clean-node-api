@@ -11,7 +11,7 @@ import { mockAccountModel } from '@domain/test'
 export const mockAddAccountRepository = (): IAddAccountRepository => {
     class AddAccountRepositoryStub implements IAddAccountRepository {
         async add(account: IAddAccountParams): Promise<IAccountModel> {
-            return new Promise(resolve => resolve(mockAccountModel()))
+            return Promise.resolve(mockAccountModel())
         }
     }
     return new AddAccountRepositoryStub()
@@ -20,7 +20,7 @@ export const mockAddAccountRepository = (): IAddAccountRepository => {
 export const mockLoadAccountByEmailRepository = () => {
     class LoadAccountByEmailRepositoryStub implements ILoadAccountByEmailRepository {
         async loadByEmail(email: string): Promise<IAccountModel> {
-            return new Promise(resolve => resolve(mockAccountModel()))
+            return Promise.resolve(mockAccountModel())
         }
     }
     return new LoadAccountByEmailRepositoryStub()
@@ -38,7 +38,7 @@ export const mockLoadAccountByTokenRepository = (): ILoadAccountByTokenRepositor
 export const mockUpdateAccessTokenRepository = (): IUpdateAccessTokenRepository => {
     class UpdateAccessTokenRepositoryStub implements IUpdateAccessTokenRepository {
         async updateAccessToken(id: string, token: string): Promise<void> {
-            return new Promise(resolve => resolve())
+            return Promise.resolve()
         }
     }
     return new UpdateAccessTokenRepositoryStub()

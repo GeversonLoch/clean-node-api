@@ -8,7 +8,7 @@ import { mockLogErrorRepository } from "@data/test"
 const mockController = (): IController => {
     class ControllerStub implements IController {
         async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
-            return new Promise(resolve => resolve(success(mockAccountModel())))
+            return Promise.resolve(success(mockAccountModel()))
         }
     }
     return new ControllerStub()
@@ -58,7 +58,7 @@ describe('Log Controller Decorator', () => {
         const logSpy = jest.spyOn(logErrorRepositoryStub, 'logError')
 
         // Mockando o retorno do método handle do controllerStub para retornar um erro
-        jest.spyOn(controllerStub, 'handle').mockReturnValueOnce(new Promise(resolve => resolve(mockInternalServerError())))
+        jest.spyOn(controllerStub, 'handle').mockReturnValueOnce(Promise.resolve(mockInternalServerError()))
 
         await sut.handle(mockHttpRequest())
         expect(logSpy).toHaveBeenCalledWith('any_stack')
