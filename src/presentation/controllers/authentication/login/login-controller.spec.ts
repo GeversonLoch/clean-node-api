@@ -1,46 +1,20 @@
-import { IAuthenticationParams } from "@domain/models"
-import { IAuthentication } from "@domain/usecases"
 import { LoginController } from "@presentation/controllers"
 import { MissingParamError } from "@presentation/errors"
-import { badRequest, internalServerError, success, unauthorized } from "@presentation/helpers"
-import { IHttpRequest, IHttpResponse } from "@presentation/protocols"
-import { IValidation } from "@presentation/protocols"
+import { badRequest, success, unauthorized } from "@presentation/helpers"
+import { mockAuthentication, mockInternalServerError, mockValidation } from "@presentation/test"
+import { IHttpRequest } from "@presentation/protocols"
 
-const makeFakeRequest = (): IHttpRequest => ({
+const mockHttpRequest = (): IHttpRequest => ({
     body: {
         email: 'any_email@email.com',
         password: 'any_password',
     }
 })
 
-const makeFakeServerError = (): IHttpResponse => {
-    let fakeError = new Error()
-    fakeError.stack = 'any_stack'
-    return internalServerError(fakeError)
-}
-
-const makeAuthentication = () => {
-    class AuthenticationStub implements IAuthentication {
-        async auth(authentication: IAuthenticationParams): Promise<string> {
-            return new Promise(resolve => resolve('any_token'))
-        }
-    }
-    return new AuthenticationStub()
-}
-
-const makeValidation = (): IValidation => {
-  class ValidationStub implements IValidation {
-    validate (input: any): Error {
-      return null
-    }
-  }
-  return new ValidationStub()
-}
-
 // sut: System Under Test
 const makeSut = () => {
-    const authenticationStub = makeAuthentication()
-    const validationStub = makeValidation()
+    const authenticationStub = mockAuthentication()
+    const validationStub = mockValidation()
     const sut = new LoginController(validationStub, authenticationStub)
     return {
         sut,
@@ -54,7 +28,7 @@ describe('Login Controller', () => {
     test('Should call Authentication with correct values', async () => {
         const { sut, authenticationStub } = makeSut()
         const authSpy = jest.spyOn(authenticationStub, 'auth')
-        const request = makeFakeRequest()
+        const request = mockHttpRequest()
         await sut.handle(request)
         expect(authSpy).toHaveBeenCalledWith({
           email: request.body.email,
@@ -68,7 +42,7 @@ describe('Login Controller', () => {
         jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(
             Promise.resolve(null) // Return null accessToken
         )
-        const httpResponse = await sut.handle(makeFakeRequest())
+        const httpResponse = await sut.handle(mockHttpRequest())
         expect(httpResponse).toEqual(unauthorized())
     })
 
@@ -78,14 +52,14 @@ describe('Login Controller', () => {
         jest.spyOn(authenticationStub, 'auth').mockImplementationOnce(() => {
             throw new Error()
         })
-        const httpResponse = await sut.handle(makeFakeRequest())
-        expect(httpResponse).toEqual(makeFakeServerError())
+        const httpResponse = await sut.handle(mockHttpRequest())
+        expect(httpResponse).toEqual(mockInternalServerError())
     })
 
     // Garante que retorne erro 200 se credenciais validas forem fornecidas.
     test('Should return 200 if valid credentials are provided', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle(makeFakeRequest())
+        const httpResponse = await sut.handle(mockHttpRequest())
         expect(httpResponse).toEqual(success({
             token: 'any_token',
         }))
@@ -95,7 +69,7 @@ describe('Login Controller', () => {
     test('Should call Validation with correct value', async () => {
       const { sut, validationStub } = makeSut()
       const validateSpy = jest.spyOn(validationStub, 'validate')
-      const httpRequest = makeFakeRequest()
+      const httpRequest = mockHttpRequest()
       await sut.handle(httpRequest)
       expect(validateSpy).toHaveBeenCalledWith(httpRequest.body)
     })

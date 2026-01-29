@@ -1,6 +1,6 @@
-import { ILoadSurveysRepository } from '@data/protocols'
-import { ISurveyModel } from '@domain/models'
 import { DbLoadSurveys } from '@data/usecases'
+import { mockSurveyModelCollection } from '@domain/test'
+import { mockLoadSurveysRepository } from '@data/test'
 import MockDate from 'mockdate'
 
 beforeAll(() => {
@@ -11,44 +11,8 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const makeFakeSurveys = (): ISurveyModel[] => {
-    return [
-        {
-            id: 'any_id',
-            question: 'any_question',
-            answers: [
-                {
-                    answer: 'any_answer',
-                    image: 'any_image',
-                },
-            ],
-            date: new Date(),
-        },
-        {
-            id: 'other_id',
-            question: 'other_question',
-            answers: [
-                {
-                    answer: 'other_answer',
-                    image: 'other_image',
-                },
-            ],
-            date: new Date(),
-        },
-    ]
-}
-
-const makeLoadSurveysRepository = (): ILoadSurveysRepository => {
-    class LoadSurveysRepositoryStub implements ILoadSurveysRepository {
-        async loadAll(): Promise<ISurveyModel[]> {
-            return Promise.resolve(makeFakeSurveys())
-        }
-    }
-    return new LoadSurveysRepositoryStub()
-}
-
 const makeSut = () => {
-    const loadSurveysRepositoryStub = makeLoadSurveysRepository()
+    const loadSurveysRepositoryStub = mockLoadSurveysRepository()
     const sut = new DbLoadSurveys(loadSurveysRepositoryStub)
     return {
         sut,
@@ -69,7 +33,7 @@ describe('DbLoadSurveys Usecase', () => {
     test('Should return a list of Surveys on sucess', async () => {
         const { sut } = makeSut()
         const surveys = await sut.load()
-        expect(surveys).toEqual(makeFakeSurveys())
+        expect(surveys).toEqual(mockSurveyModelCollection())
     })
 
     // Garante que DbLoadSurveys lance uma exceção se o LoadSurveysRepository lançar

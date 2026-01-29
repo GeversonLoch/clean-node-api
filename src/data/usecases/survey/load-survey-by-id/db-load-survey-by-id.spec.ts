@@ -1,6 +1,6 @@
-import { ISurveyModel } from '@domain/models'
 import { DbLoadSurveyById } from '@data/usecases'
-import { ILoadSurveyByIdRepository } from '@data/protocols'
+import { mockLoadSurveyByIdRepository } from '@data/test'
+import { mockSurveyModel } from '@domain/test'
 import MockDate from 'mockdate'
 
 beforeAll(() => {
@@ -11,31 +11,8 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const makeFakeSurvey = (): ISurveyModel => {
-    return {
-        id: 'any_id',
-        question: 'any_question',
-        answers: [
-            {
-                answer: 'any_answer',
-                image: 'any_image',
-            },
-        ],
-        date: new Date(),
-    }
-}
-
-const makeLoadSurveyByIdRepository = (): ILoadSurveyByIdRepository => {
-    class LoadSurveyByIdRepositoryStub implements ILoadSurveyByIdRepository {
-        async loadById(id: string): Promise<ISurveyModel> {
-            return Promise.resolve(makeFakeSurvey())
-        }
-    }
-    return new LoadSurveyByIdRepositoryStub()
-}
-
 const makeSut = () => {
-    const loadSurveyByIdRepositoryStub = makeLoadSurveyByIdRepository()
+    const loadSurveyByIdRepositoryStub = mockLoadSurveyByIdRepository()
     const sut = new DbLoadSurveyById(loadSurveyByIdRepositoryStub)
     return {
         sut,
@@ -56,7 +33,7 @@ describe('DbLoadSurveyById Usecase', () => {
     test('Should return a Survey on sucess', async () => {
         const { sut } = makeSut()
         const survey = await sut.loadById('any_id')
-        expect(survey).toEqual(makeFakeSurvey())
+        expect(survey).toEqual(mockSurveyModel())
     })
 
     // Garante que DbLoadSurveyById lance uma exceção se o LoadSurveyByIdRepository lançar

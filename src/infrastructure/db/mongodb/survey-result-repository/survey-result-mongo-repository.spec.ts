@@ -2,6 +2,7 @@ import { IAccountModel, ISurveyModel } from '@domain/models'
 import { SurveyResultMongoRepository } from '@infrastructure/db'
 import { mongoDBAdapter } from '@main/config/db-connection'
 import { Collection, ObjectId } from 'mongodb'
+import { mockAddSurveyParams, mockAddAccountExtraParams } from '@domain/test'
 import MockDate from 'mockdate'
 
 let surveyCollection: Collection
@@ -27,31 +28,14 @@ afterAll(async () => {
     MockDate.reset()
 })
 
-const makeFakeSurvey = async (): Promise<ISurveyModel> => {
-    const result = await surveyCollection.insertOne({
-        question: 'any_question',
-        answers: [
-            {
-                answer: 'any_answer',
-                image: 'any_image',
-            },
-            {
-                answer: 'other_answer',
-            },
-        ],
-        date: new Date(),
-    })
+const mockSurveyCollection = async (): Promise<ISurveyModel> => {
+    const result = await surveyCollection.insertOne(mockAddSurveyParams())
     const surveyDocument = await surveyCollection.findOne({ _id: result.insertedId })
     return mongoDBAdapter.map(surveyDocument)
 }
 
-const makeAccountFake = async (): Promise<IAccountModel> => {
-    const result = await accountCollection.insertOne({
-        name: 'any_name',
-        email: 'any_email@email.com',
-        password: 'any_password',
-        accessToken: 'any_token',
-    })
+const mockAccountCollection = async (): Promise<IAccountModel> => {
+    const result = await accountCollection.insertOne(mockAddAccountExtraParams({ accessToken: 'any_token' }))
     const accountDocument = await accountCollection.findOne({ _id: result.insertedId })
     return mongoDBAdapter.map(accountDocument)
 }
@@ -60,8 +44,8 @@ describe('Survey Result Mongo Repository', () => {
     describe('save()', () => {
         // Garante que o SurveyResultMongoRepository adicione um survey result ao executar o método 'save' com sucesso
         test('Should save a survey result if its new', async () => {
-            const survey = await makeFakeSurvey()
-            const account = await makeAccountFake()
+            const survey = await mockSurveyCollection()
+            const account = await mockAccountCollection()
             const sut = new SurveyResultMongoRepository(mongoDBAdapter)
             const surveyResult = await sut.save({
                 surveyId: survey.id,
@@ -81,8 +65,8 @@ describe('Survey Result Mongo Repository', () => {
 
         // Garante que o SurveyResultMongoRepository apenas atualize o survey result existente ao executar o método 'save' com sucesso
         test('Should update survey result if its not new', async () => {
-            const survey = await makeFakeSurvey()
-            const account = await makeAccountFake()
+            const survey = await mockSurveyCollection()
+            const account = await mockAccountCollection()
             const preInsert = await surveyResultCollection.insertOne({
                 surveyId: survey.id,
                 accountId: account.id,

@@ -1,8 +1,7 @@
-import { IHttpResponse } from '@presentation/protocols'
 import { LoadSurveysController } from '@presentation/controllers'
-import { internalServerError, noContent, success } from '@presentation/helpers'
-import { ILoadSurveys } from '@domain/usecases'
-import { ISurveyModel } from '@domain/models'
+import { noContent, success } from '@presentation/helpers'
+import { mockSurveyModelCollection } from '@domain/test'
+import { mockInternalServerError, mockLoadSurveys } from '@presentation/test'
 import MockDate from 'mockdate'
 
 beforeAll(() => {
@@ -13,50 +12,8 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const makeFakeSurveys = (): ISurveyModel[] => {
-    return [
-        {
-            id: 'any_id',
-            question: 'any_question',
-            answers: [
-                {
-                    answer: 'any_answer',
-                    image: 'any_image',
-                },
-            ],
-            date: new Date(),
-        },
-        {
-            id: 'other_id',
-            question: 'other_question',
-            answers: [
-                {
-                    answer: 'other_answer',
-                    image: 'other_image',
-                },
-            ],
-            date: new Date(),
-        },
-    ]
-}
-
-const makeLoadSurveys = (): ILoadSurveys => {
-    class LoadSurveysStub implements ILoadSurveys {
-        async load(): Promise<ISurveyModel[]> {
-            return Promise.resolve(makeFakeSurveys())
-        }
-    }
-    return new LoadSurveysStub()
-}
-
-const makeFakeServerError = (): IHttpResponse => {
-    let fakeError = new Error()
-    fakeError.stack = 'any_stack'
-    return internalServerError(fakeError)
-}
-
 const makeSut = () => {
-    const loadSurveysStub = makeLoadSurveys()
+    const loadSurveysStub = mockLoadSurveys()
     const sut = new LoadSurveysController(loadSurveysStub)
     return {
         sut,
@@ -77,7 +34,7 @@ describe('LoadSurveys Controller', () => {
     test('Should return 200 on success', async () => {
         const { sut } = makeSut()
         const httpResponse = await sut.handle()
-        expect(httpResponse).toEqual(success(makeFakeSurveys()))
+        expect(httpResponse).toEqual(success(mockSurveyModelCollection()))
     })
 
     // Garante que retorne 204 em caso de sucesso quando não registros salvos.
@@ -93,6 +50,6 @@ describe('LoadSurveys Controller', () => {
         const { sut, loadSurveysStub } = makeSut()
         jest.spyOn(loadSurveysStub, 'load').mockImplementationOnce(() => { throw new Error() })
         const httpResponse = await sut.handle()
-        expect(httpResponse).toEqual(makeFakeServerError())
+        expect(httpResponse).toEqual(mockInternalServerError())
     })
 })

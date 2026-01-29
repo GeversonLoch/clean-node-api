@@ -1,19 +1,10 @@
-import { IEmailValidator } from "@presentation/protocols"
 import { EmailValidation } from "@presentation/helpers"
 import { InvalidParamError } from "@presentation/errors"
-
-const makeEmailValidator = (): IEmailValidator => {
-  class EmailValidatorStub implements IEmailValidator {
-    isValid(email: string): boolean {
-      return true
-    }
-  }
-  return new EmailValidatorStub()
-}
+import { mockEmailValidator } from "@presentation/test"
 
 // sut: System Under Test
 const makeSut = () => {
-  const emailValidatorStub = makeEmailValidator()
+  const emailValidatorStub = mockEmailValidator()
   const sut = new EmailValidation('email', emailValidatorStub)
   return {
     sut,

@@ -1,7 +1,7 @@
 import { DbAddAccount } from '@data/usecases'
 import { IAddAccountRepository, IHasher, ILoadAccountByEmailRepository } from '@data/protocols'
 import { IAccountModel } from '@domain/models'
-import { IAddAccountParams } from '@domain/usecases'
+import { mockAddAccountRepository, mockHasher } from '@data/test'
 import { mockAccountModel, mockAddAccountParams } from '@domain/test'
 
 interface SutTypes {
@@ -11,29 +11,7 @@ interface SutTypes {
     loadAccountByEmailRepositoryStub: ILoadAccountByEmailRepository,
 }
 
-const makeHasher = (): IHasher => {
-    // Classe fictícia HasherStub usada para simular o comportamento da classe real Hasher
-    class HasherStub {
-        // Método que simula a criptografia e sempre retorna 'hashed_password'
-        async hash(value: string): Promise<string> {
-            return Promise.resolve('hashed_password')
-        }
-    }
-    return new HasherStub()
-}
-
-const makeAddAccountRepository = (): IAddAccountRepository => {
-    // Classe fictícia AddAccountRepositoryStub usada para simular o comportamento da classe real AddAccountRepository
-    class AddAccountRepositoryStub implements IAddAccountRepository {
-        // Simula o retorno do método add e sempre retorna uma conta mock
-        async add(account: IAddAccountParams): Promise<IAccountModel> {
-            return new Promise(resolve => resolve(mockAccountModel()))
-        }
-    }
-    return new AddAccountRepositoryStub()
-}
-
-const makeLoadAccountByEmailRepository = () => {
+const mockLoadAccountByEmailRepository = () => {
     class LoadAccountByEmailRepositoryStub implements ILoadAccountByEmailRepository {
         async loadByEmail(email: string): Promise<IAccountModel> {
             return new Promise(resolve => resolve(null))
@@ -43,9 +21,9 @@ const makeLoadAccountByEmailRepository = () => {
 }
 
 const makeSut = (): SutTypes => {
-    const hasherStub = makeHasher()
-    const addAccountRepositoryStub = makeAddAccountRepository()
-    const loadAccountByEmailRepositoryStub = makeLoadAccountByEmailRepository()
+    const hasherStub = mockHasher()
+    const addAccountRepositoryStub = mockAddAccountRepository()
+    const loadAccountByEmailRepositoryStub = mockLoadAccountByEmailRepository()
 
     // Cria uma instância da classe DbAddAccount, injetando hasherStub e addAccountRepositoryStub como dependências
     const sut = new DbAddAccount(
@@ -108,7 +86,7 @@ describe('DbAddAccount Usecase', () => {
         // sendo que a senha já deve estar criptografada ('hashed_password')
         expect(addSpy).toHaveBeenCalledWith({
             name: 'any_name',
-            email: 'any_email@mail.com',
+            email: 'any_email@email.com',
             password: 'hashed_password'
         })
     })
@@ -145,7 +123,7 @@ describe('DbAddAccount Usecase', () => {
         const { sut, loadAccountByEmailRepositoryStub } = makeSut()
         const loadSpy = jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail')
         await sut.add(mockAddAccountParams())
-        expect(loadSpy).toHaveBeenCalledWith('any_email@mail.com')
+        expect(loadSpy).toHaveBeenCalledWith('any_email@email.com')
     })
 
     // Garante que retorne nulo se LoadAccountByEmailRepository não retornar nulo
