@@ -1,22 +1,20 @@
 import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
 import { LogControllerDecorator } from "./log-controller-decorator"
-import { internalServerError, success } from "@presentation/helpers"
-import { ILogErrorRepository } from "@data/protocols"
-import { IAccountModel } from "@domain/models"
+import { success } from "@presentation/helpers"
+import { mockInternalServerError } from "@presentation/test"
+import { mockAccountModel } from "@domain/test"
+import { mockLogErrorRepository } from "@data/test"
 
-class ControllerStub implements IController {
-    async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
-        return new Promise(resolve => resolve(success(makeFakeAccount())))
+const mockController = (): IController => {
+    class ControllerStub implements IController {
+        async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
+            return new Promise(resolve => resolve(success(mockAccountModel())))
+        }
     }
+    return new ControllerStub()
 }
 
-class LogErrorRepositoryStub implements ILogErrorRepository {
-    async logError(stack: string): Promise<void> {
-        return new Promise(resolve => resolve())
-    }
-}
-
-const makeFakeRequest = (): IHttpRequest => ({
+const mockHttpRequest = (): IHttpRequest => ({
     body: {
         name: 'any_name',
         email: 'any_email@email.com',
@@ -25,22 +23,9 @@ const makeFakeRequest = (): IHttpRequest => ({
     }
 })
 
-const makeFakeAccount = (): IAccountModel => ({
-  id: 'valid_id',
-  name: 'valid_name',
-  email: 'valid_email@email.com',
-  password: 'valid_password'
-})
-
-const makeFakeServerError = (): IHttpResponse => {
-    let fakeError = new Error()
-    fakeError.stack = 'any_stack'
-    return internalServerError(fakeError)
-}
-
 const makeSut = () => {
-    const controllerStub = new ControllerStub()
-    const logErrorRepositoryStub = new LogErrorRepositoryStub();
+    const controllerStub = mockController()
+    const logErrorRepositoryStub = mockLogErrorRepository();
     const sut = new LogControllerDecorator(controllerStub, logErrorRepositoryStub)
     return {
         sut,
@@ -54,15 +39,15 @@ describe('Log Controller Decorator', () => {
     test('Should call controller handle', async () => {
         const { sut, controllerStub } = makeSut()
         const handleSpy = jest.spyOn(controllerStub, 'handle')
-        sut.handle(makeFakeRequest())
-        expect(handleSpy).toHaveBeenCalledWith(makeFakeRequest())
+        sut.handle(mockHttpRequest())
+        expect(handleSpy).toHaveBeenCalledWith(mockHttpRequest())
     })
 
     // Garante que o método handle do controller retorne o valor correto
     test('Should return the same result of the controller', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle(makeFakeRequest())
-        expect(httpResponse).toEqual(success(makeFakeAccount()))
+        const httpResponse = await sut.handle(mockHttpRequest())
+        expect(httpResponse).toEqual(success(mockAccountModel()))
     })
 
     // Garante que o LogErrorRepository seja chamado com o erro correto se o controlador retornar um erro do servidor
@@ -73,9 +58,9 @@ describe('Log Controller Decorator', () => {
         const logSpy = jest.spyOn(logErrorRepositoryStub, 'logError')
 
         // Mockando o retorno do método handle do controllerStub para retornar um erro
-        jest.spyOn(controllerStub, 'handle').mockReturnValueOnce(new Promise(resolve => resolve(makeFakeServerError())))
+        jest.spyOn(controllerStub, 'handle').mockReturnValueOnce(new Promise(resolve => resolve(mockInternalServerError())))
 
-        await sut.handle(makeFakeRequest())
+        await sut.handle(mockHttpRequest())
         expect(logSpy).toHaveBeenCalledWith('any_stack')
     })
 })

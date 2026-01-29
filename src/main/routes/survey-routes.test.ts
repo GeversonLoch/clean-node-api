@@ -1,8 +1,13 @@
 import request from 'supertest'
 import app from '@main/config/app'
 import { mongoDBAdapter } from '@main/config/db-connection'
+import {
+    mockAddAccountParams,
+    mockAddAccountExtraParams,
+    mockAddSurveyParams,
+    mockAddSurveyParamsCollection,
+} from '@domain/test'
 import { Collection } from 'mongodb'
-import { IAddSurveyModel } from '@domain/models'
 import { sign } from 'jsonwebtoken'
 
 let surveyCollection: Collection
@@ -26,59 +31,8 @@ afterAll(async () => {
     await mongoDBAdapter.disconnect()
 })
 
-const makeFakeAccount = (extra?: object): any => {
-    const account = {
-        name: 'Nome',
-        email: 'nome.sobrenome@email.com',
-        password: '123abc',
-    }
-    return extra ? { ...account, ...extra } : account
-}
-
-const makeFakeSurveyPayload = (): IAddSurveyModel => ({
-    question: 'any_question',
-    answers: [
-        {
-            answer: 'any_answer',
-            image: 'any_image',
-        },
-        {
-            answer: 'any_answer',
-        },
-    ],
-})
-
-const makeFakeSurveyCollection = (): IAddSurveyModel[] => [
-    {
-        question: 'any_question',
-        answers: [
-            {
-                answer: 'any_answer',
-                image: 'any_image',
-            },
-            {
-                answer: 'any_answer',
-            },
-        ],
-        date: new Date(),
-    },
-    {
-        question: 'other_question',
-        answers: [
-            {
-                answer: 'other_answer',
-                image: 'other_image',
-            },
-            {
-                answer: 'other_answer',
-            },
-        ],
-        date: new Date(),
-    },
-]
-
 const makeAccessToken = async (): Promise<string> => {
-    const { insertedId } = await accountCollection.insertOne(makeFakeAccount())
+    const { insertedId } = await accountCollection.insertOne(mockAddAccountParams())
     const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
     await accountCollection.updateOne({ _id: insertedId }, {
         $set: {
@@ -93,13 +47,13 @@ describe('POST /add-survey', () => {
     test('Should return 403 on add survey without accessToken', async () => {
         await request(app)
             .post('/api/add-survey')
-            .send(makeFakeSurveyPayload())
+            .send(mockAddSurveyParams())
             .expect(403)
     })
 
     // Garante que a rota POST '/add-survey' retorne status 204 caso seja passado um accessToken de usuário admin valido
     test('Should return 204 on add survey with valid accessToken', async () => {
-        const { insertedId } = await accountCollection.insertOne(makeFakeAccount({ role: 'admin' }))
+        const { insertedId } = await accountCollection.insertOne(mockAddAccountExtraParams({ role: 'admin' }))
         const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
         await accountCollection.updateOne({ _id: insertedId }, {
             $set: {
@@ -109,13 +63,13 @@ describe('POST /add-survey', () => {
         await request(app)
             .post('/api/add-survey')
             .set('x-access-token', accessToken)
-            .send(makeFakeSurveyPayload())
+            .send(mockAddSurveyParams())
             .expect(204)
     })
 
     // Garante que a rota POST '/add-survey' retorne status 403 caso seja passado um accessToken admin invalido
     test('Should return 403 on add survey with invalid accessToken', async () => {
-        const { insertedId } = await accountCollection.insertOne(makeFakeAccount({ role: 'admin' }))
+        const { insertedId } = await accountCollection.insertOne(mockAddAccountExtraParams({ role: 'admin' }))
         const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
         await accountCollection.updateOne({ _id: insertedId }, {
             $set: {
@@ -125,7 +79,7 @@ describe('POST /add-survey', () => {
         await request(app)
             .post('/api/add-survey')
             .set('x-access-token', 'invalid_token')
-            .send(makeFakeSurveyPayload())
+            .send(mockAddSurveyParams())
             .expect(403)
     })
 })
@@ -149,7 +103,7 @@ describe('GET /surveys', () => {
 
     // Garante que a rota GET '/surveys' retorne status 200 caso seja passado um accessToken valido
     test('Should return 200 on add survey with valid accessToken', async () => {
-        await surveyCollection.insertMany(makeFakeSurveyCollection())
+        await surveyCollection.insertMany(mockAddSurveyParamsCollection())
         const accessToken = await makeAccessToken()
         await request(app)
             .get('/api/surveys')

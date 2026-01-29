@@ -1,6 +1,6 @@
 import { ISaveSurveyResultRepository } from '@data/protocols'
 import { ISurveyResultModel } from '@domain/models'
-import { ISaveSurveyResultModel } from '@domain/usecases'
+import { ISaveSurveyResultParams } from '@domain/usecases'
 import { IMongoDBAdapter } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
@@ -9,7 +9,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
         private readonly mongoDBAdapter: IMongoDBAdapter,
     ) {}
 
-    async save(data: ISaveSurveyResultModel): Promise<ISurveyResultModel> {
+    async save(data: ISaveSurveyResultParams): Promise<ISurveyResultModel> {
         const surveyResultCollection = await this.mongoDBAdapter.getCollection('surveyResults')
         const res = await surveyResultCollection.findOneAndUpdate(
             {

@@ -2,7 +2,7 @@ import request from 'supertest'
 import app from '@main/config/app'
 import { mongoDBAdapter } from '@main/config/db-connection'
 import { Collection } from 'mongodb'
-import { IAddSurveyModel } from '@domain/models'
+import { mockAddAccountParams, mockAddSurveyParamsCollection } from '@domain/test'
 import { sign } from 'jsonwebtoken'
 
 let surveyCollection: Collection
@@ -26,51 +26,13 @@ afterAll(async () => {
     await mongoDBAdapter.disconnect()
 })
 
-const makeFakeAccount = (extra?: object): any => {
-    const account = {
-        name: 'Nome',
-        email: 'nome.sobrenome@email.com',
-        password: '123abc',
-    }
-    return extra ? { ...account, ...extra } : account
-}
-
 const makeFakeSurveyPayload = () => ({
     question: 'any_question',
     answer: 'any_answer',
 })
 
-const makeFakeSurveyCollection = (): IAddSurveyModel[] => [
-    {
-        question: 'any_question',
-        answers: [
-            {
-                answer: 'any_answer',
-                image: 'any_image',
-            },
-            {
-                answer: 'any_answer',
-            },
-        ],
-        date: new Date(),
-    },
-    {
-        question: 'other_question',
-        answers: [
-            {
-                answer: 'other_answer',
-                image: 'other_image',
-            },
-            {
-                answer: 'other_answer',
-            },
-        ],
-        date: new Date(),
-    },
-]
-
 const makeAccessToken = async (): Promise<string> => {
-    const { insertedId } = await accountCollection.insertOne(makeFakeAccount())
+    const { insertedId } = await accountCollection.insertOne(mockAddAccountParams())
     const accessToken = sign({ id: insertedId }, jwtSecretIntegrationTest)
     await accountCollection.updateOne({ _id: insertedId }, {
         $set: {
@@ -91,7 +53,7 @@ describe('PUT /surveys/:surveyId/results', () => {
 
     // Garante que a rota PUT '/surveys/:surveyId/results' retorne status 200 caso seja passado um accessToken valido
     test('Should return 200 on save survey result with valid accessToken', async () => {
-        const res = await surveyCollection.insertMany(makeFakeSurveyCollection())
+        const res = await surveyCollection.insertMany(mockAddSurveyParamsCollection())
         const id = res.insertedIds[0]
         const accessToken = await makeAccessToken()
         await request(app)

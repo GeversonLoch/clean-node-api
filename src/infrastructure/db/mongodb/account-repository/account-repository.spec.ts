@@ -7,6 +7,7 @@
 
 import { AccountMongoRepository } from '@infrastructure/db'
 import { mongoDBAdapter } from '@main/config/db-connection'
+import { mockAddAccountExtraParams, mockAddAccountParams } from '@domain/test'
 import { Collection } from 'mongodb'
 
 let accountCollection: Collection
@@ -30,11 +31,7 @@ describe('Account Mongo Repository', () => {
         com um ID gerado e os dados (nome, email, senha) corretamente persistidos. */
         test('Should return an account on add success', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            const account = await sut.add({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
-            })
+            const account = await sut.add(mockAddAccountParams())
             expect(account).toBeTruthy()
             expect(account.id).toBeTruthy()
             expect(account.name).toBe('any_name')
@@ -47,11 +44,7 @@ describe('Account Mongo Repository', () => {
         // Garante que retorne uma conta se o método loadByEmail for bem sucedido
         test('Should return an account on loadByEmail success', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            await accountCollection.insertOne({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
-            })
+            await accountCollection.insertOne(mockAddAccountParams())
             const account = await sut.loadByEmail('any_email@email.com')
             expect(account).toBeTruthy()
             expect(account.id).toBeTruthy()
@@ -73,11 +66,7 @@ describe('Account Mongo Repository', () => {
         test('Should update the account accessToken on updateAccessToken success', async () => {
             const account = await (
                 await mongoDBAdapter.getCollection('accounts')
-            ).insertOne({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
-            })
+            ).insertOne(mockAddAccountParams())
             const insertedAccount = await (
                 await mongoDBAdapter.getCollection('accounts')
             ).findOne({ _id: account.insertedId })
@@ -96,12 +85,7 @@ describe('Account Mongo Repository', () => {
         // Garante que retorne uma conta se o método loadByToken for bem sucedido sem role informado
         test('Should return an account on loadByToken without role', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            await accountCollection.insertOne({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
-                accessToken: 'any_token',
-            })
+            await accountCollection.insertOne(mockAddAccountExtraParams({ accessToken: 'any_token' }))
             const account = await sut.loadByToken('any_token')
             expect(account).toBeTruthy()
             expect(account.id).toBeTruthy()
@@ -113,13 +97,10 @@ describe('Account Mongo Repository', () => {
         // Garante que retorne uma conta se o método loadByToken for bem sucedido com role admin
         test('Should return an account on loadByToken with admin role', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            await accountCollection.insertOne({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
+            await accountCollection.insertOne(mockAddAccountExtraParams({
                 accessToken: 'any_token',
                 role: 'admin',
-            })
+            }))
             const account = await sut.loadByToken('any_token', 'admin')
             expect(account).toBeTruthy()
             expect(account.id).toBeTruthy()
@@ -131,12 +112,9 @@ describe('Account Mongo Repository', () => {
         // Garante que o loadByToken retorne null se o token é válido, mas o usuário não possui a role exigida
         test('Should return null on loadByToken with invalid role', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            await accountCollection.insertOne({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
+            await accountCollection.insertOne(mockAddAccountExtraParams({
                 accessToken: 'any_token',
-            })
+            }))
             const account = await sut.loadByToken('any_token', 'admin')
             expect(account).toBeFalsy()
         })
@@ -144,13 +122,10 @@ describe('Account Mongo Repository', () => {
         // Garante que retorne uma conta se o método loadByToken for chamado com token válido
         test('Should return an account on loadByToken with if user is admin', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            await accountCollection.insertOne({
-                name: 'any_name',
-                email: 'any_email@email.com',
-                password: 'any_password',
+            await accountCollection.insertOne(mockAddAccountExtraParams({
                 accessToken: 'any_token',
                 role: 'admin',
-            })
+            }))
             const account = await sut.loadByToken('any_token')
             expect(account).toBeTruthy()
             expect(account.id).toBeTruthy()
