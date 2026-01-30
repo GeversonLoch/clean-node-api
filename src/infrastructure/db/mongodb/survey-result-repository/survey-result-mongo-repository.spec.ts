@@ -55,21 +55,20 @@ describe('Survey Result Mongo Repository', () => {
                 date: new Date(),
             })
             expect(surveyResult).toBeTruthy()
-            expect(surveyResult.id).toBeTruthy()
             expect(new ObjectId(surveyResult.surveyId)).toEqual(new ObjectId(survey.id))
-            expect(new ObjectId(surveyResult.accountId)).toEqual(new ObjectId(account.id))
-            expect(surveyResult.question).toBe(survey.question)
-            expect(surveyResult.answer).toBe(survey.answers[0].answer)
-            expect(surveyResult.date).toEqual(survey.date)
+            expect(surveyResult.answers[0].count).toBe(1)
+            expect(surveyResult.answers[0].percent).toBe(100)
+            expect(surveyResult.answers[1].count).toBe(0)
+            expect(surveyResult.answers[1].percent).toBe(0)
         })
 
         // Garante que o SurveyResultMongoRepository apenas atualize o survey result existente ao executar o método 'save' com sucesso
         test('Should update survey result if its not new', async () => {
             const survey = await mockSurveyCollection()
             const account = await mockAccountCollection()
-            const preInsert = await surveyResultCollection.insertOne({
-                surveyId: survey.id,
-                accountId: account.id,
+            await surveyResultCollection.insertOne({
+                surveyId: new ObjectId(survey.id),
+                accountId: new ObjectId(account.id),
                 question: survey.question,
                 answer: survey.answers[0].answer,
                 date: new Date(),
@@ -83,8 +82,12 @@ describe('Survey Result Mongo Repository', () => {
                 date: new Date(),
             })
             expect(surveyResult).toBeTruthy()
-            expect(new ObjectId(surveyResult.id)).toEqual(preInsert.insertedId)
-            expect(surveyResult.answer).toBe(survey.answers[1].answer)
+            expect(new ObjectId(surveyResult.surveyId)).toEqual(new ObjectId(survey.id))
+            expect(surveyResult.answers[0].answer).toBe(survey.answers[1].answer)
+            expect(surveyResult.answers[0].count).toBe(1)
+            expect(surveyResult.answers[0].percent).toBe(100)
+            expect(surveyResult.answers[1].count).toBe(0)
+            expect(surveyResult.answers[1].percent).toBe(0)
         })
     })
 })

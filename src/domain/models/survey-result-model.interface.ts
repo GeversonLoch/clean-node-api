@@ -1,8 +1,8 @@
+import { ISurveyResultAnswersModel } from '@domain/models'
+
 export interface ISurveyResultModel {
-    id: string
     surveyId: string
-    accountId: string
     question: string
-    answer: string
+    answers: Array<ISurveyResultAnswersModel>
     date: Date
 }

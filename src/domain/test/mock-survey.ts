@@ -27,8 +27,8 @@ export const mockAddSurveyParams = (): IAddSurveyParams => ({
             image: 'any_image',
         },
         {
-            answer: 'any_answer',
-            image: 'any_image',
+            answer: 'other_answer',
+            image: 'other_image',
         },
     ],
     date: new Date(),
