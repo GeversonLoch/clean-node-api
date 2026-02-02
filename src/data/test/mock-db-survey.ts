@@ -1,6 +1,7 @@
 import {
     IAddSurveyRepository,
     ILoadSurveyByIdRepository,
+    ILoadSurveyResultRepository,
     ILoadSurveysRepository,
     ISaveSurveyResultRepository,
 } from '@data/protocols'
@@ -41,9 +42,18 @@ export const mockLoadSurveysRepository = (): ILoadSurveysRepository => {
 
 export const makeSaveSurveyResultRepository = (): ISaveSurveyResultRepository => {
     class SaveSurveyResultRepositoryStub implements ISaveSurveyResultRepository {
-        async save(surveyData: ISaveSurveyResultParams): Promise<ISurveyResultModel> {
-            return Promise.resolve(mockSurveyResultModel())
+        async save(surveyData: ISaveSurveyResultParams): Promise<void> {
+            return Promise.resolve()
         }
     }
     return new SaveSurveyResultRepositoryStub()
+}
+
+export const makeLoadSurveyResultRepository = (): ILoadSurveyResultRepository => {
+    class LoadSurveyResultRepositoryStub implements ILoadSurveyResultRepository {
+        async loadBySurveyId(surveyId: string): Promise<ISurveyResultModel> {
+            return Promise.resolve(mockSurveyResultModel())
+        }
+    }
+    return new LoadSurveyResultRepositoryStub()
 }

@@ -43,7 +43,7 @@ const makeAccessToken = async (): Promise<string> => {
 }
 
 describe('PUT /surveys/:surveyId/results', () => {
-    // Garante que a rota PUT '/surveys/:surveyId/results' retorne status 403 caso não seja passado um accessToken de usuário admin
+    // Garante que a rota PUT '/surveys/:surveyId/results' retorne status 403 caso não seja passado um accessToken valido
     test('Should return 403 on save survey result without accessToken', async () => {
         await request(app)
             .put('/api/surveys/any_id/results')
@@ -60,6 +60,26 @@ describe('PUT /surveys/:surveyId/results', () => {
             .put(`/api/surveys/${id.toString()}/results`)
             .set('x-access-token', accessToken)
             .send(makeFakeSurveyPayload())
+            .expect(200)
+    })
+})
+
+describe('GET /surveys/:surveyId/results', () => {
+    // Garante que a rota GET '/surveys/:surveyId/results' retorne status 403 caso não seja passado um accessToken valido
+    test('Should return 403 on load survey result without accessToken', async () => {
+        await request(app)
+            .get('/api/surveys/any_id/results')
+            .expect(403)
+    })
+
+    // Garante que a rota GET '/surveys/:surveyId/results' retorne status 200 caso seja passado um accessToken valido
+    test('Should return 200 on load survey result with valid accessToken', async () => {
+        const res = await surveyCollection.insertMany(mockAddSurveyParamsCollection())
+        const id = res.insertedIds[0]
+        const accessToken = await makeAccessToken()
+        await request(app)
+            .get(`/api/surveys/${id.toString()}/results`)
+            .set('x-access-token', accessToken)
             .expect(200)
     })
 })

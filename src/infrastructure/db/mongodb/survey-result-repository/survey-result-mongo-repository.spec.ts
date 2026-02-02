@@ -47,19 +47,18 @@ describe('Survey Result Mongo Repository', () => {
             const survey = await mockSurveyCollection()
             const account = await mockAccountCollection()
             const sut = new SurveyResultMongoRepository(mongoDBAdapter)
-            const surveyResult = await sut.save({
+            await sut.save({
                 surveyId: survey.id,
                 accountId: account.id,
                 question: survey.question,
                 answer: survey.answers[0].answer,
                 date: new Date(),
             })
+            const surveyResult = await surveyResultCollection.findOne({
+                surveyId: survey.id,
+                accountId: account.id,
+            })
             expect(surveyResult).toBeTruthy()
-            expect(new ObjectId(surveyResult.surveyId)).toEqual(new ObjectId(survey.id))
-            expect(surveyResult.answers[0].count).toBe(1)
-            expect(surveyResult.answers[0].percent).toBe(100)
-            expect(surveyResult.answers[1].count).toBe(0)
-            expect(surveyResult.answers[1].percent).toBe(0)
         })
 
         // Garante que o SurveyResultMongoRepository apenas atualize o survey result existente ao executar o método 'save' com sucesso
@@ -74,20 +73,69 @@ describe('Survey Result Mongo Repository', () => {
                 date: new Date(),
             })
             const sut = new SurveyResultMongoRepository(mongoDBAdapter)
-            const surveyResult = await sut.save({
+            await sut.save({
                 surveyId: survey.id,
                 accountId: account.id,
                 question: survey.question,
                 answer: survey.answers[1].answer,
                 date: new Date(),
             })
+            const surveyResult = await surveyResultCollection.find({
+                surveyId: survey.id,
+                accountId: account.id,
+            }).toArray()
+            expect(surveyResult).toBeTruthy()
+            expect(surveyResult.length).toBe(1)
+        })
+    })
+
+    describe('loadBySurveyId()', () => {
+        // Garante que o SurveyResultMongoRepository carrege o survey result
+        test('Should load survey result', async () => {
+            const survey = await mockSurveyCollection()
+            const account = await mockAccountCollection()
+            const date = new Date()
+            await surveyResultCollection.insertMany([
+                {
+                    surveyId: new ObjectId(survey.id),
+                    accountId: new ObjectId(account.id),
+                    question: survey.question,
+                    answer: survey.answers[0].answer,
+                    date
+                },
+                {
+                    surveyId: new ObjectId(survey.id),
+                    accountId: new ObjectId(account.id),
+                    question: survey.question,
+                    answer: survey.answers[1].answer,
+                    date
+                },
+                {
+                    surveyId: new ObjectId(survey.id),
+                    accountId: new ObjectId(account.id),
+                    question: survey.question,
+                    answer: survey.answers[1].answer,
+                    date
+                },
+            ])
+            const sut = new SurveyResultMongoRepository(mongoDBAdapter)
+            const surveyResult = await sut.loadBySurveyId(survey.id)
             expect(surveyResult).toBeTruthy()
             expect(new ObjectId(surveyResult.surveyId)).toEqual(new ObjectId(survey.id))
-            expect(surveyResult.answers[0].answer).toBe(survey.answers[1].answer)
-            expect(surveyResult.answers[0].count).toBe(1)
-            expect(surveyResult.answers[0].percent).toBe(100)
-            expect(surveyResult.answers[1].count).toBe(0)
-            expect(surveyResult.answers[1].percent).toBe(0)
+            expect(surveyResult.answers[0].count).toBe(2)
+            expect(surveyResult.answers[0].percent).toBe(67)
+            expect(surveyResult.answers[1].count).toBe(1)
+            expect(surveyResult.answers[1].percent).toBe(33)
+            expect(surveyResult.answers[2].count).toBe(0)
+            expect(surveyResult.answers[2].percent).toBe(0)
         })
+    })
+
+    // Garante que retorne nulo caso não existirem respostas
+    test('Should return null if there is no survey result', async () => {
+        const survey = await mockSurveyCollection()
+        const sut = new SurveyResultMongoRepository(mongoDBAdapter)
+        const surveyResult = await sut.loadBySurveyId(survey.id)
+        expect(surveyResult).toBeNull()
     })
 })

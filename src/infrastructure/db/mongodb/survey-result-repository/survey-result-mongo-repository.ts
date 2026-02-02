@@ -1,16 +1,16 @@
-import { ISaveSurveyResultRepository } from '@data/protocols'
+import { ILoadSurveyResultRepository, ISaveSurveyResultRepository } from '@data/protocols'
 import { ISurveyResultModel } from '@domain/models'
 import { ISaveSurveyResultParams } from '@domain/usecases'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 import round from 'mongo-round'
 
-export class SurveyResultMongoRepository implements ISaveSurveyResultRepository {
+export class SurveyResultMongoRepository implements ISaveSurveyResultRepository, ILoadSurveyResultRepository {
     constructor(
         private readonly mongoDBAdapter: IMongoDBAdapter,
     ) {}
 
-    async save(data: ISaveSurveyResultParams): Promise<ISurveyResultModel> {
+    async save(data: ISaveSurveyResultParams): Promise<void> {
         const surveyResultCollection = await this.mongoDBAdapter.getCollection('surveyResults')
         await surveyResultCollection.findOneAndUpdate(
             {
@@ -30,11 +30,9 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                 upsert: true,
             },
         )
-        const surveyResult = await this.loadBySurveyId(data.surveyId, data.accountId)
-        return surveyResult
     }
 
-    async loadBySurveyId(surveyId: string, accountId: string): Promise<ISurveyResultModel> {
+    async loadBySurveyId(surveyId: string): Promise<ISurveyResultModel> { // accountId: string
         const surveyResultCollection = await this.mongoDBAdapter.getCollection('surveyResults')
         const query = new QueryBuilder()
             .match({
@@ -73,7 +71,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                 count: {
                     $sum: 1,
                 },
-                currentAccountAnswer: {
+                /*currentAccountAnswer: {
                     $push: {
                         $cond: [
                             { $eq: ['$data.accountId', new ObjectId(accountId)] },
@@ -81,7 +79,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                             '$invalid',
                         ],
                     },
-                },
+                },*/
             })
             .project({
                 _id: 0,
@@ -121,7 +119,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                                             else: 0,
                                         },
                                     },
-                                    isCurrentAccountAnswerCount: {
+                                    /*isCurrentAccountAnswerCount: {
                                         $cond: [
                                             {
                                                 $eq: [
@@ -132,7 +130,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                                                 ],
                                             }, 1, 0,
                                         ],
-                                    },
+                                    },*/
                                 },
                             ],
                         },
@@ -181,9 +179,9 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                 percent: {
                     $sum: '$answers.percent',
                 },
-                isCurrentAccountAnswerCount: {
+                /*isCurrentAccountAnswerCount: {
                     $sum: '$answers.isCurrentAccountAnswerCount',
-                },
+                },*/
             })
             .project({
                 _id: 0,
@@ -195,9 +193,9 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository 
                     image: '$_id.image',
                     count: round('$count'),
                     percent: round('$percent'),
-                    isCurrentAccountAnswer: {
+                    /*isCurrentAccountAnswer: {
                         $eq: ['$isCurrentAccountAnswerCount', 1],
-                    },
+                    },*/
                 },
             })
             .sort({
