@@ -3,6 +3,7 @@ import { MissingParamError } from "@presentation/errors"
 import { badRequest, success, unauthorized } from "@presentation/helpers"
 import { mockAuthentication, mockInternalServerError, mockValidation } from "@presentation/test"
 import { IHttpRequest } from "@presentation/protocols"
+import { mockAuthenticationModel } from "@domain/test"
 
 const mockHttpRequest = (): IHttpRequest => ({
     body: {
@@ -60,9 +61,7 @@ describe('Login Controller', () => {
     test('Should return 200 if valid credentials are provided', async () => {
         const { sut } = makeSut()
         const httpResponse = await sut.handle(mockHttpRequest())
-        expect(httpResponse).toEqual(success({
-            token: 'any_token',
-        }))
+        expect(httpResponse).toEqual(success(mockAuthenticationModel()))
     })
 
     // Deve chamar Validation com o valore correto.

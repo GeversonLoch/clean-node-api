@@ -25,7 +25,7 @@ export class SignUpController implements IController {
         password
       })
 
-      const accessToken = await this.authentication.auth({
+      const authResponse = await this.authentication.auth({
         email,
         password,
       })
@@ -33,9 +33,7 @@ export class SignUpController implements IController {
         return forbidden(new InvalidCredentialsError())
       }
 
-      return success({
-        token: accessToken,
-      })
+      return success(authResponse)
     } catch (error) {
       return internalServerError(error)
     }
