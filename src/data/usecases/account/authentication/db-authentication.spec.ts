@@ -5,7 +5,7 @@ import {
     mockHashComparer,
     mockUpdateAccessTokenRepository,
 } from '@data/test'
-import { mockAuthenticationParams } from '@domain/test'
+import { mockAuthenticationModel, mockAuthenticationParams } from '@domain/test'
 
 const makeSut = () => {
     const loadAccountByEmailRepositoryStub = mockLoadAccountByEmailRepository()
@@ -50,8 +50,8 @@ describe('DbAuthentication Usecase', () => {
     test('Should return null if LoadAccountByEmailRepository returns null', async () => {
         const { sut, loadAccountByEmailRepositoryStub } = makeSut()
         jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail').mockReturnValueOnce(null)
-        const accessToken = await sut.auth(mockAuthenticationParams())
-        expect(accessToken).toBeNull()
+        const authResponse = await sut.auth(mockAuthenticationParams())
+        expect(authResponse).toBeNull()
     })
 
     // Garante que chame HashComparer com a senha correta
@@ -76,8 +76,8 @@ describe('DbAuthentication Usecase', () => {
     test('Should return null if HashComparer returns false', async () => {
         const { sut, hashComparerStub } = makeSut()
         jest.spyOn(hashComparerStub, 'compare').mockReturnValueOnce(Promise.resolve(false))
-        const accessToken = await sut.auth(mockAuthenticationParams())
-        expect(accessToken).toBeNull()
+        const authResponse = await sut.auth(mockAuthenticationParams())
+        expect(authResponse).toBeNull()
     })
 
     // Garante que Encrypter seja chamado com id correto
@@ -99,10 +99,10 @@ describe('DbAuthentication Usecase', () => {
     })
 
     // Garante que DbAuthentication retorne um token em caso de sucesso
-    test('Should return a token on success', async () => {
+    test('Should return a IAuthenticationModel on success', async () => {
         const { sut } = makeSut()
-        const accessToken = await sut.auth(mockAuthenticationParams())
-        expect(accessToken).toBe('any_token')
+        const authResponse = await sut.auth(mockAuthenticationParams())
+        expect(authResponse).toEqual(mockAuthenticationModel())
     })
 
     // Garante que chame UpdateAccessTokenRepository com valores corretos

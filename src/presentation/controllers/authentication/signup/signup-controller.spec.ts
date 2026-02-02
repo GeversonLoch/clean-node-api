@@ -1,6 +1,6 @@
 import { SignUpController } from '@presentation/controllers'
 import { IAddAccount, IAuthentication } from '@domain/usecases'
-import { mockAddAccountParams } from '@domain/test'
+import { mockAddAccountParams, mockAuthenticationModel } from '@domain/test'
 import { IValidation } from '@presentation/protocols'
 import { IHttpRequest } from '@presentation/protocols'
 import { success, badRequest, forbidden } from '@presentation/helpers'
@@ -73,9 +73,7 @@ describe('SignUp Controller', () => {
   test('Should return 200 if valid data is provided', async () => {
     const { sut } = makeSut()
     const httpResponse = await sut.handle(mockHttpRequest())
-    expect(httpResponse).toEqual(success({
-      token: 'any_token',
-    }))
+    expect(httpResponse).toEqual(success(mockAuthenticationModel()))
   })
 
   // Deve chamar Validation com o valore correto.
