@@ -58,10 +58,20 @@ describe('DbLoadAccountByToken Usecase', () => {
         expect(account).toEqual(mockAccountModel())
     })
 
-    // Garante que DbLoadAccountByToken lance uma exceção se o Decrypter lançar.
-    test('Should throw if Decrypter throws', async () => {
+    // Garante que DbLoadAccountByToken retorne nulo se o Decrypter lançar uma exceção.
+    test('Shoud DbLoadAccountByToken to return null if Decrypter throws', async () => {
         const { sut, decrypterStub } = makeSut()
         jest.spyOn(decrypterStub, 'decrypt').mockImplementationOnce(() => {
+            throw new Error()
+        })
+        const account = await sut.loadByToken(accessToken, role)
+        await expect(account).toBeNull()
+    })
+
+    // Garante que DbLoadAccountByToken lance uma exceção se o LoadAccountByTokenRepository lançar uma exceção.
+    test('Should throw if LoadAccountByTokenRepository throws', async () => {
+        const { sut, loadAccountByTokenRepositoryStub } = makeSut()
+        jest.spyOn(loadAccountByTokenRepositoryStub, 'loadByToken').mockImplementationOnce(() => {
             throw new Error()
         })
         const promise = sut.loadByToken(accessToken, role)

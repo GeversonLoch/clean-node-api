@@ -1,6 +1,7 @@
 import { IDecrypter, ILoadAccountByTokenRepository } from '@data/protocols'
 import { IAccountModel } from '@domain/models'
 import { ILoadAccountByToken } from '@domain/usecases'
+import { JwtPayload } from 'jsonwebtoken'
 
 export class DbLoadAccountByToken implements ILoadAccountByToken {
     constructor(
@@ -9,7 +10,12 @@ export class DbLoadAccountByToken implements ILoadAccountByToken {
     ) {}
 
     async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
-        const decodedToken = await this.decrypter.decrypt(accessToken)
+        let decodedToken: string | JwtPayload
+        try {
+            decodedToken = await this.decrypter.decrypt(accessToken)
+        } catch (error) {
+            return null
+        }
         if (decodedToken) {
             // TODO: O certo não seria verificação por ID? decodedToken.id com loadById?
             const account = await this.loadAccountByTokenRepository.loadByToken(accessToken, role)
