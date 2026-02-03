@@ -2,5 +2,6 @@ export interface ISurveyResultAnswersModel {
     answer: string
     image?: string
     count: number
-    percent: number
+    percent: number,
+    isCurrentAccountAnswer: boolean
 }

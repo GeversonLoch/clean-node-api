@@ -19,6 +19,7 @@ afterAll(() => {
 })
 
 const mockHttpRequest = (): IHttpRequest => ({
+    accountId: 'any_account_id',
     params: {
         surveyId: 'any_survey_id',
     },
@@ -69,7 +70,7 @@ describe('LoadSurveyResult Controller', () => {
         const loadSurveyResultSpy = jest.spyOn(loadSurveyResultStub, 'load')
         const fakeRequest = mockHttpRequest()
         await sut.handle(fakeRequest)
-        expect(loadSurveyResultSpy).toHaveBeenCalledWith(fakeRequest.params.surveyId)
+        expect(loadSurveyResultSpy).toHaveBeenCalledWith(fakeRequest.params.surveyId, fakeRequest.accountId)
     })
 
     // Garante que retorne erro 500 se o LoadSurveyResult lançar uma exceção

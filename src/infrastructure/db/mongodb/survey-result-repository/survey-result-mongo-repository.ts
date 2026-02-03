@@ -3,7 +3,6 @@ import { ISurveyResultModel } from '@domain/models'
 import { ISaveSurveyResultParams } from '@domain/usecases'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
-import round from 'mongo-round'
 
 export class SurveyResultMongoRepository implements ISaveSurveyResultRepository, ILoadSurveyResultRepository {
     constructor(
@@ -32,7 +31,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
         )
     }
 
-    async loadBySurveyId(surveyId: string): Promise<ISurveyResultModel> { // accountId: string
+    async loadBySurveyId(surveyId: string, accountId: string): Promise<ISurveyResultModel> {
         const surveyResultCollection = await this.mongoDBAdapter.getCollection('surveyResults')
         const query = new QueryBuilder()
             .match({
@@ -71,7 +70,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                 count: {
                     $sum: 1,
                 },
-                /*currentAccountAnswer: {
+                currentAccountAnswer: {
                     $push: {
                         $cond: [
                             { $eq: ['$data.accountId', new ObjectId(accountId)] },
@@ -79,7 +78,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                             '$invalid',
                         ],
                     },
-                },*/
+                },
             })
             .project({
                 _id: 0,
@@ -119,7 +118,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                                             else: 0,
                                         },
                                     },
-                                    /*isCurrentAccountAnswerCount: {
+                                    isCurrentAccountAnswerCount: {
                                         $cond: [
                                             {
                                                 $eq: [
@@ -130,7 +129,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                                                 ],
                                             }, 1, 0,
                                         ],
-                                    },*/
+                                    },
                                 },
                             ],
                         },
@@ -179,9 +178,9 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                 percent: {
                     $sum: '$answers.percent',
                 },
-                /*isCurrentAccountAnswerCount: {
+                isCurrentAccountAnswerCount: {
                     $sum: '$answers.isCurrentAccountAnswerCount',
-                },*/
+                },
             })
             .project({
                 _id: 0,
@@ -191,11 +190,15 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                 answer: {
                     answer: '$_id.answer',
                     image: '$_id.image',
-                    count: round('$count'),
-                    percent: round('$percent'),
-                    /*isCurrentAccountAnswer: {
+                    count: {
+                        $round: ['$count'],
+                    },
+                    percent: {
+                        $round: ['$percent'],
+                    },
+                    isCurrentAccountAnswer: {
                         $eq: ['$isCurrentAccountAnswerCount', 1],
-                    },*/
+                    },
                 },
             })
             .sort({

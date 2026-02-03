@@ -40,7 +40,7 @@ export const mockSaveSurveyResult = (): ISaveSurveyResult => {
 
 export const mockLoadSurveyResult = (): ILoadSurveyResult => {
     class LoadSurveyResultStub implements ILoadSurveyResult {
-        async load(surveyId: string): Promise<ISurveyResultModel> {
+        async load(surveyId: string, accountId: string): Promise<ISurveyResultModel> {
             return Promise.resolve(mockSurveyResultModel())
         }
     }

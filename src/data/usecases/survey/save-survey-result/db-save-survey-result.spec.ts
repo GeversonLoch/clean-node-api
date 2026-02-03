@@ -46,7 +46,7 @@ describe('DbSaveSurveyResult Usecase', () => {
         const loadBySurveyIdSpy = jest.spyOn(loadSurveyResultRepositoryStub, 'loadBySurveyId')
         const surveyResultPayload = mockSaveSurveyResultParams()
         await sut.save(surveyResultPayload)
-        expect(loadBySurveyIdSpy).toHaveBeenCalledWith(surveyResultPayload.surveyId)
+        expect(loadBySurveyIdSpy).toHaveBeenCalledWith(surveyResultPayload.surveyId, surveyResultPayload.accountId)
     })
 
     // Garante que DbSaveSurveyResult retorne em caso de sucesso
