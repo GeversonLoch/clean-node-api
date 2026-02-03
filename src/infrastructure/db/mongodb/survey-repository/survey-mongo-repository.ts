@@ -1,7 +1,7 @@
 import { IAddSurveyRepository, ILoadSurveyByIdRepository, ILoadSurveysRepository } from '@data/protocols'
 import { ISurveyModel } from '@domain/models'
 import { IAddSurveyParams } from '@domain/usecases'
-import { IMongoDBAdapter } from '@infrastructure/db'
+import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
 export class SurveyMongoRepository implements IAddSurveyRepository, ILoadSurveysRepository, ILoadSurveyByIdRepository {
@@ -14,10 +14,37 @@ export class SurveyMongoRepository implements IAddSurveyRepository, ILoadSurveys
         await surveyCollection.insertOne(surveyData)
     }
 
-    async loadAll(): Promise<ISurveyModel[]> {
+    async loadAll(accountId: string): Promise<ISurveyModel[]> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
-        const surveysDocuments = await surveyCollection.find().toArray()
-        return this.mongoDBAdapter.mapAll(surveysDocuments)
+        const query = new QueryBuilder()
+        .lookup({
+            from: 'surveyResults',
+            foreignField: 'surveyId',
+            localField: '_id',
+            as: 'result'
+        })
+        .project({
+            _id: 1,
+            question: 1,
+            answers: 1,
+            date: 1,
+            didAnswer: {
+                $gte: [{
+                    $size: {
+                        $filter: {
+                            input: '$result',
+                            as: 'item',
+                            cond: {
+                                $eq: ['$$item.accountId', new ObjectId(accountId)]
+                            }
+                        }
+                    }
+                }, 1]
+            }
+        })
+        .build()
+        const surveysDocuments = await surveyCollection.aggregate(query).toArray()
+        return this.mongoDBAdapter.mapCollection(surveysDocuments)
     }
 
     async loadById(id: string): Promise<ISurveyModel> {

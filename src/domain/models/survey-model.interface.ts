@@ -5,4 +5,5 @@ export interface ISurveyModel {
     question: string
     answers: Array<ISurveyAnswersModel>
     date?: Date
+    didAnswer?: boolean
 }

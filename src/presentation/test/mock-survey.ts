@@ -13,7 +13,7 @@ export const mockAddSurvey = (): IAddSurvey => {
 
 export const mockLoadSurveys = (): ILoadSurveys => {
     class LoadSurveysStub implements ILoadSurveys {
-        async load(): Promise<ISurveyModel[]> {
+        async load(accountId: string): Promise<ISurveyModel[]> {
             return Promise.resolve(mockSurveyModelCollection())
         }
     }

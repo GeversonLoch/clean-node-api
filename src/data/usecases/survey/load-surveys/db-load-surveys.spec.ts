@@ -11,6 +11,8 @@ afterAll(() => {
     MockDate.reset()
 })
 
+const accountId = 'any_account_id'
+
 const makeSut = () => {
     const loadSurveysRepositoryStub = mockLoadSurveysRepository()
     const sut = new DbLoadSurveys(loadSurveysRepositoryStub)
@@ -25,14 +27,14 @@ describe('DbLoadSurveys Usecase', () => {
     test('Should call LoadSurveysRepository', async () => {
         const { sut, loadSurveysRepositoryStub } = makeSut()
         const loadAllSpy = jest.spyOn(loadSurveysRepositoryStub, 'loadAll')
-        await sut.load()
-        expect(loadAllSpy).toHaveBeenCalled()
+        await sut.load(accountId)
+        expect(loadAllSpy).toHaveBeenCalledWith(accountId)
     })
 
     // Garante que DbLoadSurveys retorne uma lista de pesquisas em caso de sucesso
     test('Should return a list of Surveys on sucess', async () => {
         const { sut } = makeSut()
-        const surveys = await sut.load()
+        const surveys = await sut.load(accountId)
         expect(surveys).toEqual(mockSurveyModelCollection())
     })
 
@@ -40,7 +42,7 @@ describe('DbLoadSurveys Usecase', () => {
     test('Should throw if LoadSurveysRepository throws', async () => {
         const { sut, loadSurveysRepositoryStub } = makeSut()
         jest.spyOn(loadSurveysRepositoryStub, 'loadAll').mockImplementationOnce(() => { throw new Error() })
-        const promise = sut.load()
+        const promise = sut.load(accountId)
         await expect(promise).rejects.toThrow()
     })
 })

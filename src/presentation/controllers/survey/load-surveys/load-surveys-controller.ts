@@ -1,4 +1,4 @@
-import { IController, IHttpResponse } from '@presentation/protocols'
+import { IController, IHttpRequest, IHttpResponse } from '@presentation/protocols'
 import { internalServerError, noContent, success } from '@presentation/helpers'
 import { ILoadSurveys } from '@domain/usecases'
 
@@ -7,13 +7,11 @@ export class LoadSurveysController implements IController {
         private readonly loadSurveys: ILoadSurveys,
     ) {}
 
-    async handle(): Promise<IHttpResponse> {
+    async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
         try {
-            const surveys = await this.loadSurveys.load()
-            if (surveys.length)
-                return success(surveys)
-            else
-                return noContent()
+            const { accountId } = httpRequest
+            const surveys = await this.loadSurveys.load(accountId)
+            return surveys.length ? success(surveys) : noContent()
         } catch (error) {
             return internalServerError(error)
         }

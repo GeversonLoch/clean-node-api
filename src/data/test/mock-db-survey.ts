@@ -33,7 +33,7 @@ export const mockLoadSurveyByIdRepository = (): ILoadSurveyByIdRepository => {
 
 export const mockLoadSurveysRepository = (): ILoadSurveysRepository => {
     class LoadSurveysRepositoryStub implements ILoadSurveysRepository {
-        async loadAll(): Promise<ISurveyModel[]> {
+        async loadAll(accountId: string): Promise<ISurveyModel[]> {
             return Promise.resolve(mockSurveyModelCollection())
         }
     }
