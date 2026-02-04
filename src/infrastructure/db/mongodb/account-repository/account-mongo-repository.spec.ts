@@ -27,16 +27,11 @@ afterAll(async () => {
 
 describe('Account Mongo Repository', () => {
     describe('add()', () => {
-        /* Garante que, ao adicionar uma conta, o método 'add' do repositório retorna um objeto válido,
-        com um ID gerado e os dados (nome, email, senha) corretamente persistidos. */
-        test('Should return an account on add success', async () => {
+        // Garante que, ao adicionar uma conta, o método 'add' do repositório retorne true
+        test('Should return true on add success', async () => {
             const sut = new AccountMongoRepository(mongoDBAdapter)
-            const account = await sut.add(mockAddAccountParams())
-            expect(account).toBeTruthy()
-            expect(account.id).toBeTruthy()
-            expect(account.name).toBe('any_name')
-            expect(account.email).toBe('any_email@email.com')
-            expect(account.password).toBe('any_password')
+            const isValidAccount = await sut.add(mockAddAccountParams())
+            expect(isValidAccount).toBe(true)
         })
     })
 

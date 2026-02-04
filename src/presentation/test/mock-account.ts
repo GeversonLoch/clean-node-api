@@ -1,11 +1,11 @@
-import { IAddAccount, IAddAccountParams, ILoadAccountByToken } from '@domain/usecases'
+import { IAddAccount, ILoadAccountByToken } from '@domain/usecases'
 import { IAccountModel } from '@domain/models'
 import { mockAccountModel } from '@domain/test'
 
 export const mockAddAccount = (): IAddAccount => {
     class AddAccountStub implements IAddAccount {
-        async add(account: IAddAccountParams): Promise<IAccountModel> {
-            return Promise.resolve(mockAccountModel())
+        async add(account: IAddAccount.Params): Promise<IAddAccount.Result> {
+            return true
         }
     }
     return new AddAccountStub()

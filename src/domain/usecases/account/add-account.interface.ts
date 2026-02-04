@@ -1,7 +1,10 @@
 import { IAccountModel } from '@domain/models'
 
-export type IAddAccountParams = Omit<IAccountModel, 'id'>
-
 export interface IAddAccount {
-    add (account: IAddAccountParams): Promise<IAccountModel>
+    add(account: IAddAccount.Params): Promise<IAddAccount.Result>
+}
+
+export namespace IAddAccount {
+    export type Params = Omit<IAccountModel, 'id'>
+    export type Result = boolean
 }

@@ -1,7 +1,7 @@
-import { IAuthentication } from "@domain/usecases"
-import { badRequest, internalServerError, success, unauthorized } from "@presentation/helpers"
-import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
-import { IValidation } from "@presentation/protocols"
+import { IAuthentication } from '@domain/usecases'
+import { badRequest, internalServerError, success, unauthorized } from '@presentation/helpers'
+import { IController, IHttpResponse } from '@presentation/protocols'
+import { IValidation } from '@presentation/protocols'
 
 export class LoginController implements IController {
     constructor(
@@ -9,14 +9,14 @@ export class LoginController implements IController {
         private readonly authentication: IAuthentication,
     ) {}
 
-    async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
+    async handle(request: LoginController.Request): Promise<IHttpResponse> {
         try {
-            const error = this.validation.validate(httpRequest.body)
+            const error = this.validation.validate(request)
             if (error) {
-              return badRequest(error)
+                return badRequest(error)
             }
 
-            const { email, password } = httpRequest.body
+            const { email, password } = request
             const authResponse = await this.authentication.auth({
                 email,
                 password,
@@ -29,5 +29,12 @@ export class LoginController implements IController {
         } catch (error) {
             return internalServerError(error)
         }
+    }
+}
+
+export namespace LoginController {
+    export type Request = {
+        email: string
+        password: string
     }
 }

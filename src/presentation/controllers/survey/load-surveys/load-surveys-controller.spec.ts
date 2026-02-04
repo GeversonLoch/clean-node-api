@@ -1,6 +1,5 @@
 import { LoadSurveysController } from '@presentation/controllers'
 import { noContent, success } from '@presentation/helpers'
-import { IHttpRequest } from '@presentation/protocols'
 import { mockSurveyModelCollection } from '@domain/test'
 import { mockInternalServerError, mockLoadSurveys } from '@presentation/test'
 import MockDate from 'mockdate'
@@ -13,7 +12,7 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const mockHttpRequest = (): IHttpRequest => ({
+const mockRequest = (): LoadSurveysController.Request => ({
     accountId: 'any_account_id',
 })
 
@@ -31,15 +30,15 @@ describe('LoadSurveys Controller', () => {
     test('Should call LoadSurveys with correct value', async () => {
         const { sut, loadSurveysStub } = makeSut()
         const loadSpy = jest.spyOn(loadSurveysStub, 'load')
-        const fakeRequest = mockHttpRequest()
-        await sut.handle(fakeRequest)
-        expect(loadSpy).toHaveBeenCalledWith(fakeRequest.accountId)
+        const request = mockRequest()
+        await sut.handle(request)
+        expect(loadSpy).toHaveBeenCalledWith(request.accountId)
     })
 
     // Garante que retorne 200 em caso de sucesso.
     test('Should return 200 on success', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(success(mockSurveyModelCollection()))
     })
 
@@ -47,7 +46,7 @@ describe('LoadSurveys Controller', () => {
     test('Should return 204 if LoadSurveys returns empty', async () => {
         const { sut, loadSurveysStub } = makeSut()
         jest.spyOn(loadSurveysStub, 'load').mockReturnValueOnce(Promise.resolve([]))
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(noContent())
     })
 
@@ -55,7 +54,7 @@ describe('LoadSurveys Controller', () => {
     test('Should return 500 if LoadSurveys throws an exception', async () => {
         const { sut, loadSurveysStub } = makeSut()
         jest.spyOn(loadSurveysStub, 'load').mockImplementationOnce(() => { throw new Error() })
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(mockInternalServerError())
     })
 })

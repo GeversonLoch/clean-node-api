@@ -2,7 +2,6 @@ import { mockSurveyResultModel } from '@domain/test'
 import { LoadSurveyResultController } from '@presentation/controllers'
 import { InvalidParamError } from '@presentation/errors'
 import { forbidden, success } from '@presentation/helpers'
-import { IHttpRequest } from '@presentation/protocols'
 import {
     mockInternalServerError,
     mockLoadSurveyById,
@@ -18,11 +17,9 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const mockHttpRequest = (): IHttpRequest => ({
+const mockRequest = (): LoadSurveyResultController.Request => ({
     accountId: 'any_account_id',
-    params: {
-        surveyId: 'any_survey_id',
-    },
+    surveyId: 'any_survey_id',
 })
 
 const makeSut = () => {
@@ -41,16 +38,16 @@ describe('LoadSurveyResult Controller', () => {
     test('Should call LoadSurveyById with correct values', async () => {
         const { sut, loadSurveyByIdStub } = makeSut()
         const loadByIdSpy = jest.spyOn(loadSurveyByIdStub, 'loadById')
-        const fakeRequest = mockHttpRequest()
-        sut.handle(fakeRequest)
-        expect(loadByIdSpy).toHaveBeenCalledWith(fakeRequest.params.surveyId)
+        const request = mockRequest()
+        sut.handle(request)
+        expect(loadByIdSpy).toHaveBeenCalledWith(request.surveyId)
     })
 
     // Garante que retorne 403 se LoadSurveyById retornar nulo
     test('Should return 403 if LoadSurveyById returns null', async () => {
         const { sut, loadSurveyByIdStub } = makeSut()
         jest.spyOn(loadSurveyByIdStub, 'loadById').mockReturnValueOnce(Promise.resolve(null))
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(forbidden(new InvalidParamError('surveyId')))
     })
 
@@ -60,7 +57,7 @@ describe('LoadSurveyResult Controller', () => {
         jest.spyOn(loadSurveyByIdStub, 'loadById').mockImplementationOnce(() => {
             throw new Error()
         })
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(mockInternalServerError())
     })
 
@@ -68,9 +65,9 @@ describe('LoadSurveyResult Controller', () => {
     test('Should call LoadSurveyResult with correct values', async () => {
         const { sut, loadSurveyResultStub } = makeSut()
         const loadSurveyResultSpy = jest.spyOn(loadSurveyResultStub, 'load')
-        const fakeRequest = mockHttpRequest()
-        await sut.handle(fakeRequest)
-        expect(loadSurveyResultSpy).toHaveBeenCalledWith(fakeRequest.params.surveyId, fakeRequest.accountId)
+        const request = mockRequest()
+        await sut.handle(request)
+        expect(loadSurveyResultSpy).toHaveBeenCalledWith(request.surveyId, request.accountId)
     })
 
     // Garante que retorne erro 500 se o LoadSurveyResult lançar uma exceção
@@ -79,14 +76,14 @@ describe('LoadSurveyResult Controller', () => {
         jest.spyOn(loadSurveyResultStub, 'load').mockImplementationOnce(() => {
             throw new Error()
         })
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(mockInternalServerError())
     })
 
     // Garante que retorne 200 em caso de sucesso.
     test('Should return 200 on success', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(success(mockSurveyResultModel()))
     })
 })

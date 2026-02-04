@@ -1,17 +1,17 @@
 import { makeLogControllerDecorator } from '@main/factories/decorators/log-controller-factory'
-import { IController, IHttpRequest } from '@presentation/protocols'
+import { IController } from '@presentation/protocols'
 import { Request, Response } from 'express'
 
 export const expressRouteAdapter = (controller: IController) => {
     return async (req: Request, res: Response) => {
-        const httpRequest: IHttpRequest = {
-            body: req.body,
-            params: req.params,
-            accountId: req.accountId
+        const request = {
+            ...(req.body || {}),
+            ...(req.params || {}),
+            accountId: req.accountId,
         }
 
         const logControllerDecorator = makeLogControllerDecorator(controller)
-        const httpResponse = await logControllerDecorator.handle(httpRequest)
+        const httpResponse = await logControllerDecorator.handle(request)
 
         if (httpResponse.statusCode >= 400) {
             const errorMessage =

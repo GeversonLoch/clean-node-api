@@ -97,16 +97,16 @@ describe('DbAddAccount Usecase', () => {
         await expect(accountPromise).rejects.toThrow()
     })
 
-    // Teste para garantir que seja retornada uma conta em caso de sucesso
-    test('Should return an account on success', async () => {
+    // Teste para garantir que seja retornado verdadeiro em caso de sucesso
+    test('Should return true on success', async () => {
 
         const { sut } = makeSut()
 
         // Chama o método add da instância DbAddAccount e armazena o resultado
-        const account = await sut.add(mockAddAccountParams())
+        const isValidAccount = await sut.add(mockAddAccountParams())
 
         // Verifica se o método add retorna a conta esperada
-        expect(account).toEqual(mockAccountModel())
+        expect(isValidAccount).toBe(true)
     })
 
     // Garante que LoadAccountByEmailRepository seja chamado com o email correto
@@ -117,13 +117,13 @@ describe('DbAddAccount Usecase', () => {
         expect(loadSpy).toHaveBeenCalledWith('any_email@email.com')
     })
 
-    // Garante que retorne nulo se LoadAccountByEmailRepository não retornar nulo
-    test('Should return null if LoadAccountByEmailRepository not return null', async () => {
+    // Garante que retorne falso se LoadAccountByEmailRepository retornar uma conta
+    test('Should return false if LoadAccountByEmailRepository returns an account', async () => {
         const { sut, loadAccountByEmailRepositoryStub } = makeSut()
         jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail').mockReturnValueOnce(
             Promise.resolve(mockAccountModel())
         )
-        const account = await sut.add(mockAddAccountParams())
-        expect(account).toBeNull()
+        const isValidAccount = await sut.add(mockAddAccountParams())
+        expect(isValidAccount).toBe(false)
     })
 })

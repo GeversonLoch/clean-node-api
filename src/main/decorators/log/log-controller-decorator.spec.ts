@@ -1,4 +1,4 @@
-import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
+import { IController, IHttpResponse } from "@presentation/protocols"
 import { LogControllerDecorator } from "./log-controller-decorator"
 import { success } from "@presentation/helpers"
 import { mockInternalServerError } from "@presentation/test"
@@ -7,20 +7,18 @@ import { mockLogErrorRepository } from "@data/test"
 
 const mockController = (): IController => {
     class ControllerStub implements IController {
-        async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
+        async handle(request: any): Promise<IHttpResponse> {
             return Promise.resolve(success(mockAccountModel()))
         }
     }
     return new ControllerStub()
 }
 
-const mockHttpRequest = (): IHttpRequest => ({
-    body: {
-        name: 'any_name',
-        email: 'any_email@email.com',
-        password: 'any_password',
-        passwordConfirmation: 'any_password'
-    }
+const mockRequest = () => ({
+    name: 'any_name',
+    email: 'any_email@email.com',
+    password: 'any_password',
+    passwordConfirmation: 'any_password'
 })
 
 const makeSut = () => {
@@ -39,14 +37,14 @@ describe('Log Controller Decorator', () => {
     test('Should call controller handle', async () => {
         const { sut, controllerStub } = makeSut()
         const handleSpy = jest.spyOn(controllerStub, 'handle')
-        sut.handle(mockHttpRequest())
-        expect(handleSpy).toHaveBeenCalledWith(mockHttpRequest())
+        sut.handle(mockRequest())
+        expect(handleSpy).toHaveBeenCalledWith(mockRequest())
     })
 
     // Garante que o método handle do controller retorne o valor correto
     test('Should return the same result of the controller', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(success(mockAccountModel()))
     })
 
@@ -60,7 +58,7 @@ describe('Log Controller Decorator', () => {
         // Mockando o retorno do método handle do controllerStub para retornar um erro
         jest.spyOn(controllerStub, 'handle').mockReturnValueOnce(Promise.resolve(mockInternalServerError()))
 
-        await sut.handle(mockHttpRequest())
+        await sut.handle(mockRequest())
         expect(logSpy).toHaveBeenCalledWith('any_stack')
     })
 })

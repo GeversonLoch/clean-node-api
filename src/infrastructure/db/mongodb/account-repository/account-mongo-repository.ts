@@ -1,16 +1,5 @@
-/*
-* Repositório MongoDB para gerenciamento de contas.
-*
-* Esta implementação de AccountMongoRepository adere às interfaces
-* IAddAccountRepository e ILoadAccountByEmailRepository e é responsável
-* por adicionar novas contas e obter contas na coleção 'accounts' do MongoDB.
-* Utiliza IMongoDBAdapter para realizar operações
-* de conexão, obtenção de coleção e mapeamento de documentos.
-*/
-
 import { IAddAccountRepository, ILoadAccountByEmailRepository, ILoadAccountByTokenRepository, IUpdateAccessTokenRepository } from '@data/protocols'
 import { IAccountModel } from '@domain/models'
-import { IAddAccountParams } from '@domain/usecases'
 import { IMongoDBAdapter } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
@@ -21,15 +10,10 @@ export class AccountMongoRepository implements
     ILoadAccountByTokenRepository {
     constructor(private readonly mongoDBAdapter: IMongoDBAdapter) { }
 
-    /* Adiciona uma nova conta na coleção 'accounts' do MongoDB.
-    Este método recebe os dados da conta (IAddAccountParams), insere no banco,
-    recupera o documento recém-criado e o converte para o formato IAccountModel,
-    incluindo a conversão do _id do MongoDB para o campo id. */
-    async add(account: IAddAccountParams): Promise<IAccountModel> {
+    async add(account: IAddAccountRepository.Params): Promise<IAddAccountRepository.Result> {
         const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
         const result = await accountCollection.insertOne(account)
-        const newAccount = await accountCollection.findOne({ _id: result.insertedId })
-        return this.mongoDBAdapter.map(newAccount)
+        return result.insertedId !== null
     }
 
     async loadByEmail(email: string): Promise<IAccountModel> {

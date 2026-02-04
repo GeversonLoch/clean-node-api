@@ -3,7 +3,7 @@
 * funcionalidade de log de erros ao controlador original.
 */
 
-import { IController, IHttpRequest, IHttpResponse } from "@presentation/protocols"
+import { IController, IHttpResponse } from "@presentation/protocols"
 import { ILogErrorRepository } from "@data/protocols"
 
 export class LogControllerDecorator implements IController {
@@ -13,8 +13,8 @@ export class LogControllerDecorator implements IController {
     ) {}
 
     // Método que trata a requisição e, caso ocorra um erro interno, registra o log do erro.
-    async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
-        const httpResponse = await this.controller.handle(httpRequest)
+    async handle(request: any): Promise<IHttpResponse> {
+        const httpResponse = await this.controller.handle(request)
         if (httpResponse.statusCode === 500) {
             await this.logErrorRepository.logError(httpResponse.body.stack)
         }

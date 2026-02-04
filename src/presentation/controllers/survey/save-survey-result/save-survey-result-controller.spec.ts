@@ -2,7 +2,6 @@ import { mockSaveSurveyResultParams, mockSurveyResultModel } from '@domain/test'
 import { SaveSurveyResultController } from '@presentation/controllers'
 import { InvalidParamError } from '@presentation/errors'
 import { forbidden, success } from '@presentation/helpers'
-import { IHttpRequest } from '@presentation/protocols'
 import {
     mockInternalServerError,
     mockLoadSurveyById,
@@ -18,15 +17,11 @@ afterAll(() => {
     MockDate.reset()
 })
 
-const mockHttpRequest = (): IHttpRequest => ({
-    params: {
-        surveyId: 'any_survey_id',
-    },
-    body: {
-        question: 'any_question',
-        answer: 'any_answer',
-    },
+const mockRequest = (): SaveSurveyResultController.Request => ({
+    surveyId: 'any_survey_id',
     accountId: 'any_account_id',
+    question: 'any_question',
+    answer: 'any_answer',
 })
 
 const makeSut = () => {
@@ -45,16 +40,16 @@ describe('SaveSurveyResult Controller', () => {
     test('Should call LoadSurveyById with correct values', async () => {
         const { sut, loadSurveyByIdStub } = makeSut()
         const loadByIdSpy = jest.spyOn(loadSurveyByIdStub, 'loadById')
-        const fakeRequest = mockHttpRequest()
-        sut.handle(fakeRequest)
-        expect(loadByIdSpy).toHaveBeenCalledWith(fakeRequest.params.surveyId)
+        const request = mockRequest()
+        sut.handle(request)
+        expect(loadByIdSpy).toHaveBeenCalledWith(request.surveyId)
     })
 
     // Garante que retorne 403 se LoadSurveyById retornar nulo
     test('Should return 403 if LoadSurveyById returns null', async () => {
         const { sut, loadSurveyByIdStub } = makeSut()
         jest.spyOn(loadSurveyByIdStub, 'loadById').mockReturnValueOnce(Promise.resolve(null))
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(forbidden(new InvalidParamError('surveyId')))
     })
 
@@ -62,16 +57,16 @@ describe('SaveSurveyResult Controller', () => {
     test('Should return 500 if loadSurveyById throws an exception', async () => {
         const { sut, loadSurveyByIdStub } = makeSut()
         jest.spyOn(loadSurveyByIdStub, 'loadById').mockImplementationOnce(() => { throw new Error() })
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(mockInternalServerError())
     })
 
     // Garante que retorne 403 se a resposta enviada pelo client for uma resposta invalida
     test('Should return 403 if an invalid anwer is provided', async () => {
         const { sut } = makeSut()
-        let fakeRequest = mockHttpRequest()
-        fakeRequest.body.answer = 'wrong_answer'
-        const httpResponse = await sut.handle(fakeRequest)
+        let request = mockRequest()
+        request.answer = 'wrong_answer'
+        const httpResponse = await sut.handle(request)
         expect(httpResponse).toEqual(forbidden(new InvalidParamError('answer')))
     })
 
@@ -79,7 +74,7 @@ describe('SaveSurveyResult Controller', () => {
     test('Should call SaveSurveyResult with correct values', async () => {
         const { sut, saveSurveyResultStub } = makeSut()
         const saveSpy = jest.spyOn(saveSurveyResultStub, 'save')
-        await sut.handle(mockHttpRequest())
+        await sut.handle(mockRequest())
         expect(saveSpy).toHaveBeenCalledWith(mockSaveSurveyResultParams())
     })
 
@@ -87,14 +82,14 @@ describe('SaveSurveyResult Controller', () => {
     test('Should return 500 if SaveSurveyResult throws an exception', async () => {
         const { sut, saveSurveyResultStub } = makeSut()
         jest.spyOn(saveSurveyResultStub, 'save').mockImplementationOnce(() => { throw new Error() })
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(mockInternalServerError())
     })
 
     // Garante que retorne 200 em caso de sucesso.
     test('Should return 200 on success', async () => {
         const { sut } = makeSut()
-        const httpResponse = await sut.handle(mockHttpRequest())
+        const httpResponse = await sut.handle(mockRequest())
         expect(httpResponse).toEqual(success(mockSurveyResultModel()))
     })
 })

@@ -1,7 +1,7 @@
 import { ILoadAccountByToken } from '@domain/usecases'
 import { AccessDeniedError } from '@presentation/errors'
 import { forbidden, internalServerError, success } from '@presentation/helpers'
-import { IHttpRequest, IHttpResponse, IMiddleware } from '@presentation/protocols'
+import { IHttpResponse, IMiddleware } from '@presentation/protocols'
 
 export class AuthMiddleware implements IMiddleware {
     constructor(
@@ -9,9 +9,9 @@ export class AuthMiddleware implements IMiddleware {
         private readonly role?: string,
     ) {}
 
-    async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
+    async handle(request: AuthMiddleware.Request): Promise<IHttpResponse> {
         try {
-            const accessToken = httpRequest.headers?.['x-access-token']
+            const { accessToken } = request
             if (accessToken) {
                 const account = await this.loadAccountByToken.loadByToken(accessToken, this.role)
                 if (account) {
@@ -27,5 +27,11 @@ export class AuthMiddleware implements IMiddleware {
 
             return internalServerError(error)
         }
+    }
+}
+
+export namespace AuthMiddleware {
+    export type Request = {
+        accessToken?: string
     }
 }
