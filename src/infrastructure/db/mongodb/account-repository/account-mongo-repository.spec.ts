@@ -1,10 +1,3 @@
-/*
- * Testes de integração para o repositório de contas utilizando o MongoDB.
- * O ambiente de teste é configurado com a conexão ao banco de dados e a limpeza da coleção 'accounts'
- * é realizada antes de cada teste, garantindo um ambiente isolado e consistente. As operações de inserção
- * de contas são validadas para assegurar a correta persistência dos dados.
- */
-
 import { AccountMongoRepository } from '@infrastructure/db'
 import { mongoDBAdapter } from '@main/config/db-connection'
 import { mockAddAccountExtraParams, mockAddAccountParams } from '@domain/test'

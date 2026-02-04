@@ -30,7 +30,7 @@ export class AccountMongoRepository implements
         )
     }
 
-    async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
+    async loadByToken(accessToken: string, role?: string): Promise<ILoadAccountByTokenRepository.Result> {
         const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
         const account = await accountCollection.findOne({
             accessToken,

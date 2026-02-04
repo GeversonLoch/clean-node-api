@@ -1,5 +1,4 @@
 import { IDecrypter, ILoadAccountByTokenRepository } from '@data/protocols'
-import { IAccountModel } from '@domain/models'
 import { ILoadAccountByToken } from '@domain/usecases'
 import { JwtPayload } from 'jsonwebtoken'
 
@@ -9,7 +8,7 @@ export class DbLoadAccountByToken implements ILoadAccountByToken {
         private readonly loadAccountByTokenRepository: ILoadAccountByTokenRepository,
     ) {}
 
-    async loadByToken(accessToken: string, role?: string): Promise<IAccountModel> {
+    async loadByToken(accessToken: string, role?: string): Promise<ILoadAccountByToken.Result> {
         let decodedToken: string | JwtPayload
         try {
             decodedToken = await this.decrypter.decrypt(accessToken)
