@@ -49,7 +49,7 @@ export class SurveyMongoRepository implements
         return this.mongoDBAdapter.mapCollection(surveysDocuments)
     }
 
-    async loadById(id: string): Promise<ISurveyModel> {
+    async loadById(id: string): Promise<ILoadSurveyByIdRepository.Result> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
         const surveyDocument = await surveyCollection.findOne({ _id: new ObjectId(id) })
         return surveyDocument && this.mongoDBAdapter.map(surveyDocument)
