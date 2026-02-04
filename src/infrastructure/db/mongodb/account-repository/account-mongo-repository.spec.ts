@@ -28,6 +28,24 @@ describe('Account Mongo Repository', () => {
         })
     })
 
+    describe('checkByEmail()', () => {
+        // Garante que retorne verdadeiro se uma conta com o email for encontrado
+        test('Should return true if account with email exists', async () => {
+            const sut = new AccountMongoRepository(mongoDBAdapter)
+            await accountCollection.insertOne(mockAddAccountParams())
+            const accountExists = await sut.checkByEmail('any_email@email.com')
+            expect(accountExists).toBe(true)
+        })
+
+        // Garante que retorne falso se nenhuma conta com o email for encontrado
+        test('Should return false if no account is found with this e-mail address', async () => {
+            const sut = new AccountMongoRepository(mongoDBAdapter)
+            await accountCollection.insertOne(mockAddAccountParams())
+            const accountExists = await sut.checkByEmail('other_email@email.com')
+            expect(accountExists).toBe(false)
+        })
+    })
+
     describe('loadByEmail()', () => {
         // Garante que retorne uma conta se o método loadByEmail for bem sucedido
         test('Should return an account on loadByEmail success', async () => {

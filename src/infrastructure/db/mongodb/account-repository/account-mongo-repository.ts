@@ -1,9 +1,16 @@
-import { IAddAccountRepository, ILoadAccountByEmailRepository, ILoadAccountByTokenRepository, IUpdateAccessTokenRepository } from '@data/protocols'
+import {
+    IAddAccountRepository,
+    ICheckAccountByEmailRepository,
+    ILoadAccountByEmailRepository,
+    IUpdateAccessTokenRepository,
+    ILoadAccountByTokenRepository,
+} from '@data/protocols'
 import { IMongoDBAdapter } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
 export class AccountMongoRepository implements
     IAddAccountRepository,
+    ICheckAccountByEmailRepository,
     ILoadAccountByEmailRepository,
     IUpdateAccessTokenRepository,
     ILoadAccountByTokenRepository {
@@ -13,6 +20,17 @@ export class AccountMongoRepository implements
         const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
         const result = await accountCollection.insertOne(account)
         return result.insertedId !== null
+    }
+
+    async checkByEmail(email: string): Promise<boolean> {
+        const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
+        const account = await accountCollection.findOne(
+            { email },
+            {
+                projection: { _id: 1 },
+            },
+        )
+        return account !== null
     }
 
     async loadByEmail(email: string): Promise<ILoadAccountByEmailRepository.Result> {

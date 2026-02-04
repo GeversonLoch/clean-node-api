@@ -1,5 +1,6 @@
 import {
     IAddAccountRepository,
+    ICheckAccountByEmailRepository,
     ILoadAccountByEmailRepository,
     ILoadAccountByTokenRepository,
     IUpdateAccessTokenRepository,
@@ -9,10 +10,19 @@ import { mockAccountModel } from '@domain/test'
 export const mockAddAccountRepository = (): IAddAccountRepository => {
     class AddAccountRepositoryStub implements IAddAccountRepository {
         async add(account: IAddAccountRepository.Params): Promise<IAddAccountRepository.Result> {
-            return true
+            return Promise.resolve(true)
         }
     }
     return new AddAccountRepositoryStub()
+}
+
+export const mockCheckAccountByEmailRepository = () => {
+    class CheckAccountByEmailRepositoryStub implements ICheckAccountByEmailRepository {
+        async checkByEmail(email: string): Promise<boolean> {
+            return Promise.resolve(false)
+        }
+    }
+    return new CheckAccountByEmailRepositoryStub()
 }
 
 export const mockLoadAccountByEmailRepository = () => {
