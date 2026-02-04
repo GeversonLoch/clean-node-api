@@ -6,5 +6,5 @@ export interface IAddAccountRepository {
 
 export namespace IAddAccountRepository {
     export type Params = IAddAccount.Params
-    export type Result = IAddAccount.Result
+    export type Result = boolean
 }

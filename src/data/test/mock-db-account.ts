@@ -4,7 +4,6 @@ import {
     ILoadAccountByTokenRepository,
     IUpdateAccessTokenRepository,
 } from '@data/protocols'
-import { IAccountModel } from '@domain/models'
 import { mockAccountModel } from '@domain/test'
 
 export const mockAddAccountRepository = (): IAddAccountRepository => {
@@ -18,7 +17,7 @@ export const mockAddAccountRepository = (): IAddAccountRepository => {
 
 export const mockLoadAccountByEmailRepository = () => {
     class LoadAccountByEmailRepositoryStub implements ILoadAccountByEmailRepository {
-        async loadByEmail(email: string): Promise<IAccountModel> {
+        async loadByEmail(email: string): Promise<ILoadAccountByEmailRepository.Result> {
             return Promise.resolve(mockAccountModel())
         }
     }

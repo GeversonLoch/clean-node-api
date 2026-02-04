@@ -1,5 +1,4 @@
 import { IAddAccountRepository, ILoadAccountByEmailRepository, ILoadAccountByTokenRepository, IUpdateAccessTokenRepository } from '@data/protocols'
-import { IAccountModel } from '@domain/models'
 import { IMongoDBAdapter } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
@@ -16,7 +15,7 @@ export class AccountMongoRepository implements
         return result.insertedId !== null
     }
 
-    async loadByEmail(email: string): Promise<IAccountModel> {
+    async loadByEmail(email: string): Promise<ILoadAccountByEmailRepository.Result> {
         const accountCollection = await this.mongoDBAdapter.getCollection('accounts')
         const account = await accountCollection.findOne({ email })
         return this.mongoDBAdapter.map(account)
