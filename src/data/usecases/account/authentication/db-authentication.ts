@@ -4,7 +4,6 @@ import {
     IEncrypter,
     IUpdateAccessTokenRepository,
 } from '@data/protocols'
-import { IAuthenticationModel, IAuthenticationParams } from '@domain/models'
 import { IAuthentication } from '@domain/usecases'
 
 export class DbAuthentication implements IAuthentication {
@@ -15,7 +14,7 @@ export class DbAuthentication implements IAuthentication {
         private readonly updateAccessTokenRepository: IUpdateAccessTokenRepository,
     ) {}
 
-    async auth(authentication: IAuthenticationParams): Promise<IAuthenticationModel> {
+    async auth(authentication: IAuthentication.Params): Promise<IAuthentication.Result> {
         const { email, password } = authentication
         const account = await this.loadAccountByEmailRepository.loadByEmail(email)
         if (account) {

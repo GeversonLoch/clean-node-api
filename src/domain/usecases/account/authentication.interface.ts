@@ -1,5 +1,14 @@
-import { IAuthenticationModel, IAuthenticationParams } from '@domain/models';
-
 export interface IAuthentication {
-    auth(authentication: IAuthenticationParams): Promise<IAuthenticationModel>
+    auth(authentication: IAuthentication.Params): Promise<IAuthentication.Result>
+}
+
+export namespace IAuthentication {
+    export type Params = {
+        email: string
+        password: string
+    }
+    export type Result = {
+        accessToken: string
+        name: string
+    }
 }
