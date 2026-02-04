@@ -1,5 +1,5 @@
 import { ISurveyModel } from '@domain/models'
-import { IAddSurveyParams } from '@domain/usecases'
+import { IAddSurvey } from '@domain/usecases'
 
 export const mockSurveyModel = (): ISurveyModel => {
     return {
@@ -19,7 +19,7 @@ export const mockSurveyModelCollection = (): ISurveyModel[] => {
     return [mockSurveyModel(), mockSurveyModel()]
 }
 
-export const mockAddSurveyParams = (): IAddSurveyParams => ({
+export const mockAddSurveyParams = (): IAddSurvey.Params => ({
     question: 'any_question',
     answers: [
         {
@@ -38,6 +38,6 @@ export const mockAddSurveyParams = (): IAddSurveyParams => ({
     date: new Date(),
 })
 
-export const mockAddSurveyParamsCollection = (): IAddSurveyParams[] => {
+export const mockAddSurveyParamsCollection = (): IAddSurvey.Params[] => {
     return [mockAddSurveyParams(), mockAddSurveyParams()]
 }

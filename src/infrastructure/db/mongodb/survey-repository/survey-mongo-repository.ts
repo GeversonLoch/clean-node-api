@@ -1,15 +1,17 @@
 import { IAddSurveyRepository, ILoadSurveyByIdRepository, ILoadSurveysRepository } from '@data/protocols'
 import { ISurveyModel } from '@domain/models'
-import { IAddSurveyParams } from '@domain/usecases'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
-export class SurveyMongoRepository implements IAddSurveyRepository, ILoadSurveysRepository, ILoadSurveyByIdRepository {
+export class SurveyMongoRepository implements 
+    IAddSurveyRepository,
+    ILoadSurveysRepository,
+    ILoadSurveyByIdRepository {
     constructor(
         private readonly mongoDBAdapter: IMongoDBAdapter,
     ) {}
 
-    async add(surveyData: IAddSurveyParams): Promise<void> {
+    async add(surveyData: IAddSurveyRepository.Params): Promise<void> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
         await surveyCollection.insertOne(surveyData)
     }
