@@ -1,21 +1,21 @@
 import { DbLoadAnswersBySurvey } from '@data/usecases'
-import { mockLoadSurveyByIdRepository } from '@data/test'
+import { mockLoadAnswersBySurveyRepository } from '@data/test'
 import { mockSurveyModel } from '@domain/test'
 
 const makeSut = () => {
-    const loadSurveyByIdRepositoryStub = mockLoadSurveyByIdRepository()
-    const sut = new DbLoadAnswersBySurvey(loadSurveyByIdRepositoryStub)
+    const loadAnswersBySurveyRepositoryStub = mockLoadAnswersBySurveyRepository()
+    const sut = new DbLoadAnswersBySurvey(loadAnswersBySurveyRepositoryStub)
     return {
         sut,
-        loadSurveyByIdRepositoryStub,
+        loadAnswersBySurveyRepositoryStub,
     }
 }
 
 describe('DbLoadAnswersBySurvey Usecase', () => {
-    // Garante que LoadSurveyByIdRepository seja chamado com o Id correto
-    test('Should call LoadSurveyByIdRepository with correct Id', async () => {
-        const { sut, loadSurveyByIdRepositoryStub } = makeSut()
-        const loadByIdSpy = jest.spyOn(loadSurveyByIdRepositoryStub, 'loadById')
+    // Garante que LoadAnswersBySurveyRepository seja chamado com o Id correto
+    test('Should call LoadAnswersBySurveyRepository with correct Id', async () => {
+        const { sut, loadAnswersBySurveyRepositoryStub } = makeSut()
+        const loadByIdSpy = jest.spyOn(loadAnswersBySurveyRepositoryStub, 'loadAnswers')
         await sut.loadAnswers('any_id')
         expect(loadByIdSpy).toHaveBeenCalledWith('any_id')
     })
@@ -29,18 +29,22 @@ describe('DbLoadAnswersBySurvey Usecase', () => {
         expect(survey).toEqual(answers)
     })
 
-    // Garante que DbLoadAnswersBySurvey retorne uma coleção vazia caso LoadSurveyByIdRepository retorne nulo
-    test('Should return empty collection if LoadSurveyByIdRepository returns null', async () => {
-        const { sut, loadSurveyByIdRepositoryStub } = makeSut()
-        jest.spyOn(loadSurveyByIdRepositoryStub, 'loadById').mockReturnValueOnce(Promise.resolve(null))
+    // Garante que DbLoadAnswersBySurvey retorne uma coleção vazia caso LoadAnswersBySurveyRepository retorne nulo
+    test('Should return empty collection if LoadAnswersBySurveyRepository returns null', async () => {
+        const { sut, loadAnswersBySurveyRepositoryStub } = makeSut()
+        jest.spyOn(loadAnswersBySurveyRepositoryStub, 'loadAnswers').mockReturnValueOnce(
+            Promise.resolve([]),
+        )
         const survey = await sut.loadAnswers('any_id')
         expect(survey).toEqual([])
     })
 
-    // Garante que DbLoadAnswersBySurvey lance uma exceção se o LoadSurveyByIdRepository lançar
-    test('Should throw if LoadSurveyByIdRepository throws', async () => {
-        const { sut, loadSurveyByIdRepositoryStub } = makeSut()
-        jest.spyOn(loadSurveyByIdRepositoryStub, 'loadById').mockImplementationOnce(() => { throw new Error() })
+    // Garante que DbLoadAnswersBySurvey lance uma exceção se o LoadAnswersBySurveyRepository lançar
+    test('Should throw if LoadAnswersBySurveyRepository throws', async () => {
+        const { sut, loadAnswersBySurveyRepositoryStub } = makeSut()
+        jest.spyOn(loadAnswersBySurveyRepositoryStub, 'loadAnswers').mockImplementationOnce(() => {
+            throw new Error()
+        })
         const promise = sut.loadAnswers('any_id')
         await expect(promise).rejects.toThrow()
     })

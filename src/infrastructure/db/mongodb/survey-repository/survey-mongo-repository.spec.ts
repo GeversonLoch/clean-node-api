@@ -89,12 +89,31 @@ describe('Survey Mongo Repository', () => {
             expect(survey.id).toBeTruthy()
         })
 
-        // Garante que retorne nulo se a pesquisa não existir
+        // Garante que retorne nulo se a pesquisa informada não existir
         test('Should return null if survey does not exists', async () => {
             const sut = makeSut()
             const fakeId = new ObjectId().toHexString()
             const survey = await sut.loadById(fakeId)
             expect(survey).toBeFalsy()
+        })
+    })
+
+    describe('loadAnswers()', () => {
+        // Garante que carregue os answers em caso de sucesso
+        test('Should load answers on success', async () => {
+            const answers = mockAddSurveyParams()
+            const result = await surveyCollection.insertOne(answers)
+            const sut = makeSut()
+            const survey = await sut.loadAnswers(result.insertedId.toHexString())
+            expect(survey).toEqual(answers.answers.map(a => a.answer))
+        })
+
+        // Garante que retorne um array vazio se a pesquisa informada não existir
+        test('Should return empty array if survey does not exists', async () => {
+            const sut = makeSut()
+            const fakeId = new ObjectId().toHexString()
+            const survey = await sut.loadAnswers(fakeId)
+            expect(survey).toEqual([])
         })
     })
 

@@ -1,8 +1,9 @@
 import {
     IAddSurveyRepository,
     ICheckSurveyByIdRepository,
+    ILoadAnswersBySurveyRepository,
     ILoadSurveyByIdRepository,
-    ILoadSurveysRepository
+    ILoadSurveysRepository,
 } from '@data/protocols'
 import { ISurveyModel } from '@domain/models'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
@@ -12,7 +13,8 @@ export class SurveyMongoRepository implements
     IAddSurveyRepository,
     ILoadSurveysRepository,
     ILoadSurveyByIdRepository,
-    ICheckSurveyByIdRepository {
+    ICheckSurveyByIdRepository,
+    ILoadAnswersBySurveyRepository {
     constructor(
         private readonly mongoDBAdapter: IMongoDBAdapter,
     ) {}
@@ -24,14 +26,12 @@ export class SurveyMongoRepository implements
 
     async loadAll(accountId: string): Promise<ISurveyModel[]> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
-        const query = new QueryBuilder()
-        .lookup({
+        const query = new QueryBuilder().lookup({
             from: 'surveyResults',
             foreignField: 'surveyId',
             localField: '_id',
             as: 'result'
-        })
-        .project({
+        }).project({
             _id: 1,
             question: 1,
             answers: 1,
@@ -49,26 +49,38 @@ export class SurveyMongoRepository implements
                     }
                 }, 1]
             }
-        })
-        .build()
-        const surveysDocuments = await surveyCollection.aggregate(query).toArray()
-        return this.mongoDBAdapter.mapCollection(surveysDocuments)
+        }).build()
+        const surveys = await surveyCollection.aggregate(query).toArray()
+        return this.mongoDBAdapter.mapCollection(surveys)
     }
 
     async loadById(id: string): Promise<ILoadSurveyByIdRepository.Result> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
-        const surveyDocument = await surveyCollection.findOne({ _id: new ObjectId(id) })
-        return surveyDocument && this.mongoDBAdapter.map(surveyDocument)
+        const survey = await surveyCollection.findOne({ _id: new ObjectId(id) })
+        return survey && this.mongoDBAdapter.map(survey)
+    }
+
+    async loadAnswers(id: string): Promise<string[]> {
+        const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
+        const query = new QueryBuilder().match({
+            _id: new ObjectId(id)
+        }).project({
+            _id: 0,
+            answers: '$answers.answer'
+        })
+        .build()
+        const surveys = await surveyCollection.aggregate(query).toArray()
+        return surveys[0]?.answers || []
     }
 
     async checkById(id: string): Promise<boolean> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
-        const surveyDocument = await surveyCollection.findOne(
+        const survey = await surveyCollection.findOne(
             { _id: new ObjectId(id) },
             {
                 projection: { _id: 1 },
             },
         )
-        return surveyDocument !== null
+        return survey !== null
     }
 }

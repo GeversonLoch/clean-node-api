@@ -224,9 +224,9 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
                 answers: '$answers',
             })
             .build()
-        const surveyResult = await surveyResultCollection
+        const surveys = await surveyResultCollection
             .aggregate<ISurveyResultModel>(query)
             .toArray()
-        return surveyResult.length ? surveyResult[0] : null
+        return surveys.length ? surveys[0] : null
     }
 }
