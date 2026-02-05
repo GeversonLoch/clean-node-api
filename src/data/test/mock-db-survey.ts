@@ -1,5 +1,6 @@
 import {
     IAddSurveyRepository,
+    ICheckSurveyByIdRepository,
     ILoadSurveyByIdRepository,
     ILoadSurveyResultRepository,
     ILoadSurveysRepository,
@@ -20,6 +21,15 @@ export const mockAddSurveyRepository = (): IAddSurveyRepository => {
         }
     }
     return new AddSurveyRepositoryStub()
+}
+
+export const mockCheckSurveyByIdRepository = (): ICheckSurveyByIdRepository => {
+    class CheckSurveyByIdRepositoryStub implements ICheckSurveyByIdRepository {
+        async checkById(id: string): Promise<boolean> {
+            return Promise.resolve(true)
+        }
+    }
+    return new CheckSurveyByIdRepositoryStub()
 }
 
 export const mockLoadSurveyByIdRepository = (): ILoadSurveyByIdRepository => {

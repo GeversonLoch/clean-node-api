@@ -1,20 +1,19 @@
-// import { ILoadSurveyResultRepository } from '@data/protocols'
-import { ILoadSurveyById, ILoadSurveyResult } from '@domain/usecases'
+import { ICheckSurveyById, ILoadSurveyResult } from '@domain/usecases'
 import { InvalidParamError } from '@presentation/errors'
 import { forbidden, internalServerError, success } from '@presentation/helpers'
 import { IController, IHttpResponse } from '@presentation/protocols'
 
 export class LoadSurveyResultController implements IController {
     constructor(
-        private readonly loadSurveyById: ILoadSurveyById,
+        private readonly checkSurveyById: ICheckSurveyById,
         private readonly loadSurveyResult: ILoadSurveyResult,
     ) {}
 
     async handle(request: LoadSurveyResultController.Request): Promise<IHttpResponse> {
         try {
             const { accountId, surveyId } = request
-            const survey = await this.loadSurveyById.loadById(surveyId)
-            if (!survey) {
+            const existsSurvey = await this.checkSurveyById.checkById(surveyId)
+            if (!existsSurvey) {
                 return forbidden(new InvalidParamError('surveyId'))
             }
             const surveyResult = await this.loadSurveyResult.load(surveyId, accountId)

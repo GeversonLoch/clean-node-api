@@ -1,4 +1,4 @@
-import { IAddSurvey, ILoadSurveyById, ILoadSurveyResult, ILoadSurveys, ISaveSurveyResult, ISaveSurveyResultParams } from '@domain/usecases'
+import { IAddSurvey, ICheckSurveyById, ILoadSurveyById, ILoadSurveyResult, ILoadSurveys, ISaveSurveyResult, ISaveSurveyResultParams } from '@domain/usecases'
 import { mockSurveyModel, mockSurveyModelCollection, mockSurveyResultModel } from '@domain/test'
 import { ISurveyModel, ISurveyResultModel } from '@domain/models'
 
@@ -18,6 +18,15 @@ export const mockLoadSurveys = (): ILoadSurveys => {
         }
     }
     return new LoadSurveysStub()
+}
+
+export const mockCheckSurveyById = (): ICheckSurveyById => {
+    class CheckSurveyByIdStub implements ICheckSurveyById {
+        async checkById(id: string): Promise<boolean> {
+            return Promise.resolve(true)
+        }
+    }
+    return new CheckSurveyByIdStub()
 }
 
 export const mockLoadSurveyById = (): ILoadSurveyById => {

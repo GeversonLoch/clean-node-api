@@ -1,4 +1,9 @@
-import { IAddSurveyRepository, ILoadSurveyByIdRepository, ILoadSurveysRepository } from '@data/protocols'
+import {
+    IAddSurveyRepository,
+    ICheckSurveyByIdRepository,
+    ILoadSurveyByIdRepository,
+    ILoadSurveysRepository
+} from '@data/protocols'
 import { ISurveyModel } from '@domain/models'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
@@ -6,7 +11,8 @@ import { ObjectId } from 'mongodb'
 export class SurveyMongoRepository implements 
     IAddSurveyRepository,
     ILoadSurveysRepository,
-    ILoadSurveyByIdRepository {
+    ILoadSurveyByIdRepository,
+    ICheckSurveyByIdRepository {
     constructor(
         private readonly mongoDBAdapter: IMongoDBAdapter,
     ) {}
@@ -53,5 +59,16 @@ export class SurveyMongoRepository implements
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
         const surveyDocument = await surveyCollection.findOne({ _id: new ObjectId(id) })
         return surveyDocument && this.mongoDBAdapter.map(surveyDocument)
+    }
+
+    async checkById(id: string): Promise<boolean> {
+        const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
+        const surveyDocument = await surveyCollection.findOne(
+            { _id: new ObjectId(id) },
+            {
+                projection: { _id: 1 },
+            },
+        )
+        return surveyDocument !== null
     }
 }

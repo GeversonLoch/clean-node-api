@@ -81,7 +81,7 @@ describe('Survey Mongo Repository', () => {
 
     describe('loadById()', () => {
         // Garante que o SurveyMongoRepository obtenha todas as pesquisas ao executar o método 'loadAll' com sucesso
-        test('Should load survey by id on success', async () => {
+        test('Should load surveyById on success', async () => {
             const result = await surveyCollection.insertOne(mockAddSurveyParams())
             const sut = makeSut()
             const survey = await sut.loadById(result.insertedId.toHexString())
@@ -95,6 +95,24 @@ describe('Survey Mongo Repository', () => {
             const fakeId = new ObjectId().toHexString()
             const survey = await sut.loadById(fakeId)
             expect(survey).toBeFalsy()
+        })
+    })
+
+    describe('checkById()', () => {
+        // Garante que retorne verdadeiro se a pesquisa existir
+        test('Should load checkById on success', async () => {
+            const result = await surveyCollection.insertOne(mockAddSurveyParams())
+            const sut = makeSut()
+            const existsSurvey = await sut.checkById(result.insertedId.toHexString())
+            expect(existsSurvey).toBe(true)
+        })
+
+        // Garante que retorne falso se a pesquisa não existir
+        test('Should return false if survey does not exists', async () => {
+            const sut = makeSut()
+            const fakeId = new ObjectId().toHexString()
+            const existsSurvey = await sut.checkById(fakeId)
+            expect(existsSurvey).toBe(false)
         })
     })
 })
