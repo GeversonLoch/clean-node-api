@@ -1,9 +1,9 @@
 import { ISurveyModel } from '@domain/models'
 
-export interface ILoadSurveyByIdRepository {
-    loadById(id: string): Promise<ILoadSurveyByIdRepository.Result>
+export interface ILoadAnswersBySurveyRepository {
+    loadById(id: string): Promise<ILoadAnswersBySurveyRepository.Result>
 }
 
-export namespace ILoadSurveyByIdRepository {
+export namespace ILoadAnswersBySurveyRepository {
     export type Result = ISurveyModel
 }

@@ -5,7 +5,6 @@ import { forbidden, success } from '@presentation/helpers'
 import {
     mockCheckSurveyById,
     mockInternalServerError,
-    mockLoadSurveyById,
     mockLoadSurveyResult,
 } from '@presentation/test'
 import MockDate from 'mockdate'
