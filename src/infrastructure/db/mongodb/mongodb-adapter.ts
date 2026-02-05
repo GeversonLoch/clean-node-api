@@ -1,5 +1,5 @@
 import { IMongoDBAdapter } from "@infrastructure/db"
-import { MongoClient, Db, Collection, WithId, Document } from "mongodb"
+import { MongoClient, Db, Collection, Document } from "mongodb"
 
 export class MongoDBAdapter implements IMongoDBAdapter {
   private client: MongoClient

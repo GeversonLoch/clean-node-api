@@ -1,6 +1,4 @@
 import { ILoadSurveyResultRepository, ISaveSurveyResultRepository } from '@data/protocols'
-import { ISurveyResultModel } from '@domain/models'
-import { ISaveSurveyResultParams } from '@domain/usecases'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
@@ -9,7 +7,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
         private readonly mongoDBAdapter: IMongoDBAdapter,
     ) {}
 
-    async save(data: ISaveSurveyResultParams): Promise<void> {
+    async save(data: ISaveSurveyResultRepository.Params): Promise<void> {
         const surveyResultCollection = await this.mongoDBAdapter.getCollection('surveyResults')
         await surveyResultCollection.findOneAndUpdate(
             {
@@ -31,7 +29,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
         )
     }
 
-    async loadBySurveyId(surveyId: string, accountId: string): Promise<ISurveyResultModel> {
+    async loadBySurveyId(surveyId: string, accountId: string): Promise<ILoadSurveyResultRepository.Result> {
         const surveyResultCollection = await this.mongoDBAdapter.getCollection('surveyResults')
         const query = new QueryBuilder()
             .match({
@@ -225,7 +223,7 @@ export class SurveyResultMongoRepository implements ISaveSurveyResultRepository,
             })
             .build()
         const surveys = await surveyResultCollection
-            .aggregate<ISurveyResultModel>(query)
+            .aggregate<ILoadSurveyResultRepository.Result>(query)
             .toArray()
         return surveys.length ? surveys[0] : null
     }

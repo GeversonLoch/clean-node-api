@@ -1,4 +1,4 @@
-export interface IDatabaseAdapter {
+export interface IDatabase {
     connect(): Promise<void>
     disconnect(): Promise<void>
 }

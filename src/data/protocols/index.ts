@@ -15,4 +15,4 @@ export * from './db/survey/load-answers-by-survey-repository'
 export * from './db/survey/load-survey-by-id-repository'
 export * from './db/survey/save-survey-result-repository'
 export * from './db/survey/load-survey-result-repository'
-export * from './db/database-adapter.interface' // TODO: Validar se esse adapter realmente pertence a camada data!
+export * from './db/database.interface' // TODO: Validar se essa interface realmente pertence a camada data!

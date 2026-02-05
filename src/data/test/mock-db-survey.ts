@@ -7,8 +7,6 @@ import {
     ILoadSurveysRepository,
     ISaveSurveyResultRepository,
 } from '@data/protocols'
-import { ISurveyModel, ISurveyResultModel } from '@domain/models'
-import { ISaveSurveyResultParams } from '@domain/usecases'
 import {
     mockSurveyModel,
     mockSurveyModelCollection,
@@ -63,7 +61,7 @@ export const mockLoadSurveysRepository = (): ILoadSurveysRepository => {
 
 export const makeSaveSurveyResultRepository = (): ISaveSurveyResultRepository => {
     class SaveSurveyResultRepositoryStub implements ISaveSurveyResultRepository {
-        async save(surveyData: ISaveSurveyResultParams): Promise<void> {
+        async save(surveyData: ISaveSurveyResultRepository.Params): Promise<void> {
             return Promise.resolve()
         }
     }
@@ -72,7 +70,7 @@ export const makeSaveSurveyResultRepository = (): ISaveSurveyResultRepository =>
 
 export const makeLoadSurveyResultRepository = (): ILoadSurveyResultRepository => {
     class LoadSurveyResultRepositoryStub implements ILoadSurveyResultRepository {
-        async loadBySurveyId(surveyId: string, accountId: string): Promise<ISurveyResultModel> {
+        async loadBySurveyId(surveyId: string, accountId: string): Promise<ILoadSurveyResultRepository.Result> {
             return Promise.resolve(mockSurveyResultModel())
         }
     }
