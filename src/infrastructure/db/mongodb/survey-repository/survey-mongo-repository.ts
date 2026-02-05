@@ -5,7 +5,6 @@ import {
     ILoadSurveyByIdRepository,
     ILoadSurveysRepository,
 } from '@data/protocols'
-import { ISurveyModel } from '@domain/models'
 import { IMongoDBAdapter, QueryBuilder } from '@infrastructure/db'
 import { ObjectId } from 'mongodb'
 
@@ -24,7 +23,7 @@ export class SurveyMongoRepository implements
         await surveyCollection.insertOne(surveyData)
     }
 
-    async loadAll(accountId: string): Promise<ISurveyModel[]> {
+    async loadAll(accountId: string): Promise<ILoadSurveysRepository.Result> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
         const query = new QueryBuilder().lookup({
             from: 'surveyResults',
