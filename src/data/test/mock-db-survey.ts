@@ -1,7 +1,7 @@
 import {
     IAddSurveyRepository,
     ICheckSurveyByIdRepository,
-    ILoadAnswersBySurveyRepository,
+    ILoadSurveyByIdRepository,
     ILoadSurveyResultRepository,
     ILoadSurveysRepository,
     ISaveSurveyResultRepository,
@@ -32,9 +32,9 @@ export const mockCheckSurveyByIdRepository = (): ICheckSurveyByIdRepository => {
     return new CheckSurveyByIdRepositoryStub()
 }
 
-export const mockLoadSurveyByIdRepository = (): ILoadAnswersBySurveyRepository => {
-    class LoadSurveyByIdRepositoryStub implements ILoadAnswersBySurveyRepository {
-        async loadById(id: string): Promise<ILoadAnswersBySurveyRepository.Result> {
+export const mockLoadSurveyByIdRepository = (): ILoadSurveyByIdRepository => {
+    class LoadSurveyByIdRepositoryStub implements ILoadSurveyByIdRepository {
+        async loadById(id: string): Promise<ILoadSurveyByIdRepository.Result> {
             return Promise.resolve(mockSurveyModel())
         }
     }

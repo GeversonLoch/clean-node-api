@@ -1,17 +1,17 @@
-import { ILoadAnswersBySurveyRepository, ILoadSurveyResultRepository } from '@data/protocols'
+import { ILoadSurveyByIdRepository, ILoadSurveyResultRepository } from '@data/protocols'
 import { ILoadSurveyResult } from '@domain/usecases'
 import { ISurveyResultModel } from '@domain/models'
 
 export class DbLoadSurveyResult implements ILoadSurveyResult {
     constructor(
         private readonly loadSurveyResultRepository: ILoadSurveyResultRepository,
-        private readonly loadAnswersBySurveyRepository: ILoadAnswersBySurveyRepository,
+        private readonly loadSurveyByIdRepository: ILoadSurveyByIdRepository,
     ) {}
 
     async load(surveyId: string, accountId: string): Promise<ISurveyResultModel> {
         let surveyResult = await this.loadSurveyResultRepository.loadBySurveyId(surveyId, accountId)
         if (!surveyResult) {
-            const survey = await this.loadAnswersBySurveyRepository.loadById(surveyId)
+            const survey = await this.loadSurveyByIdRepository.loadById(surveyId)
             surveyResult = {
                 surveyId: survey.id,
                 question: survey.question,

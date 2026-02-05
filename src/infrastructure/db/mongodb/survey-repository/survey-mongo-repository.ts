@@ -1,7 +1,7 @@
 import {
     IAddSurveyRepository,
     ICheckSurveyByIdRepository,
-    ILoadAnswersBySurveyRepository,
+    ILoadSurveyByIdRepository,
     ILoadSurveysRepository
 } from '@data/protocols'
 import { ISurveyModel } from '@domain/models'
@@ -11,7 +11,7 @@ import { ObjectId } from 'mongodb'
 export class SurveyMongoRepository implements 
     IAddSurveyRepository,
     ILoadSurveysRepository,
-    ILoadAnswersBySurveyRepository,
+    ILoadSurveyByIdRepository,
     ICheckSurveyByIdRepository {
     constructor(
         private readonly mongoDBAdapter: IMongoDBAdapter,
@@ -55,7 +55,7 @@ export class SurveyMongoRepository implements
         return this.mongoDBAdapter.mapCollection(surveysDocuments)
     }
 
-    async loadById(id: string): Promise<ILoadAnswersBySurveyRepository.Result> {
+    async loadById(id: string): Promise<ILoadSurveyByIdRepository.Result> {
         const surveyCollection = await this.mongoDBAdapter.getCollection('surveys')
         const surveyDocument = await surveyCollection.findOne({ _id: new ObjectId(id) })
         return surveyDocument && this.mongoDBAdapter.map(surveyDocument)
